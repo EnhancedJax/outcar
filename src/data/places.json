@@ -1,23 +1,1173 @@
-[
-  {
-    "id": "tokyo-tower",
-    "name": "Tokyo Tower",
-    "note": "Classic city landmark with great night views.",
-    "longitude": 139.7454,
-    "latitude": 35.6586
-  },
-  {
-    "id": "shibuya-crossing",
-    "name": "Shibuya Crossing",
-    "note": "Busy scramble crossing and a great people-watching spot.",
-    "longitude": 139.7006,
-    "latitude": 35.6595
-  },
-  {
-    "id": "sensoji",
-    "name": "Senso-ji Temple",
-    "note": "Historic temple in Asakusa with a lively market street.",
-    "longitude": 139.7967,
-    "latitude": 35.7148
-  }
-]
+{
+  "tags": [],
+  "places": [
+    {
+      "id": "place-1791028289870",
+      "name": "上水大水管",
+      "note": "",
+      "longitude": 114.1156647,
+      "latitude": 22.515639699999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-2",
+      "name": "北望神州石",
+      "note": "",
+      "longitude": 114.13994149999999,
+      "latitude": 22.5172207,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-3",
+      "name": "黃竹洋村",
+      "note": "",
+      "longitude": 114.26599859999999,
+      "latitude": 22.4049601,
+      "tags": []
+    },
+    {
+      "id": "cape-collinson-road-rest-garden",
+      "name": "Cape Collinson Road Rest Garden",
+      "note": "",
+      "longitude": 114.2513163,
+      "latitude": 22.2569902,
+      "tags": []
+    },
+    {
+      "id": "aberdeen-chinese-permanent-cemetery",
+      "name": "Aberdeen Chinese Permanent Cemetery",
+      "note": "",
+      "longitude": 114.15142829999999,
+      "latitude": 22.2501076,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-4",
+      "name": "上水大石磨山",
+      "note": "",
+      "longitude": 114.1071071,
+      "latitude": 22.5227091,
+      "tags": []
+    },
+    {
+      "id": "tai-shu-ha-rd-w",
+      "name": "Tai Shu Ha Rd W",
+      "note": "",
+      "longitude": 114.0386874,
+      "latitude": 22.4168316,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-5",
+      "name": "元朗",
+      "note": "",
+      "longitude": 114.0325295,
+      "latitude": 22.4769142,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-6",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 114.02800789999999,
+      "latitude": 22.465069,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-7",
+      "name": "(屏山鄉)天水圍",
+      "note": "",
+      "longitude": 114.01348,
+      "latitude": 22.4663343,
+      "tags": []
+    },
+    {
+      "id": "kafe",
+      "name": "ā kafe 丫咖啡研究所",
+      "note": "",
+      "longitude": 114.01187689999999,
+      "latitude": 22.4522797,
+      "tags": []
+    },
+    {
+      "id": "metered-parking-spaces-big-wave-bay",
+      "name": "Metered Parking Spaces (Big Wave Bay)",
+      "note": "",
+      "longitude": 114.2455411,
+      "latitude": 22.2445308,
+      "tags": []
+    },
+    {
+      "id": "peak-tram-barker-road-station",
+      "name": "Peak Tram Barker Road Station",
+      "note": "",
+      "longitude": 114.15166939999999,
+      "latitude": 22.2709869,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-8",
+      "name": "司徒拔道瞭望處",
+      "note": "",
+      "longitude": 114.1759632,
+      "latitude": 22.2701131,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-9",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 114.0928721,
+      "latitude": 22.528851,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-10",
+      "name": "麥景陶碉堡 (馬草壟)",
+      "note": "",
+      "longitude": 114.09849,
+      "latitude": 22.524627,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-11",
+      "name": "馬草壟南屋仔",
+      "note": "",
+      "longitude": 114.0951704,
+      "latitude": 22.5244245,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-12",
+      "name": "天星碼頭多層停車場",
+      "note": "",
+      "longitude": 114.1602947,
+      "latitude": 22.2830157,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-13",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 113.99881669999999,
+      "latitude": 22.4832714,
+      "tags": []
+    },
+    {
+      "id": "sha-kiu-tsuen-shoreline-east",
+      "name": "Sha Kiu Tsuen Shoreline (East)",
+      "note": "",
+      "longitude": 113.99570879999999,
+      "latitude": 22.4864084,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-14",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 113.9763418,
+      "latitude": 22.4493236,
+      "tags": []
+    },
+    {
+      "id": "kai-pak-ling",
+      "name": "Kai Pak Ling",
+      "note": "",
+      "longitude": 113.9810286,
+      "latitude": 22.4558678,
+      "tags": []
+    },
+    {
+      "id": "nodi-north-point",
+      "name": "nodi (North Point)",
+      "note": "",
+      "longitude": 114.2026437,
+      "latitude": 22.2936896,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-15",
+      "name": "上環西消防街",
+      "note": "",
+      "longitude": 114.147633,
+      "latitude": 22.288802699999998,
+      "tags": []
+    },
+    {
+      "id": "heung-hoi-ming-shan-memorial-archway",
+      "name": "Heung Hoi Ming Shan Memorial Archway",
+      "note": "",
+      "longitude": 113.961767,
+      "latitude": 22.3921256,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-16",
+      "name": "源·區",
+      "note": "",
+      "longitude": 113.92557459999999,
+      "latitude": 22.4227821,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-17",
+      "name": "大圍徑口路",
+      "note": "",
+      "longitude": 114.1694124,
+      "latitude": 22.3644073,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-18",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 114.26908949999999,
+      "latitude": 22.4211481,
+      "tags": []
+    },
+    {
+      "id": "wu-kai-sha-beach",
+      "name": "Wu Kai Sha Beach",
+      "note": "",
+      "longitude": 114.23870439999999,
+      "latitude": 22.434362,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-19",
+      "name": "新田高攝",
+      "note": "",
+      "longitude": 114.06681409999999,
+      "latitude": 22.5052977,
+      "tags": []
+    },
+    {
+      "id": "temple-hill-transmission-station",
+      "name": "Temple Hill Transmission Station",
+      "note": "",
+      "longitude": 114.20662349999999,
+      "latitude": 22.356079599999997,
+      "tags": []
+    },
+    {
+      "id": "three-village-pavilion",
+      "name": "Three Village Pavilion",
+      "note": "",
+      "longitude": 114.16506539999999,
+      "latitude": 22.5353407,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-20",
+      "name": "白茅田",
+      "note": "",
+      "longitude": 114.15796259999999,
+      "latitude": 22.538653099999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-21",
+      "name": "石澳山仔石堆",
+      "note": "",
+      "longitude": 114.2558632,
+      "latitude": 22.228575199999998,
+      "tags": []
+    },
+    {
+      "id": "mount-davis-peak",
+      "name": "Mount Davis Peak",
+      "note": "",
+      "longitude": 114.1249218,
+      "latitude": 22.2769308,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-22",
+      "name": "屏南石澗",
+      "note": "",
+      "longitude": 114.2076364,
+      "latitude": 22.5130612,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-23",
+      "name": "香港中華煤氣大埔煤氣廠",
+      "note": "",
+      "longitude": 114.18137689999999,
+      "latitude": 22.454062099999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-24",
+      "name": "井頭村休憩處",
+      "note": "",
+      "longitude": 114.27044869999999,
+      "latitude": 22.427881799999998,
+      "tags": []
+    },
+    {
+      "id": "south-perimeter-road",
+      "name": "South Perimeter Road",
+      "note": "",
+      "longitude": 113.89420319999999,
+      "latitude": 22.2952303,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-25",
+      "name": "大潭篤",
+      "note": "",
+      "longitude": 114.2234465,
+      "latitude": 22.2384222,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-26",
+      "name": "大潭篤水塘水壩觀景點",
+      "note": "",
+      "longitude": 114.2218261,
+      "latitude": 22.244649799999998,
+      "tags": []
+    },
+    {
+      "id": "tai-tam-rd",
+      "name": "Tai Tam Rd",
+      "note": "",
+      "longitude": 114.2231037,
+      "latitude": 22.2482564,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-27",
+      "name": "鴨脷洲鴨脷洲海傍道",
+      "note": "",
+      "longitude": 114.15885879999999,
+      "latitude": 22.242211899999997,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-28",
+      "name": "芝加哥大學香港校園",
+      "note": "",
+      "longitude": 114.1174753,
+      "latitude": 22.275152,
+      "tags": []
+    },
+    {
+      "id": "cyberport-rd",
+      "name": "Cyberport Rd",
+      "note": "",
+      "longitude": 114.13263339999999,
+      "latitude": 22.2594675,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-29",
+      "name": "淺水灣道",
+      "note": "",
+      "longitude": 114.1958598,
+      "latitude": 22.238493,
+      "tags": []
+    },
+    {
+      "id": "stanley-main-street",
+      "name": "Stanley Main Street",
+      "note": "",
+      "longitude": 114.21107269999999,
+      "latitude": 22.2186265,
+      "tags": []
+    },
+    {
+      "id": "chung-hom-kok-battery",
+      "name": "Chung Hom Kok Battery",
+      "note": "",
+      "longitude": 114.1982159,
+      "latitude": 22.2104189,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-30",
+      "name": "聖士提反灣",
+      "note": "",
+      "longitude": 114.21465409999999,
+      "latitude": 22.2118455,
+      "tags": []
+    },
+    {
+      "id": "sunny-bay-beach",
+      "name": "Sunny Bay Beach",
+      "note": "",
+      "longitude": 114.0207743,
+      "latitude": 22.325745599999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289870-31",
+      "name": "石澳泳灘",
+      "note": "",
+      "longitude": 114.250855,
+      "latitude": 22.229345,
+      "tags": []
+    },
+    {
+      "id": "shek-o-rd",
+      "name": "Shek O Rd",
+      "note": "",
+      "longitude": 114.2383388,
+      "latitude": 22.2417317,
+      "tags": []
+    },
+    {
+      "id": "lau-fau-shan-mudflat",
+      "name": "Lau Fau Shan Mudflat",
+      "note": "",
+      "longitude": 113.9415626,
+      "latitude": 22.428948899999998,
+      "tags": []
+    },
+    {
+      "id": "nim-wan-road-seawall",
+      "name": "Nim Wan Road Seawall",
+      "note": "",
+      "longitude": 113.9498694,
+      "latitude": 22.4413709,
+      "tags": []
+    },
+    {
+      "id": "tai-mo-shan-lookout",
+      "name": "Tai Mo Shan Lookout",
+      "note": "",
+      "longitude": 114.1166753,
+      "latitude": 22.4119977,
+      "tags": []
+    },
+    {
+      "id": "rte-twisk",
+      "name": "Rte Twisk",
+      "note": "",
+      "longitude": 114.10853039999999,
+      "latitude": 22.400131,
+      "tags": []
+    },
+    {
+      "id": "lantau-link-viewing-platform",
+      "name": "Lantau Link Viewing Platform",
+      "note": "",
+      "longitude": 114.0809939,
+      "latitude": 22.3579391,
+      "tags": []
+    },
+    {
+      "id": "hill-road-flyover",
+      "name": "山道天橋 Hill Road Flyover",
+      "note": "",
+      "longitude": 114.1358017,
+      "latitude": 22.2852949,
+      "tags": []
+    },
+    {
+      "id": "victoria-peak-lookout-point",
+      "name": "Victoria Peak Lookout Point",
+      "note": "",
+      "longitude": 114.1423454,
+      "latitude": 22.2739191,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871",
+      "name": "香港摩天輪",
+      "note": "",
+      "longitude": 114.16172209999999,
+      "latitude": 22.285285899999998,
+      "tags": []
+    },
+    {
+      "id": "arabica",
+      "name": "% Arabica",
+      "note": "",
+      "longitude": 114.1266778,
+      "latitude": 22.2836703,
+      "tags": []
+    },
+    {
+      "id": "halfway-coffee-the-peak",
+      "name": "Halfway Coffee (The Peak)",
+      "note": "",
+      "longitude": 114.1515335,
+      "latitude": 22.26859,
+      "tags": []
+    },
+    {
+      "id": "barker-road-viewing-point",
+      "name": "Barker Road Viewing Point",
+      "note": "",
+      "longitude": 114.157641,
+      "latitude": 22.2712415,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-2",
+      "name": "馬頭角公眾碼頭",
+      "note": "",
+      "longitude": 114.1943565,
+      "latitude": 22.318392499999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-3",
+      "name": "青衣島昂船洲橋底",
+      "note": "",
+      "longitude": 114.1147723,
+      "latitude": 22.328360999999997,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-4",
+      "name": "關帝廟",
+      "note": "",
+      "longitude": 114.2071369,
+      "latitude": 22.5205845,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-5",
+      "name": "鹿頸直升機坪",
+      "note": "",
+      "longitude": 114.2117059,
+      "latitude": 22.5113788,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-6",
+      "name": "寶琳南路",
+      "note": "",
+      "longitude": 114.25060339999999,
+      "latitude": 22.309400699999998,
+      "tags": []
+    },
+    {
+      "id": "tate-s-cairn-meteorological-station-hong-kong-observatory",
+      "name": "Tate's Cairn Meteorological Station Hong Kong Observatory",
+      "note": "¡",
+      "longitude": 114.2177746,
+      "latitude": 22.3577642,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-7",
+      "name": "青衣西草灣道",
+      "note": "",
+      "longitude": 114.0882496,
+      "latitude": 22.3452852,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-8",
+      "name": "已放置圖釘",
+      "note": "",
+      "longitude": 114.2667345,
+      "latitude": 22.3059369,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-9",
+      "name": "荃灣華人永遠墳場",
+      "note": "",
+      "longitude": 114.1159548,
+      "latitude": 22.3591941,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-10",
+      "name": "清水灣百花林路",
+      "note": "",
+      "longitude": 114.2304406,
+      "latitude": 22.342475399999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-11",
+      "name": "小欖海灘",
+      "note": "",
+      "longitude": 114.0102459,
+      "latitude": 22.3648951,
+      "tags": []
+    },
+    {
+      "id": "tkohp-cafe",
+      "name": "將軍澳風物汛 - TKOHP Cafe",
+      "note": "",
+      "longitude": 114.2515626,
+      "latitude": 22.3091908,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-12",
+      "name": "香港風帆訓練協會",
+      "note": "",
+      "longitude": 114.2884052,
+      "latitude": 22.3197206,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-13",
+      "name": "青山公路－汀九段",
+      "note": "",
+      "longitude": 114.0842682,
+      "latitude": 22.3681879,
+      "tags": []
+    },
+    {
+      "id": "pineapple-hill-por-lo-shan",
+      "name": "Pineapple Hill (Por Lo Shan)",
+      "note": "",
+      "longitude": 113.9538702,
+      "latitude": 22.4097243,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-14",
+      "name": "龍蝦灣風箏場",
+      "note": "",
+      "longitude": 114.3038734,
+      "latitude": 22.3091296,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-15",
+      "name": "大嶼山深水角徑",
+      "note": "",
+      "longitude": 113.9956211,
+      "latitude": 22.3149032,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-16",
+      "name": "石蓮路",
+      "note": "",
+      "longitude": 114.1516171,
+      "latitude": 22.445844899999997,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-17",
+      "name": "城門水塘副堤壩",
+      "note": "",
+      "longitude": 114.14383869999999,
+      "latitude": 22.3798604,
+      "tags": []
+    },
+    {
+      "id": "tin-kwong-road-driving-test-centre",
+      "name": "Tin Kwong Road Driving Test Centre",
+      "note": "",
+      "longitude": 114.1849549,
+      "latitude": 22.322030599999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-18",
+      "name": "小棕林海灘",
+      "note": "",
+      "longitude": 114.2855043,
+      "latitude": 22.320339999999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-19",
+      "name": "糖宮甜品專門店",
+      "note": "",
+      "longitude": 114.178698,
+      "latitude": 22.3766966,
+      "tags": []
+    },
+    {
+      "id": "dog99-coffee",
+      "name": "Dog99 Coffee",
+      "note": "",
+      "longitude": 114.1659097,
+      "latitude": 22.3293236,
+      "tags": []
+    },
+    {
+      "id": "ma-liu-shui-landing-no-1",
+      "name": "Ma Liu Shui Landing No. 1",
+      "note": "",
+      "longitude": 114.2143785,
+      "latitude": 22.413825199999998,
+      "tags": []
+    },
+    {
+      "id": "junk-bay-chinese-permanent-cemetery",
+      "name": "Junk Bay Chinese Permanent Cemetery",
+      "note": "",
+      "longitude": 114.2480417,
+      "latitude": 22.2964101,
+      "tags": []
+    },
+    {
+      "id": "sam-ka-tsuen-landing-no-1",
+      "name": "Sam Ka Tsuen Landing No. 1",
+      "note": "",
+      "longitude": 114.233086,
+      "latitude": 22.294638,
+      "tags": []
+    },
+    {
+      "id": "ngau-kwu-leng-hiking-trail",
+      "name": "Ngau Kwu Leng Hiking Trail",
+      "note": "",
+      "longitude": 114.13491529999999,
+      "latitude": 22.465037199999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-20",
+      "name": "茂草岩",
+      "note": "",
+      "longitude": 114.2210776,
+      "latitude": 22.3659887,
+      "tags": []
+    },
+    {
+      "id": "fu-yung-pei-village",
+      "name": "Fu Yung Pei Village",
+      "note": "",
+      "longitude": 114.2182177,
+      "latitude": 22.367920599999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-21",
+      "name": "沙田觀坪路停車站",
+      "note": "",
+      "longitude": 114.2148603,
+      "latitude": 22.3641386,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-22",
+      "name": "元朗綠色隧道",
+      "note": "",
+      "longitude": 114.0321445,
+      "latitude": 22.4344395,
+      "tags": []
+    },
+    {
+      "id": "sham-wat-rd",
+      "name": "Sham Wat Rd",
+      "note": "",
+      "longitude": 113.8901008,
+      "latitude": 22.256453999999998,
+      "tags": []
+    },
+    {
+      "id": "tai-long-wan-beach",
+      "name": "Tai Long Wan Beach",
+      "note": "",
+      "longitude": 113.8864875,
+      "latitude": 22.2211174,
+      "tags": []
+    },
+    {
+      "id": "shek-pik-reservoir-observation-deck",
+      "name": "Shek Pik Reservoir Observation Deck",
+      "note": "",
+      "longitude": 113.8977058,
+      "latitude": 22.226212099999998,
+      "tags": []
+    },
+    {
+      "id": "upper-cheung-sha-beach",
+      "name": "Upper Cheung Sha Beach",
+      "note": "",
+      "longitude": 113.9452125,
+      "latitude": 22.2322994,
+      "tags": []
+    },
+    {
+      "id": "mui-wo-ferry-pier",
+      "name": "Mui Wo Ferry Pier",
+      "note": "",
+      "longitude": 114.00212499999999,
+      "latitude": 22.265027999999997,
+      "tags": []
+    },
+    {
+      "id": "ngong-ping-village",
+      "name": "Ngong Ping Village",
+      "note": "",
+      "longitude": 113.9022318,
+      "latitude": 22.2568782,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-23",
+      "name": "龍鼓灘長凳",
+      "note": "",
+      "longitude": 113.91916379999999,
+      "latitude": 22.390347199999997,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-24",
+      "name": "屯門龍鼓灘路",
+      "note": "",
+      "longitude": 113.91930529999999,
+      "latitude": 22.3944029,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-25",
+      "name": "路邊電單車泊車位 (骨位)",
+      "note": "",
+      "longitude": 114.318637,
+      "latitude": 22.3967876,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-26",
+      "name": "早禾坑碼頭",
+      "note": "",
+      "longitude": 114.2885361,
+      "latitude": 22.392076499999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-27",
+      "name": "企嶺下山火瞭望台",
+      "note": "",
+      "longitude": 114.2707688,
+      "latitude": 22.3998691,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-28",
+      "name": "有利士多",
+      "note": "",
+      "longitude": 114.2989095,
+      "latitude": 22.3928095,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-29",
+      "name": "張記士多",
+      "note": "",
+      "longitude": 114.1820272,
+      "latitude": 22.479668699999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-30",
+      "name": "青衣青衣路",
+      "note": "",
+      "longitude": 114.10687109999999,
+      "latitude": 22.3409422,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-31",
+      "name": "天后廟 - 西貢南圍",
+      "note": "",
+      "longitude": 114.2599281,
+      "latitude": 22.3551291,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-32",
+      "name": "大牛湖",
+      "note": "",
+      "longitude": 114.24482719999999,
+      "latitude": 22.3289279,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-33",
+      "name": "很得輝",
+      "note": "",
+      "longitude": 113.9768553,
+      "latitude": 22.396652,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-34",
+      "name": "壁畫",
+      "note": "",
+      "longitude": 113.9852614,
+      "latitude": 22.4416919,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-35",
+      "name": "南生圍",
+      "note": "",
+      "longitude": 114.0383942,
+      "latitude": 22.4622425,
+      "tags": []
+    },
+    {
+      "id": "cloudy-hill",
+      "name": "Cloudy Hill",
+      "note": "",
+      "longitude": 114.1666667,
+      "latitude": 22.483333299999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-36",
+      "name": "清水灣二灘 電單車泊車位 (骨位)",
+      "note": "",
+      "longitude": 114.28703399999999,
+      "latitude": 22.28765,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-37",
+      "name": "望后石浩和街",
+      "note": "",
+      "longitude": 113.9495675,
+      "latitude": 22.3608111,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-38",
+      "name": "汀九汀逸路",
+      "note": "",
+      "longitude": 114.07875729999999,
+      "latitude": 22.3702491,
+      "tags": []
+    },
+    {
+      "id": "sham-tseng-settlement-basin",
+      "name": "Sham Tseng Settlement Basin",
+      "note": "",
+      "longitude": 114.0534134,
+      "latitude": 22.3709699,
+      "tags": []
+    },
+    {
+      "id": "lido-beach",
+      "name": "Lido Beach",
+      "note": "",
+      "longitude": 114.0761168,
+      "latitude": 22.367833899999997,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-39",
+      "name": "龍翔道眺望處",
+      "note": "",
+      "longitude": 114.1713497,
+      "latitude": 22.342950599999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-40",
+      "name": "南山白汁冰",
+      "note": "",
+      "longitude": 114.17014189999999,
+      "latitude": 22.3329879,
+      "tags": []
+    },
+    {
+      "id": "hung-hom-bypass",
+      "name": "Hung Hom Bypass",
+      "note": "",
+      "longitude": 114.1840704,
+      "latitude": 22.302192299999998,
+      "tags": []
+    },
+    {
+      "id": "kai-tak-promenade",
+      "name": "Kai Tak Promenade",
+      "note": "",
+      "longitude": 114.20939039999999,
+      "latitude": 22.314499599999998,
+      "tags": []
+    },
+    {
+      "id": "tour-bus-parking",
+      "name": "Tour bus Parking",
+      "note": "",
+      "longitude": 114.2134585,
+      "latitude": 22.309277899999998,
+      "tags": []
+    },
+    {
+      "id": "tai-hang-tun-kite-flying-area",
+      "name": "Tai Hang Tun Kite Flying Area",
+      "note": "",
+      "longitude": 114.30007379999999,
+      "latitude": 22.2895085,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-41",
+      "name": "布袋澳遠眺處",
+      "note": "",
+      "longitude": 114.2916305,
+      "latitude": 22.2745653,
+      "tags": []
+    },
+    {
+      "id": "sam-ka-tsuen-pier",
+      "name": "Sam Ka Tsuen Pier",
+      "note": "",
+      "longitude": 114.2362766,
+      "latitude": 22.2909152,
+      "tags": []
+    },
+    {
+      "id": "kowloon-peak-viewing-point",
+      "name": "Kowloon Peak Viewing Point",
+      "note": "",
+      "longitude": 114.2214367,
+      "latitude": 22.3530288,
+      "tags": []
+    },
+    {
+      "id": "pak-sha-wan-pier",
+      "name": "Pak Sha Wan Pier",
+      "note": "",
+      "longitude": 114.2600265,
+      "latitude": 22.362130999999998,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-42",
+      "name": "相思灣",
+      "note": "",
+      "longitude": 114.2905194,
+      "latitude": 22.3073141,
+      "tags": []
+    },
+    {
+      "id": "lion-s-pavilion",
+      "name": "Lion's Pavilion",
+      "note": "",
+      "longitude": 114.1891272,
+      "latitude": 22.3909606,
+      "tags": []
+    },
+    {
+      "id": "jat-s-incline-parking-viewpoint",
+      "name": "Jat's Incline Parking Viewpoint",
+      "note": "",
+      "longitude": 114.2139886,
+      "latitude": 22.3556238,
+      "tags": []
+    },
+    {
+      "id": "lower-shing-mun-reservoir-main-dam",
+      "name": "Lower Shing Mun Reservoir Main Dam",
+      "note": "",
+      "longitude": 114.1645035,
+      "latitude": 22.3724253,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-43",
+      "name": "金山金山路",
+      "note": "",
+      "longitude": 114.1506313,
+      "latitude": 22.359615899999998,
+      "tags": []
+    },
+    {
+      "id": "kowloon-reservoir-dam",
+      "name": "Kowloon Reservoir Dam",
+      "note": "",
+      "longitude": 114.1533066,
+      "latitude": 22.353098499999998,
+      "tags": []
+    },
+    {
+      "id": "stonecutters-bridge-viewing-point",
+      "name": "Stonecutters Bridge Viewing Point",
+      "note": "",
+      "longitude": 114.12220939999999,
+      "latitude": 22.3229918,
+      "tags": []
+    },
+    {
+      "id": "cheung-hang-rd",
+      "name": "Cheung Hang Rd",
+      "note": "",
+      "longitude": 114.14272229999999,
+      "latitude": 22.3433779,
+      "tags": []
+    },
+    {
+      "id": "luen-yick-ferry-pier",
+      "name": "Luen Yick Ferry Pier",
+      "note": "",
+      "longitude": 114.2143476,
+      "latitude": 22.457634,
+      "tags": []
+    },
+    {
+      "id": "tai-mei-tuk-tsuen",
+      "name": "Tai Mei Tuk Tsuen",
+      "note": "",
+      "longitude": 114.23296099999999,
+      "latitude": 22.4728367,
+      "tags": []
+    },
+    {
+      "id": "place-1791028289871-44",
+      "name": "發記士多",
+      "note": "",
+      "longitude": 114.2193933,
+      "latitude": 22.525125199999998,
+      "tags": []
+    },
+    {
+      "id": "robin-s-nest",
+      "name": "Robin's Nest",
+      "note": "",
+      "longitude": 114.19,
+      "latitude": 22.541389,
+      "tags": []
+    },
+    {
+      "id": "bride-s-pool-rd",
+      "name": "Bride's Pool Rd",
+      "note": "",
+      "longitude": 114.2346939,
+      "latitude": 22.5053989,
+      "tags": []
+    },
+    {
+      "id": "tung-chung-ma-wan-chung-pier",
+      "name": "Tung Chung Ma Wan Chung Pier",
+      "note": "",
+      "longitude": 113.9342324,
+      "latitude": 22.286282,
+      "tags": []
+    },
+    {
+      "id": "wa-shan-military-road-sheung-shui",
+      "name": "Wa Shan Military Road, Sheung Shui",
+      "note": "",
+      "longitude": 114.13834659999999,
+      "latitude": 22.516119999999997,
+      "tags": []
+    },
+    {
+      "id": "lam-tei-irrigation-reservoir",
+      "name": "Lam Tei Irrigation Reservoir",
+      "note": "",
+      "longitude": 113.9902609,
+      "latitude": 22.410637599999998,
+      "tags": []
+    },
+    {
+      "id": "tsim-bei-tsui",
+      "name": "Tsim Bei Tsui",
+      "note": "",
+      "longitude": 114.0113758,
+      "latitude": 22.4859789,
+      "tags": []
+    }
+  ]
+}

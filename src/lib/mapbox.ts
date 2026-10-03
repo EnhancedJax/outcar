@@ -8,10 +8,20 @@ export function getMapboxToken() {
   return MAPBOX_TOKEN
 }
 
-export function getMapStyle(isDark: boolean) {
-  return isDark
-    ? "mapbox://styles/mapbox/dark-v11"
-    : "mapbox://styles/mapbox/light-v11"
+export const MAPBOX_STANDARD_STYLE = "mapbox://styles/mapbox/standard"
+
+export type MapAppearance = "colored" | "monochrome"
+
+export function getMapStyle() {
+  return MAPBOX_STANDARD_STYLE
+}
+
+export function getBasemapConfig(appearance: MapAppearance, isDark: boolean) {
+  return {
+    theme: appearance === "monochrome" ? "monochrome" : "default",
+    lightPreset: isDark ? "night" : "day",
+    show3dObjects: true,
+  }
 }
 
 export type GeocodingFeature = {
