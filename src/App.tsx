@@ -47,6 +47,8 @@ export function App() {
   const [isEditorOpen, setIsEditorOpen] = useState(true)
   const resolvedTheme = useResolvedTheme()
   const isDark = resolvedTheme === "dark"
+  const isEditorActive = import.meta.env.DEV && isEditorOpen
+  const viewerMode = !isEditorActive
 
   const filteredPlaces = useMemo(() => {
     if (!activeTag) {
@@ -57,9 +59,9 @@ export function App() {
   }, [places, activeTag])
 
   const displayPlaces = useMemo(() => {
-    const basePlaces = import.meta.env.DEV ? places : filteredPlaces
+    const basePlaces = isEditorActive ? places : filteredPlaces
 
-    if (!import.meta.env.DEV || !editorDraft) {
+    if (!isEditorActive || !editorDraft) {
       return basePlaces
     }
 
@@ -76,11 +78,11 @@ export function App() {
     return basePlaces.map((place) =>
       place.id === draftPlace.id ? draftPlace : place
     )
-  }, [places, filteredPlaces, editorDraft, isCreatingDraft])
+  }, [places, filteredPlaces, editorDraft, isCreatingDraft, isEditorActive])
 
   const handleMapClick = useCallback(
     (longitude: number, latitude: number) => {
-      if (!import.meta.env.DEV || !editorDraft) {
+      if (!isEditorActive || !editorDraft) {
         return
       }
 
@@ -90,12 +92,12 @@ export function App() {
         latitude: String(latitude),
       })
     },
-    [editorDraft]
+    [editorDraft, isEditorActive]
   )
 
   const handleMarkerDrag = useCallback(
     (placeId: string, longitude: number, latitude: number) => {
-      if (!import.meta.env.DEV || editorDraft?.id !== placeId) {
+      if (!isEditorActive || editorDraft?.id !== placeId) {
         return
       }
 
@@ -105,7 +107,7 @@ export function App() {
         latitude: String(latitude),
       })
     },
-    [editorDraft]
+    [editorDraft, isEditorActive]
   )
 
   const handleSelectPlace = useCallback(
@@ -128,17 +130,18 @@ export function App() {
       <main className="relative min-h-0 min-w-0 flex-1">
         <PlacesMap
           places={displayPlaces}
-          fitBoundsPlaces={import.meta.env.DEV ? displayPlaces : places}
+          fitBoundsPlaces={isEditorActive ? displayPlaces : places}
           previewPlaces={importPreviewPlaces ?? undefined}
           tags={tags}
           activeTag={activeTag}
           onActiveTagChange={setActiveTag}
           isDark={isDark}
+          viewerMode={viewerMode}
           selectedPlaceId={selectedPlaceId}
           onSelectPlace={handleSelectPlace}
           onMapClick={handleMapClick}
           onMarkerDrag={handleMarkerDrag}
-          draggableMarkerId={import.meta.env.DEV ? editorDraft?.id ?? null : null}
+          draggableMarkerId={isEditorActive ? editorDraft?.id ?? null : null}
         />
 
         {PlaceEditor ? (
@@ -146,7 +149,7 @@ export function App() {
             type="button"
             size="icon"
             variant="secondary"
-            className="absolute right-4 bottom-4 z-20 shadow-lg"
+            className="absolute top-4 right-4 z-20 shadow-lg"
             aria-expanded={isEditorOpen}
             aria-label={isEditorOpen ? "Close editor" : "Open editor"}
             onClick={() => setIsEditorOpen((open) => !open)}

@@ -1,6 +1,3 @@
-import { Plus } from "@phosphor-icons/react"
-
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import {
@@ -13,20 +10,14 @@ import { PlacesTab } from "./tabs/places-tab"
 import { TagsTab } from "./tabs/tags-tab"
 
 function PlaceEditorShell() {
-  const { activeTab, setActiveTab, error, startCreate } = usePlaceEditor()
+  const { activeTab, setActiveTab, error } = usePlaceEditor()
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col bg-background">
       <div className="border-b border-border p-4">
-        <div className="flex items-center justify-between gap-2">
-          <div>
-            <h2 className="font-medium">Places editor</h2>
-            <p className="text-sm text-muted-foreground">Dev mode only</p>
-          </div>
-          <Button size="sm" onClick={startCreate}>
-            <Plus data-icon="inline-start" />
-            Add
-          </Button>
+        <div>
+          <h2 className="font-medium">Places editor</h2>
+          <p className="text-sm text-muted-foreground">Dev mode only</p>
         </div>
       </div>
 

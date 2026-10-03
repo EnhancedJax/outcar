@@ -20,6 +20,7 @@ type PlacesMapProps = {
   activeTag?: string | null
   onActiveTagChange?: (tag: string | null) => void
   isDark: boolean
+  viewerMode?: boolean
   selectedPlaceId?: string | null
   onSelectPlace?: (placeId: string | null) => void
   onMapClick?: (longitude: number, latitude: number) => void
@@ -69,6 +70,7 @@ export function PlacesMap({
   activeTag = null,
   onActiveTagChange,
   isDark,
+  viewerMode = false,
   selectedPlaceId = null,
   onSelectPlace,
   onMapClick,
@@ -81,9 +83,6 @@ export function PlacesMap({
   const isOrbitingRef = useRef(false)
   const awaitingFocusMoveEndRef = useRef(false)
   const [mapAppearance, setMapAppearance] = useState<MapAppearance>("monochrome")
-  const isDev = import.meta.env.DEV
-  const showTagFilter = !isDev && tags.length > 0
-  const showPlaceDetails = !isDev && selectedPlace
 
   const stopOrbit = useCallback(() => {
     isOrbitingRef.current = false
@@ -143,6 +142,9 @@ export function PlacesMap({
     () => places.find((place) => place.id === selectedPlaceId) ?? null,
     [places, selectedPlaceId]
   )
+
+  const showTagFilter = viewerMode && tags.length > 0
+  const showPlaceDetails = viewerMode && selectedPlace
 
   const initialViewState = useMemo(() => {
     if (places.length === 0) {
@@ -218,7 +220,7 @@ export function PlacesMap({
   }, [basemapConfig])
 
   useEffect(() => {
-    if (isDev || !selectedPlace) {
+    if (!viewerMode || !selectedPlace) {
       awaitingFocusMoveEndRef.current = false
       stopOrbit()
       return
@@ -256,10 +258,10 @@ export function PlacesMap({
       map.off("moveend", handleMoveEnd)
       stopOrbit()
     }
-  }, [isDev, selectedPlace, startOrbit, stopOrbit])
+  }, [viewerMode, selectedPlace, startOrbit, stopOrbit])
 
   useEffect(() => {
-    if (isDev) {
+    if (!viewerMode) {
       return
     }
 
@@ -287,7 +289,7 @@ export function PlacesMap({
       map.off("pitchstart", handleCameraInteraction)
       map.off("touchstart", handleCameraInteraction)
     }
-  }, [isDev, stopOrbit])
+  }, [viewerMode, stopOrbit])
 
   function handleTagClick(tag: string) {
     if (!onActiveTagChange) {
@@ -349,7 +351,7 @@ export function PlacesMap({
           </Marker>
         ))}
 
-        {selectedPlace && isDev && !draggableMarkerId ? (
+        {selectedPlace && !viewerMode && !draggableMarkerId ? (
           <Popup
             longitude={selectedPlace.longitude}
             latitude={selectedPlace.latitude}

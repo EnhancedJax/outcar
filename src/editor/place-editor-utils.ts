@@ -14,6 +14,16 @@ export type ImportPreviewItem = {
 
 export type EditorTab = "places" | "tags" | "import" | "search"
 
+export type PlacesScreen = "list" | "form"
+
+export type PlaceFormValues = {
+  id: string
+  name: string
+  note: string
+  longitude: string
+  latitude: string
+}
+
 export function toDraft(place: Place): DraftPlace {
   return {
     id: place.id,

@@ -30,7 +30,13 @@ import {
   toggleDraftTag,
   type EditorTab,
   type ImportPreviewItem,
+  type PlacesScreen,
 } from "./place-editor-utils"
+
+export type PlaceSaveError = {
+  field?: keyof import("./place-editor-utils").PlaceFormValues
+  message: string
+}
 
 export type PlaceEditorProps = {
   places: Place[]
@@ -69,6 +75,8 @@ type PlaceEditorContextValue = {
   error: string | null
   activeTab: EditorTab
   setActiveTab: (tab: EditorTab) => void
+  placesScreen: PlacesScreen
+  goToPlacesList: () => void
   onDraftChange: (draft: DraftPlace | null, isCreating: boolean) => void
   persistCatalog: (nextTags: string[], nextPlaces: Place[]) => Promise<void>
   clearImportPreview: () => void
@@ -84,11 +92,10 @@ type PlaceEditorContextValue = {
   applySearchResult: (
     feature: Awaited<ReturnType<typeof searchPlaces>>[number]
   ) => void
-  handleSave: () => Promise<void>
+  handleSave: (values: DraftPlace) => Promise<PlaceSaveError | null>
   handleDelete: (placeId: string) => Promise<void>
   handleToggleDraftTag: (tag: string) => void
   handleAddDraftTag: () => Promise<void>
-  cancelDraft: () => void
 }
 
 const PlaceEditorContext = createContext<PlaceEditorContextValue | null>(null)
@@ -134,6 +141,7 @@ export function PlaceEditorProvider({
   const [isSaving, setIsSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<EditorTab>("places")
+  const [placesScreen, setPlacesScreen] = useState<PlacesScreen>("list")
 
   const selectedPlace =
     places.find((place) => place.id === selectedPlaceId) ?? null
@@ -309,6 +317,12 @@ export function PlaceEditorProvider({
     }
   }, [query])
 
+  const goToPlacesList = useCallback(() => {
+    onDraftChange(null, false)
+    onSelectPlace(null)
+    setPlacesScreen("list")
+  }, [onDraftChange, onSelectPlace])
+
   const startCreate = useCallback(() => {
     onDraftChange(
       {
@@ -323,6 +337,7 @@ export function PlaceEditorProvider({
     )
     onSelectPlace(null)
     setActiveTab("places")
+    setPlacesScreen("form")
   }, [onDraftChange, onSelectPlace])
 
   const startEdit = useCallback(
@@ -330,6 +345,7 @@ export function PlaceEditorProvider({
       onDraftChange(toDraft(place), false)
       onSelectPlace(place.id)
       setActiveTab("places")
+      setPlacesScreen("form")
     },
     [onDraftChange, onSelectPlace]
   )
@@ -362,54 +378,54 @@ export function PlaceEditorProvider({
         draft ? isCreating : !selectedPlace
       )
       setActiveTab("places")
+      setPlacesScreen("form")
     },
     [draft, isCreating, onDraftChange, selectedPlace]
   )
 
-  const handleSave = useCallback(async () => {
-    if (!draft) {
-      return
-    }
+  const handleSave = useCallback(
+    async (values: DraftPlace): Promise<PlaceSaveError | null> => {
+      const nextPlace = fromDraft(values)
 
-    const nextPlace = fromDraft(draft)
+      if (!nextPlace) {
+        return { message: "Fill in name and valid coordinates before saving." }
+      }
 
-    if (!nextPlace) {
-      setError("Fill in name and valid coordinates before saving.")
-      return
-    }
+      const duplicateId = places.some(
+        (place) =>
+          place.id === nextPlace.id &&
+          place.id !== (selectedPlace?.id ?? values.id)
+      )
 
-    const duplicateId = places.some(
-      (place) =>
-        place.id === nextPlace.id &&
-        place.id !== (selectedPlace?.id ?? draft.id)
-    )
+      if (duplicateId) {
+        return { field: "id", message: "A place with this id already exists." }
+      }
 
-    if (duplicateId) {
-      setError("A place with this id already exists.")
-      return
-    }
+      const nextPlaces = isCreating
+        ? [...places, nextPlace]
+        : places.map((place) =>
+            place.id === selectedPlace?.id ? nextPlace : place
+          )
 
-    const nextPlaces = isCreating
-      ? [...places, nextPlace]
-      : places.map((place) =>
-          place.id === selectedPlace?.id ? nextPlace : place
-        )
+      await persistCatalog(tags, nextPlaces)
+      onDraftChange(null, false)
+      onSelectPlace(nextPlace.id)
+      setPlacesScreen("list")
+      setResults([])
+      setQuery("")
 
-    await persistCatalog(tags, nextPlaces)
-    onDraftChange(null, false)
-    onSelectPlace(nextPlace.id)
-    setResults([])
-    setQuery("")
-  }, [
-    draft,
-    isCreating,
-    onDraftChange,
-    onSelectPlace,
-    persistCatalog,
-    places,
-    selectedPlace,
-    tags,
-  ])
+      return null
+    },
+    [
+      isCreating,
+      onDraftChange,
+      onSelectPlace,
+      persistCatalog,
+      places,
+      selectedPlace,
+      tags,
+    ]
+  )
 
   const handleDelete = useCallback(
     async (placeId: string) => {
@@ -419,6 +435,7 @@ export function PlaceEditorProvider({
       if (selectedPlaceId === placeId) {
         onSelectPlace(null)
         onDraftChange(null, false)
+        setPlacesScreen("list")
       }
     },
     [
@@ -468,11 +485,6 @@ export function PlaceEditorProvider({
     setDraftNewTagLabel("")
   }, [draft, draftNewTagLabel, isCreating, onDraftChange, persistCatalog, places, tags])
 
-  const cancelDraft = useCallback(() => {
-    onDraftChange(null, false)
-    onSelectPlace(null)
-  }, [onDraftChange, onSelectPlace])
-
   const value = useMemo<PlaceEditorContextValue>(
     () => ({
       places,
@@ -498,6 +510,8 @@ export function PlaceEditorProvider({
       error,
       activeTab,
       setActiveTab,
+      placesScreen,
+      goToPlacesList,
       onDraftChange,
       persistCatalog,
       clearImportPreview,
@@ -515,13 +529,12 @@ export function PlaceEditorProvider({
       handleDelete,
       handleToggleDraftTag,
       handleAddDraftTag,
-      cancelDraft,
     }),
     [
       activeTab,
       applySearchResult,
-      cancelDraft,
       clearImportPreview,
+      goToPlacesList,
       draft,
       draftNewTagLabel,
       error,
@@ -546,6 +559,7 @@ export function PlaceEditorProvider({
       onDraftChange,
       persistCatalog,
       places,
+      placesScreen,
       query,
       results,
       selectedPlace,
