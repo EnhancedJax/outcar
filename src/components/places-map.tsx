@@ -1,7 +1,6 @@
-import { X } from "@phosphor-icons/react"
+import "mapbox-gl/dist/mapbox-gl.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox"
-import "mapbox-gl/dist/mapbox-gl.css"
 
 import { useAppState } from "@/app-state"
 import {
@@ -9,6 +8,8 @@ import {
   PreviewPlacePin,
   SelectedPlacePin,
 } from "@/components/place-pin"
+import { SelectedPlace } from "@/components/selected-place"
+import { TagList } from "@/components/tag-list"
 import { Button } from "@/components/ui/button"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 import {
@@ -58,9 +59,6 @@ export function PlacesMap() {
     displayPlaces: places,
     fitBoundsPlaces,
     importPreviewPlaces,
-    tags,
-    activeTag,
-    setActiveTag,
     viewerMode,
     selectedPlaceId,
     selectPlace,
@@ -77,7 +75,8 @@ export function PlacesMap() {
   const orbitFrameRef = useRef<number | null>(null)
   const isOrbitingRef = useRef(false)
   const awaitingFocusMoveEndRef = useRef(false)
-  const [mapAppearance, setMapAppearance] = useState<MapAppearance>("monochrome")
+  const [mapAppearance, setMapAppearance] =
+    useState<MapAppearance>("monochrome")
 
   const stopOrbit = useCallback(() => {
     isOrbitingRef.current = false
@@ -137,9 +136,6 @@ export function PlacesMap() {
     () => places.find((place) => place.id === selectedPlaceId) ?? null,
     [places, selectedPlaceId]
   )
-
-  const showTagFilter = viewerMode && tags.length > 0
-  const showPlaceDetails = viewerMode && selectedPlace
 
   const initialViewState = useMemo(() => {
     if (places.length === 0) {
@@ -286,10 +282,6 @@ export function PlacesMap() {
     }
   }, [viewerMode, stopOrbit])
 
-  function handleTagClick(tag: string) {
-    setActiveTag(activeTag === tag ? null : tag)
-  }
-
   return (
     <div ref={containerRef} className="relative h-full w-full">
       <Map
@@ -350,7 +342,9 @@ export function PlacesMap() {
             <div className="max-w-56 space-y-1">
               <p className="font-medium">{selectedPlace.name}</p>
               {selectedPlace.note ? (
-                <p className="text-sm text-muted-foreground">{selectedPlace.note}</p>
+                <p className="text-sm text-muted-foreground">
+                  {selectedPlace.note}
+                </p>
               ) : null}
             </div>
           </Popup>
@@ -376,80 +370,8 @@ export function PlacesMap() {
         </Button>
       </div>
 
-      {showPlaceDetails || showTagFilter ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-3 p-4">
-          {showPlaceDetails ? (
-            <div
-              className="pointer-events-auto w-full max-w-md rounded-2xl border border-border bg-background/95 p-4 shadow-lg backdrop-blur"
-              role="dialog"
-              aria-label={selectedPlace.name}
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="min-w-0 space-y-2">
-                  <h2 className="text-lg font-medium">{selectedPlace.name}</h2>
-                  {selectedPlace.note ? (
-                    <p className="text-sm text-muted-foreground">
-                      {selectedPlace.note}
-                    </p>
-                  ) : null}
-                  {selectedPlace.tags.length > 0 ? (
-                    <div className="flex flex-wrap gap-1.5">
-                      {selectedPlace.tags.map((tag) => (
-                        <span
-                          key={tag}
-                          className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
-                        >
-                          {tag}
-                        </span>
-                      ))}
-                    </div>
-                  ) : null}
-                </div>
-                <Button
-                  type="button"
-                  size="icon-sm"
-                  variant="ghost"
-                  aria-label="Dismiss place details"
-                  onClick={() => {
-                    stopOrbit()
-                    selectPlace(null)
-                  }}
-                >
-                  <X />
-                </Button>
-              </div>
-            </div>
-          ) : null}
-
-          {showTagFilter ? (
-            <div
-              className="pointer-events-auto flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
-              role="toolbar"
-              aria-label="Filter places by tag"
-            >
-              {tags.map((tag) => {
-                const isActive = activeTag === tag
-
-                return (
-                  <button
-                    key={tag}
-                    type="button"
-                    className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                      isActive
-                        ? "border-primary bg-primary text-primary-foreground"
-                        : "border-border bg-background hover:bg-muted"
-                    }`}
-                    aria-pressed={isActive}
-                    onClick={() => handleTagClick(tag)}
-                  >
-                    {tag}
-                  </button>
-                )
-              })}
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      <SelectedPlace />
+      <TagList />
     </div>
   )
 }
