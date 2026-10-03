@@ -1,10 +1,6 @@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
-import {
-  PlaceEditorProvider,
-  usePlaceEditor,
-  type PlaceEditorProps,
-} from "./place-editor-context"
+import { PlaceEditorProvider, usePlaceEditor } from "./place-editor-context"
 import { ImportTab } from "./tabs/import-tab"
 import { PlacesTab } from "./tabs/places-tab"
 import { TagsTab } from "./tabs/tags-tab"
@@ -62,9 +58,9 @@ function PlaceEditorShell() {
   )
 }
 
-export default function PlaceEditor(props: PlaceEditorProps) {
+export default function PlaceEditor() {
   return (
-    <PlaceEditorProvider {...props}>
+    <PlaceEditorProvider>
       <PlaceEditorShell />
     </PlaceEditorProvider>
   )

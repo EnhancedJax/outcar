@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react"
 
+import { useAppState } from "@/app-state"
 import {
   addTagToCatalog,
   createPlaceId,
@@ -36,19 +37,6 @@ import {
 export type PlaceSaveError = {
   field?: keyof import("./place-editor-utils").PlaceFormValues
   message: string
-}
-
-export type PlaceEditorProps = {
-  places: Place[]
-  tags: string[]
-  selectedPlaceId: string | null
-  draft: DraftPlace | null
-  isCreating: boolean
-  onPlacesChange: (places: Place[]) => void
-  onTagsChange: (tags: string[]) => void
-  onSelectPlace: (placeId: string | null) => void
-  onDraftChange: (draft: DraftPlace | null, isCreating: boolean) => void
-  onImportPreviewChange: (places: Place[] | null) => void
 }
 
 type PlaceEditorContextValue = {
@@ -110,23 +98,24 @@ export function usePlaceEditor() {
   return context
 }
 
-type PlaceEditorProviderProps = PlaceEditorProps & {
+type PlaceEditorProviderProps = {
   children: ReactNode
 }
 
-export function PlaceEditorProvider({
-  places,
-  tags,
-  selectedPlaceId,
-  draft,
-  isCreating,
-  onPlacesChange,
-  onTagsChange,
-  onSelectPlace,
-  onDraftChange,
-  onImportPreviewChange,
-  children,
-}: PlaceEditorProviderProps) {
+export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
+  const {
+    places,
+    tags,
+    selectedPlaceId,
+    editorDraft: draft,
+    isCreatingDraft: isCreating,
+    setPlaces,
+    setTags,
+    setEditorDraft: onDraftChange,
+    setImportPreviewPlaces,
+    selectPlace: onSelectPlace,
+  } = useAppState()
+
   const [query, setQuery] = useState("")
   const [importUrl, setImportUrl] = useState("")
   const [importListName, setImportListName] = useState<string | null>(null)
@@ -148,12 +137,12 @@ export function PlaceEditorProvider({
 
   useEffect(() => {
     if (importPreview.length === 0) {
-      onImportPreviewChange(null)
+      setImportPreviewPlaces(null)
       return
     }
 
-    onImportPreviewChange(importPreviewToPlaces(importPreview))
-  }, [importPreview, onImportPreviewChange])
+    setImportPreviewPlaces(importPreviewToPlaces(importPreview))
+  }, [importPreview, setImportPreviewPlaces])
 
   const persistCatalog = useCallback(
     async (nextTags: string[], nextPlaces: Place[]) => {
@@ -162,8 +151,8 @@ export function PlaceEditorProvider({
 
       try {
         await savePlacesCatalog({ tags: nextTags, places: nextPlaces })
-        onTagsChange(nextTags)
-        onPlacesChange(nextPlaces)
+        setTags(nextTags)
+        setPlaces(nextPlaces)
       } catch (persistError) {
         setError(
           persistError instanceof Error
@@ -174,7 +163,7 @@ export function PlaceEditorProvider({
         setIsSaving(false)
       }
     },
-    [onPlacesChange, onTagsChange]
+    [setPlaces, setTags]
   )
 
   const clearImportPreview = useCallback(() => {

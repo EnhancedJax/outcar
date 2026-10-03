@@ -3,7 +3,9 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox"
 import "mapbox-gl/dist/mapbox-gl.css"
 
+import { useAppState } from "@/app-state"
 import { Button } from "@/components/ui/button"
+import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 import {
   getBasemapConfig,
   getMapStyle,
@@ -11,22 +13,6 @@ import {
   type MapAppearance,
 } from "@/lib/mapbox"
 import type { Place } from "@/types/place"
-
-type PlacesMapProps = {
-  places: Place[]
-  fitBoundsPlaces?: Place[]
-  previewPlaces?: Place[]
-  tags?: string[]
-  activeTag?: string | null
-  onActiveTagChange?: (tag: string | null) => void
-  isDark: boolean
-  viewerMode?: boolean
-  selectedPlaceId?: string | null
-  onSelectPlace?: (placeId: string | null) => void
-  onMapClick?: (longitude: number, latitude: number) => void
-  onMarkerDrag?: (placeId: string, longitude: number, latitude: number) => void
-  draggableMarkerId?: string | null
-}
 
 const DEFAULT_PITCH = 50
 const ORBIT_SPEED = 5
@@ -62,21 +48,25 @@ function getBounds(places: Place[]) {
   ] as [[number, number], [number, number]]
 }
 
-export function PlacesMap({
-  places,
-  fitBoundsPlaces,
-  previewPlaces = [],
-  tags = [],
-  activeTag = null,
-  onActiveTagChange,
-  isDark,
-  viewerMode = false,
-  selectedPlaceId = null,
-  onSelectPlace,
-  onMapClick,
-  onMarkerDrag,
-  draggableMarkerId = null,
-}: PlacesMapProps) {
+export function PlacesMap() {
+  const {
+    displayPlaces: places,
+    fitBoundsPlaces,
+    importPreviewPlaces,
+    tags,
+    activeTag,
+    setActiveTag,
+    viewerMode,
+    selectedPlaceId,
+    selectPlace,
+    handleMapClick,
+    handleMarkerDrag,
+    draggableMarkerId,
+  } = useAppState()
+  const resolvedTheme = useResolvedTheme()
+  const isDark = resolvedTheme === "dark"
+  const previewPlaces = importPreviewPlaces ?? []
+
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapRef>(null)
   const orbitFrameRef = useRef<number | null>(null)
@@ -292,11 +282,7 @@ export function PlacesMap({
   }, [viewerMode, stopOrbit])
 
   function handleTagClick(tag: string) {
-    if (!onActiveTagChange) {
-      return
-    }
-
-    onActiveTagChange(activeTag === tag ? null : tag)
+    setActiveTag(activeTag === tag ? null : tag)
   }
 
   return (
@@ -309,7 +295,7 @@ export function PlacesMap({
         initialViewState={initialViewState}
         style={{ width: "100%", height: "100%" }}
         onClick={(event) => {
-          onMapClick?.(event.lngLat.lng, event.lngLat.lat)
+          handleMapClick(event.lngLat.lng, event.lngLat.lat)
         }}
       >
         {places.map((place) => {
@@ -325,10 +311,10 @@ export function PlacesMap({
               draggable={isDraggable}
               onClick={(event) => {
                 event.originalEvent.stopPropagation()
-                onSelectPlace?.(place.id)
+                selectPlace(place.id)
               }}
               onDragEnd={(event) => {
-                onMarkerDrag?.(place.id, event.lngLat.lng, event.lngLat.lat)
+                handleMarkerDrag(place.id, event.lngLat.lng, event.lngLat.lat)
               }}
             >
               <div
@@ -425,7 +411,7 @@ export function PlacesMap({
                   aria-label="Dismiss place details"
                   onClick={() => {
                     stopOrbit()
-                    onSelectPlace?.(null)
+                    selectPlace(null)
                   }}
                 >
                   <X />
