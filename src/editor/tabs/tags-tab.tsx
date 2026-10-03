@@ -1,5 +1,7 @@
 import { ArrowDown, ArrowUp, Trash } from "@phosphor-icons/react"
 
+import { TagChip } from "@/components/tag-chip"
+import { TagIconPicker } from "@/components/tag-icon-picker"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
@@ -15,6 +17,7 @@ export function TagsTab() {
     handleAddTag,
     handleMoveTag,
     handleDeleteTag,
+    handleSetTagIcon,
   } = usePlaceEditor()
 
   return (
@@ -48,11 +51,16 @@ export function TagsTab() {
         <ul className="space-y-1">
           {tags.map((tag, index) => (
             <li
-              key={tag}
+              key={tag.id}
               className="flex items-center gap-1 rounded-lg border border-border px-2 py-1.5"
             >
+              <TagIconPicker
+                value={tag.icon}
+                disabled={isSaving}
+                onSelect={(icon) => void handleSetTagIcon(tag.id, icon)}
+              />
               <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                {tag}
+                <TagChip catalogTag={tag} />
               </span>
               <Button
                 type="button"
@@ -76,7 +84,7 @@ export function TagsTab() {
                 type="button"
                 size="icon-xs"
                 variant="ghost"
-                onClick={() => void handleDeleteTag(tag)}
+                onClick={() => void handleDeleteTag(tag.id)}
                 disabled={isSaving}
               >
                 <Trash />

@@ -2,7 +2,9 @@ import { ArrowLeft } from "@phosphor-icons/react"
 import { useMemo } from "react"
 
 import { useAppState } from "@/app-state"
+import { TagChip } from "@/components/tag-chip"
 import { Button } from "@/components/ui/button"
+import { catalogTagById } from "@/types/place"
 
 const BLUR_BANDS = [
   { blur: 1, from: 0, to: 28 },
@@ -47,7 +49,7 @@ function ProgressiveBlur() {
 }
 
 export function SelectedPlace() {
-  const { displayPlaces, selectedPlaceId, viewerMode, selectPlace } =
+  const { displayPlaces, selectedPlaceId, tags, viewerMode, selectPlace } =
     useAppState()
 
   const selectedPlace = useMemo(
@@ -74,14 +76,22 @@ export function SelectedPlace() {
           ) : null}
           {selectedPlace.tags.length > 0 ? (
             <div className="flex flex-wrap justify-center gap-1.5">
-              {selectedPlace.tags.map((tag) => (
-                <span
-                  key={tag}
-                  className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
-                >
-                  {tag}
-                </span>
-              ))}
+              {selectedPlace.tags.map((tagId) => {
+                const catalogTag = catalogTagById(tags, tagId)
+
+                if (!catalogTag) {
+                  return null
+                }
+
+                return (
+                  <span
+                    key={tagId}
+                    className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                  >
+                    <TagChip catalogTag={catalogTag} />
+                  </span>
+                )
+              })}
             </div>
           ) : null}
         </div>

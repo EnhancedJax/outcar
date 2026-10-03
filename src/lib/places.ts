@@ -1,6 +1,8 @@
 import placesData from "@/data/places.json"
-import type { Place, PlacesCatalog } from "@/types/place"
+import type { CatalogTag, Place, PlacesCatalog } from "@/types/place"
+import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import {
+  createUniqueTagId,
   normalizePlacesCatalog,
   normalizeTagLabel,
   tagKey,
@@ -8,8 +10,15 @@ import {
 
 const catalog = normalizePlacesCatalog(placesData)
 
+function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
+  return tags.map((tag) => ({
+    ...tag,
+    icon: normalizeIcon(tag.icon),
+  }))
+}
+
 export const places = catalog.places
-export const tags = catalog.tags
+export const tags = sanitizeCatalogTags(catalog.tags)
 
 export type GoogleMapsListPlace = {
   name: string
@@ -45,12 +54,17 @@ export async function fetchGoogleMapsList(
 }
 
 export async function savePlacesCatalog(nextCatalog: PlacesCatalog) {
+  const sanitizedCatalog: PlacesCatalog = {
+    ...nextCatalog,
+    tags: sanitizeCatalogTags(nextCatalog.tags),
+  }
+
   const response = await fetch("/__places", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(nextCatalog),
+    body: JSON.stringify(sanitizedCatalog),
   })
 
   if (!response.ok) {
@@ -105,42 +119,64 @@ export function createUniquePlaceId(name: string, existingIds: Set<string>) {
   return `${base}-${suffix}`
 }
 
-export function tagExistsInCatalog(label: string, catalogTags: string[]) {
+export function tagExistsInCatalog(label: string, catalogTags: CatalogTag[]) {
   const key = tagKey(label)
-  return catalogTags.some((tag) => tagKey(tag) === key)
+  return catalogTags.some((tag) => tagKey(tag.label) === key)
 }
 
 export function addTagToCatalog(
-  catalogTags: string[],
+  catalogTags: CatalogTag[],
   label: string
-): string[] | null {
+): CatalogTag[] | null {
   const normalized = normalizeTagLabel(label)
 
   if (!normalized || tagExistsInCatalog(normalized, catalogTags)) {
     return null
   }
 
-  return [...catalogTags, normalized]
+  const existingIds = new Set(catalogTags.map((tag) => tag.id))
+  const id = createUniqueTagId(normalized, existingIds)
+
+  return [
+    ...catalogTags,
+    { id, label: normalized, icon: null, description: "" },
+  ]
 }
 
 export function removeTagFromCatalog(
-  catalogTags: string[],
-  label: string
-): string[] {
-  const key = tagKey(label)
-  return catalogTags.filter((tag) => tagKey(tag) !== key)
+  catalogTags: CatalogTag[],
+  tagId: string
+): CatalogTag[] {
+  return catalogTags.filter((tag) => tag.id !== tagId)
 }
 
-export function removeTagFromPlaces(placesList: Place[], label: string): Place[] {
-  const key = tagKey(label)
-
+export function removeTagFromPlaces(
+  placesList: Place[],
+  tagId: string
+): Place[] {
   return placesList.map((place) => ({
     ...place,
-    tags: place.tags.filter((tag) => tagKey(tag) !== key),
+    tags: place.tags.filter((tag) => tag !== tagId),
   }))
 }
 
-export function moveTag(catalogTags: string[], fromIndex: number, toIndex: number) {
+export function setTagIcon(
+  catalogTags: CatalogTag[],
+  tagId: string,
+  icon: string | null
+): CatalogTag[] {
+  const normalizedIcon = normalizeIcon(icon)
+
+  return catalogTags.map((tag) =>
+    tag.id === tagId ? { ...tag, icon: normalizedIcon } : tag
+  )
+}
+
+export function moveTag(
+  catalogTags: CatalogTag[],
+  fromIndex: number,
+  toIndex: number
+) {
   if (
     fromIndex < 0 ||
     toIndex < 0 ||

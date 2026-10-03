@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { tagKey } from "@/types/place"
+import { TagChip } from "@/components/tag-chip"
 import type { DraftPlace } from "@/types/place"
 
 import { usePlaceEditor } from "../place-editor-context"
@@ -147,22 +147,20 @@ export function PlaceForm() {
         {tags.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => {
-              const isSelected = draft.tags.some(
-                (item) => tagKey(item) === tagKey(tag)
-              )
+              const isSelected = draft.tags.includes(tag.id)
 
               return (
                 <button
-                  key={tag}
+                  key={tag.id}
                   type="button"
                   className={`rounded-full border px-2.5 py-1 text-xs font-medium transition-colors ${
                     isSelected
                       ? "border-primary bg-primary text-primary-foreground"
                       : "border-border bg-background hover:bg-muted"
                   }`}
-                  onClick={() => handleToggleDraftTag(tag)}
+                  onClick={() => handleToggleDraftTag(tag.id)}
                 >
-                  {tag}
+                  <TagChip catalogTag={tag} />
                 </button>
               )
             })}

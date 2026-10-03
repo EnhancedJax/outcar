@@ -1,6 +1,47 @@
 {
   "tags": [
-    "Test"
+    {
+      "id": "photo",
+      "label": "打卡位",
+      "description": "打卡位",
+      "icon": "CameraIcon"
+    },
+    {
+      "id": "view",
+      "label": "睇風景",
+      "description": "睇風景",
+      "icon": "MountainsIcon"
+    },
+    {
+      "id": "small-road",
+      "label": "細路",
+      "description": "細路",
+      "icon": "TreeIcon"
+    },
+    {
+      "id": "challenge",
+      "label": "挑戰性",
+      "description": "挑戰性",
+      "icon": "MotorcycleIcon"
+    },
+    {
+      "id": "eat",
+      "label": "食嘢",
+      "description": "食嘢",
+      "icon": "BowlFoodIcon"
+    },
+    {
+      "id": "coffee",
+      "label": "飲啡",
+      "description": "飲啡",
+      "icon": "CoffeeIcon"
+    },
+    {
+      "id": "new",
+      "label": "未去過",
+      "description": "未去過",
+      "icon": "SealIcon"
+    }
   ],
   "places": [
     {
@@ -10,7 +51,7 @@
       "longitude": 114.1156647,
       "latitude": 22.515639699999998,
       "tags": [
-        "Test"
+        "new"
       ]
     },
     {
@@ -19,7 +60,12 @@
       "note": "",
       "longitude": 114.13994149999999,
       "latitude": 22.5172207,
-      "tags": []
+      "tags": [
+        "photo",
+        "challenge",
+        "view",
+        "small-road"
+      ]
     },
     {
       "id": "place-1791028289870-3",
@@ -27,23 +73,30 @@
       "note": "",
       "longitude": 114.26599859999999,
       "latitude": 22.4049601,
-      "tags": []
+      "tags": [
+        "photo",
+        "small-road"
+      ]
     },
     {
       "id": "cape-collinson-road-rest-garden",
-      "name": "Cape Collinson Road Rest Garden",
+      "name": "歌連臣角道休憩花園",
       "note": "",
       "longitude": 114.2513163,
       "latitude": 22.2569902,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "aberdeen-chinese-permanent-cemetery",
-      "name": "Aberdeen Chinese Permanent Cemetery",
+      "name": "香港仔華人永遠墳場",
       "note": "",
       "longitude": 114.15142829999999,
       "latitude": 22.2501076,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "place-1791028289870-4",
@@ -51,11 +104,13 @@
       "note": "",
       "longitude": 114.1071071,
       "latitude": 22.5227091,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "tai-shu-ha-rd-w",
-      "name": "Tai Shu Ha Rd W",
+      "name": "大樹下西路",
       "note": "",
       "longitude": 114.0386874,
       "latitude": 22.4168316,
@@ -95,7 +150,7 @@
     },
     {
       "id": "metered-parking-spaces-big-wave-bay",
-      "name": "Metered Parking Spaces (Big Wave Bay)",
+      "name": "大浪灣咪錶停車位",
       "note": "",
       "longitude": 114.2455411,
       "latitude": 22.2445308,
@@ -103,7 +158,7 @@
     },
     {
       "id": "peak-tram-barker-road-station",
-      "name": "Peak Tram Barker Road Station",
+      "name": "山頂纜車白加道站",
       "note": "",
       "longitude": 114.15166939999999,
       "latitude": 22.2709869,
@@ -159,7 +214,7 @@
     },
     {
       "id": "sha-kiu-tsuen-shoreline-east",
-      "name": "Sha Kiu Tsuen Shoreline (East)",
+      "name": "沙橋村東岸線",
       "note": "",
       "longitude": 113.99570879999999,
       "latitude": 22.4864084,
@@ -175,7 +230,7 @@
     },
     {
       "id": "kai-pak-ling",
-      "name": "Kai Pak Ling",
+      "name": "雞伯嶺",
       "note": "",
       "longitude": 113.9810286,
       "latitude": 22.4558678,
@@ -183,7 +238,7 @@
     },
     {
       "id": "nodi-north-point",
-      "name": "nodi (North Point)",
+      "name": "nodi (北角)",
       "note": "",
       "longitude": 114.2026437,
       "latitude": 22.2936896,
@@ -199,7 +254,7 @@
     },
     {
       "id": "heung-hoi-ming-shan-memorial-archway",
-      "name": "Heung Hoi Ming Shan Memorial Archway",
+      "name": "香海名山牌樓",
       "note": "",
       "longitude": 113.961767,
       "latitude": 22.3921256,
@@ -231,7 +286,7 @@
     },
     {
       "id": "wu-kai-sha-beach",
-      "name": "Wu Kai Sha Beach",
+      "name": "烏溪沙泳灘",
       "note": "",
       "longitude": 114.23870439999999,
       "latitude": 22.434362,
@@ -247,7 +302,7 @@
     },
     {
       "id": "temple-hill-transmission-station",
-      "name": "Temple Hill Transmission Station",
+      "name": "慈雲山發射站",
       "note": "",
       "longitude": 114.20662349999999,
       "latitude": 22.356079599999997,
@@ -255,7 +310,7 @@
     },
     {
       "id": "three-village-pavilion",
-      "name": "Three Village Pavilion",
+      "name": "三村亭",
       "note": "",
       "longitude": 114.16506539999999,
       "latitude": 22.5353407,
@@ -279,7 +334,7 @@
     },
     {
       "id": "mount-davis-peak",
-      "name": "Mount Davis Peak",
+      "name": "摩星嶺",
       "note": "",
       "longitude": 114.1249218,
       "latitude": 22.2769308,
@@ -311,7 +366,7 @@
     },
     {
       "id": "south-perimeter-road",
-      "name": "South Perimeter Road",
+      "name": "南環路",
       "note": "",
       "longitude": 113.89420319999999,
       "latitude": 22.2952303,
@@ -335,7 +390,7 @@
     },
     {
       "id": "tai-tam-rd",
-      "name": "Tai Tam Rd",
+      "name": "大潭道",
       "note": "",
       "longitude": 114.2231037,
       "latitude": 22.2482564,
@@ -359,7 +414,7 @@
     },
     {
       "id": "cyberport-rd",
-      "name": "Cyberport Rd",
+      "name": "數碼港道",
       "note": "",
       "longitude": 114.13263339999999,
       "latitude": 22.2594675,
@@ -375,7 +430,7 @@
     },
     {
       "id": "stanley-main-street",
-      "name": "Stanley Main Street",
+      "name": "赤柱大街",
       "note": "",
       "longitude": 114.21107269999999,
       "latitude": 22.2186265,
@@ -383,7 +438,7 @@
     },
     {
       "id": "chung-hom-kok-battery",
-      "name": "Chung Hom Kok Battery",
+      "name": "舂坎角炮台",
       "note": "",
       "longitude": 114.1982159,
       "latitude": 22.2104189,
@@ -399,7 +454,7 @@
     },
     {
       "id": "sunny-bay-beach",
-      "name": "Sunny Bay Beach",
+      "name": "欣澳泳灘",
       "note": "",
       "longitude": 114.0207743,
       "latitude": 22.325745599999998,
@@ -415,7 +470,7 @@
     },
     {
       "id": "shek-o-rd",
-      "name": "Shek O Rd",
+      "name": "石澳道",
       "note": "",
       "longitude": 114.2383388,
       "latitude": 22.2417317,
@@ -423,7 +478,7 @@
     },
     {
       "id": "lau-fau-shan-mudflat",
-      "name": "Lau Fau Shan Mudflat",
+      "name": "流浮山泥灘",
       "note": "",
       "longitude": 113.9415626,
       "latitude": 22.428948899999998,
@@ -431,7 +486,7 @@
     },
     {
       "id": "nim-wan-road-seawall",
-      "name": "Nim Wan Road Seawall",
+      "name": "稔灣路海堤",
       "note": "",
       "longitude": 113.9498694,
       "latitude": 22.4413709,
@@ -439,7 +494,7 @@
     },
     {
       "id": "tai-mo-shan-lookout",
-      "name": "Tai Mo Shan Lookout",
+      "name": "大帽山瞭望台",
       "note": "",
       "longitude": 114.1166753,
       "latitude": 22.4119977,
@@ -447,7 +502,7 @@
     },
     {
       "id": "rte-twisk",
-      "name": "Rte Twisk",
+      "name": "荃錦公路",
       "note": "",
       "longitude": 114.10853039999999,
       "latitude": 22.400131,
@@ -455,7 +510,7 @@
     },
     {
       "id": "lantau-link-viewing-platform",
-      "name": "Lantau Link Viewing Platform",
+      "name": "青嶼幹線觀景台",
       "note": "",
       "longitude": 114.0809939,
       "latitude": 22.3579391,
@@ -463,7 +518,7 @@
     },
     {
       "id": "hill-road-flyover",
-      "name": "山道天橋 Hill Road Flyover",
+      "name": "山道天橋",
       "note": "",
       "longitude": 114.1358017,
       "latitude": 22.2852949,
@@ -471,7 +526,7 @@
     },
     {
       "id": "victoria-peak-lookout-point",
-      "name": "Victoria Peak Lookout Point",
+      "name": "太平山瞭望點",
       "note": "",
       "longitude": 114.1423454,
       "latitude": 22.2739191,
@@ -495,7 +550,7 @@
     },
     {
       "id": "halfway-coffee-the-peak",
-      "name": "Halfway Coffee (The Peak)",
+      "name": "Halfway Coffee (山頂)",
       "note": "",
       "longitude": 114.1515335,
       "latitude": 22.26859,
@@ -503,7 +558,7 @@
     },
     {
       "id": "barker-road-viewing-point",
-      "name": "Barker Road Viewing Point",
+      "name": "白加道觀景點",
       "note": "",
       "longitude": 114.157641,
       "latitude": 22.2712415,
@@ -551,7 +606,7 @@
     },
     {
       "id": "tate-s-cairn-meteorological-station-hong-kong-observatory",
-      "name": "Tate's Cairn Meteorological Station Hong Kong Observatory",
+      "name": "大老山氣象站 香港天文台",
       "note": "¡",
       "longitude": 114.2177746,
       "latitude": 22.3577642,
@@ -623,7 +678,7 @@
     },
     {
       "id": "pineapple-hill-por-lo-shan",
-      "name": "Pineapple Hill (Por Lo Shan)",
+      "name": "菠蘿山 (菠蘿山)",
       "note": "",
       "longitude": 113.9538702,
       "latitude": 22.4097243,
@@ -663,7 +718,7 @@
     },
     {
       "id": "tin-kwong-road-driving-test-centre",
-      "name": "Tin Kwong Road Driving Test Centre",
+      "name": "天光道駕駛考試中心",
       "note": "",
       "longitude": 114.1849549,
       "latitude": 22.322030599999998,
@@ -695,7 +750,7 @@
     },
     {
       "id": "ma-liu-shui-landing-no-1",
-      "name": "Ma Liu Shui Landing No. 1",
+      "name": "馬料水一號登岸處",
       "note": "",
       "longitude": 114.2143785,
       "latitude": 22.413825199999998,
@@ -703,7 +758,7 @@
     },
     {
       "id": "junk-bay-chinese-permanent-cemetery",
-      "name": "Junk Bay Chinese Permanent Cemetery",
+      "name": "將軍澳華人永遠墳場",
       "note": "",
       "longitude": 114.2480417,
       "latitude": 22.2964101,
@@ -711,7 +766,7 @@
     },
     {
       "id": "sam-ka-tsuen-landing-no-1",
-      "name": "Sam Ka Tsuen Landing No. 1",
+      "name": "三家村一號登岸處",
       "note": "",
       "longitude": 114.233086,
       "latitude": 22.294638,
@@ -719,7 +774,7 @@
     },
     {
       "id": "ngau-kwu-leng-hiking-trail",
-      "name": "Ngau Kwu Leng Hiking Trail",
+      "name": "牛牯嶺遠足徑",
       "note": "",
       "longitude": 114.13491529999999,
       "latitude": 22.465037199999998,
@@ -735,7 +790,7 @@
     },
     {
       "id": "fu-yung-pei-village",
-      "name": "Fu Yung Pei Village",
+      "name": "芙蓉皮村",
       "note": "",
       "longitude": 114.2182177,
       "latitude": 22.367920599999998,
@@ -759,7 +814,7 @@
     },
     {
       "id": "sham-wat-rd",
-      "name": "Sham Wat Rd",
+      "name": "深屈道",
       "note": "",
       "longitude": 113.8901008,
       "latitude": 22.256453999999998,
@@ -767,7 +822,7 @@
     },
     {
       "id": "tai-long-wan-beach",
-      "name": "Tai Long Wan Beach",
+      "name": "大浪灣泳灘",
       "note": "",
       "longitude": 113.8864875,
       "latitude": 22.2211174,
@@ -775,7 +830,7 @@
     },
     {
       "id": "shek-pik-reservoir-observation-deck",
-      "name": "Shek Pik Reservoir Observation Deck",
+      "name": "石壁水塘觀景台",
       "note": "",
       "longitude": 113.8977058,
       "latitude": 22.226212099999998,
@@ -783,7 +838,7 @@
     },
     {
       "id": "upper-cheung-sha-beach",
-      "name": "Upper Cheung Sha Beach",
+      "name": "上長沙泳灘",
       "note": "",
       "longitude": 113.9452125,
       "latitude": 22.2322994,
@@ -791,7 +846,7 @@
     },
     {
       "id": "mui-wo-ferry-pier",
-      "name": "Mui Wo Ferry Pier",
+      "name": "梅窩渡輪碼頭",
       "note": "",
       "longitude": 114.00212499999999,
       "latitude": 22.265027999999997,
@@ -799,7 +854,7 @@
     },
     {
       "id": "ngong-ping-village",
-      "name": "Ngong Ping Village",
+      "name": "昂坪市集",
       "note": "",
       "longitude": 113.9022318,
       "latitude": 22.2568782,
@@ -911,7 +966,7 @@
     },
     {
       "id": "cloudy-hill",
-      "name": "Cloudy Hill",
+      "name": "九龍坑山",
       "note": "",
       "longitude": 114.1666667,
       "latitude": 22.483333299999998,
@@ -943,7 +998,7 @@
     },
     {
       "id": "sham-tseng-settlement-basin",
-      "name": "Sham Tseng Settlement Basin",
+      "name": "深井沉澱池",
       "note": "",
       "longitude": 114.0534134,
       "latitude": 22.3709699,
@@ -951,7 +1006,7 @@
     },
     {
       "id": "lido-beach",
-      "name": "Lido Beach",
+      "name": "麗都灣泳灘",
       "note": "",
       "longitude": 114.0761168,
       "latitude": 22.367833899999997,
@@ -975,7 +1030,7 @@
     },
     {
       "id": "hung-hom-bypass",
-      "name": "Hung Hom Bypass",
+      "name": "紅磡繞道",
       "note": "",
       "longitude": 114.1840704,
       "latitude": 22.302192299999998,
@@ -983,7 +1038,7 @@
     },
     {
       "id": "kai-tak-promenade",
-      "name": "Kai Tak Promenade",
+      "name": "啟德海濱長廊",
       "note": "",
       "longitude": 114.20939039999999,
       "latitude": 22.314499599999998,
@@ -991,7 +1046,7 @@
     },
     {
       "id": "tour-bus-parking",
-      "name": "Tour bus Parking",
+      "name": "旅遊巴士泊車處",
       "note": "",
       "longitude": 114.2134585,
       "latitude": 22.309277899999998,
@@ -999,7 +1054,7 @@
     },
     {
       "id": "tai-hang-tun-kite-flying-area",
-      "name": "Tai Hang Tun Kite Flying Area",
+      "name": "大坑墩放風箏場",
       "note": "",
       "longitude": 114.30007379999999,
       "latitude": 22.2895085,
@@ -1015,7 +1070,7 @@
     },
     {
       "id": "sam-ka-tsuen-pier",
-      "name": "Sam Ka Tsuen Pier",
+      "name": "三家村碼頭",
       "note": "",
       "longitude": 114.2362766,
       "latitude": 22.2909152,
@@ -1023,7 +1078,7 @@
     },
     {
       "id": "kowloon-peak-viewing-point",
-      "name": "Kowloon Peak Viewing Point",
+      "name": "飛鵝山觀景點",
       "note": "",
       "longitude": 114.2214367,
       "latitude": 22.3530288,
@@ -1031,7 +1086,7 @@
     },
     {
       "id": "pak-sha-wan-pier",
-      "name": "Pak Sha Wan Pier",
+      "name": "白沙灣碼頭",
       "note": "",
       "longitude": 114.2600265,
       "latitude": 22.362130999999998,
@@ -1047,7 +1102,7 @@
     },
     {
       "id": "lion-s-pavilion",
-      "name": "Lion's Pavilion",
+      "name": "獅子亭",
       "note": "",
       "longitude": 114.1891272,
       "latitude": 22.3909606,
@@ -1055,7 +1110,7 @@
     },
     {
       "id": "jat-s-incline-parking-viewpoint",
-      "name": "Jat's Incline Parking Viewpoint",
+      "name": "扎山道泊車觀景點",
       "note": "",
       "longitude": 114.2139886,
       "latitude": 22.3556238,
@@ -1063,7 +1118,7 @@
     },
     {
       "id": "lower-shing-mun-reservoir-main-dam",
-      "name": "Lower Shing Mun Reservoir Main Dam",
+      "name": "下城門水塘主壩",
       "note": "",
       "longitude": 114.1645035,
       "latitude": 22.3724253,
@@ -1079,7 +1134,7 @@
     },
     {
       "id": "kowloon-reservoir-dam",
-      "name": "Kowloon Reservoir Dam",
+      "name": "九龍水塘水壩",
       "note": "",
       "longitude": 114.1533066,
       "latitude": 22.353098499999998,
@@ -1087,7 +1142,7 @@
     },
     {
       "id": "stonecutters-bridge-viewing-point",
-      "name": "Stonecutters Bridge Viewing Point",
+      "name": "昂船洲大橋觀景點",
       "note": "",
       "longitude": 114.12220939999999,
       "latitude": 22.3229918,
@@ -1095,7 +1150,7 @@
     },
     {
       "id": "cheung-hang-rd",
-      "name": "Cheung Hang Rd",
+      "name": "長亨路",
       "note": "",
       "longitude": 114.14272229999999,
       "latitude": 22.3433779,
@@ -1103,7 +1158,7 @@
     },
     {
       "id": "luen-yick-ferry-pier",
-      "name": "Luen Yick Ferry Pier",
+      "name": "聯益渡輪碼頭",
       "note": "",
       "longitude": 114.2143476,
       "latitude": 22.457634,
@@ -1111,7 +1166,7 @@
     },
     {
       "id": "tai-mei-tuk-tsuen",
-      "name": "Tai Mei Tuk Tsuen",
+      "name": "大美督村",
       "note": "",
       "longitude": 114.23296099999999,
       "latitude": 22.4728367,
@@ -1127,7 +1182,7 @@
     },
     {
       "id": "robin-s-nest",
-      "name": "Robin's Nest",
+      "name": "紅花嶺",
       "note": "",
       "longitude": 114.19,
       "latitude": 22.541389,
@@ -1135,7 +1190,7 @@
     },
     {
       "id": "bride-s-pool-rd",
-      "name": "Bride's Pool Rd",
+      "name": "新娘潭路",
       "note": "",
       "longitude": 114.2346939,
       "latitude": 22.5053989,
@@ -1143,7 +1198,7 @@
     },
     {
       "id": "tung-chung-ma-wan-chung-pier",
-      "name": "Tung Chung Ma Wan Chung Pier",
+      "name": "東涌馬灣涌碼頭",
       "note": "",
       "longitude": 113.9342324,
       "latitude": 22.286282,
@@ -1151,7 +1206,7 @@
     },
     {
       "id": "wa-shan-military-road-sheung-shui",
-      "name": "Wa Shan Military Road, Sheung Shui",
+      "name": "華山軍路，上水",
       "note": "",
       "longitude": 114.13834659999999,
       "latitude": 22.516119999999997,
@@ -1159,7 +1214,7 @@
     },
     {
       "id": "lam-tei-irrigation-reservoir",
-      "name": "Lam Tei Irrigation Reservoir",
+      "name": "藍地灌溉水塘",
       "note": "",
       "longitude": 113.9902609,
       "latitude": 22.410637599999998,
@@ -1167,7 +1222,7 @@
     },
     {
       "id": "tsim-bei-tsui",
-      "name": "Tsim Bei Tsui",
+      "name": "尖鼻咀",
       "note": "",
       "longitude": 114.0113758,
       "latitude": 22.4859789,

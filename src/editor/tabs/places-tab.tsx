@@ -1,6 +1,8 @@
 import { ArrowLeft, Plus, Trash } from "@phosphor-icons/react"
 
+import { TagChip } from "@/components/tag-chip"
 import { Button } from "@/components/ui/button"
+import { catalogTagById } from "@/types/place"
 
 import { usePlaceEditor } from "../place-editor-context"
 import { PlaceForm } from "./place-form"
@@ -8,6 +10,7 @@ import { PlaceForm } from "./place-form"
 export function PlacesTab() {
   const {
     places,
+    tags,
     selectedPlaceId,
     placesScreen,
     isCreating,
@@ -71,14 +74,22 @@ export function PlacesTab() {
               </p>
               {place.tags.length > 0 ? (
                 <div className="mt-1 flex flex-wrap gap-1">
-                  {place.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground"
-                    >
-                      {tag}
-                    </span>
-                  ))}
+                  {place.tags.map((tagId) => {
+                    const catalogTag = catalogTagById(tags, tagId)
+
+                    if (!catalogTag) {
+                      return null
+                    }
+
+                    return (
+                      <span
+                        key={tagId}
+                        className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground"
+                      >
+                        <TagChip catalogTag={catalogTag} />
+                      </span>
+                    )
+                  })}
                 </div>
               ) : null}
             </button>

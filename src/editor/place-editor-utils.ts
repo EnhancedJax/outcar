@@ -1,5 +1,4 @@
 import { createPlaceId } from "@/lib/places"
-import { tagKey } from "@/types/place"
 import type { DraftPlace, Place } from "@/types/place"
 
 export type ImportPreviewItem = {
@@ -71,14 +70,13 @@ export function importPreviewToPlaces(items: ImportPreviewItem[]): Place[] {
     }))
 }
 
-export function toggleDraftTag(draft: DraftPlace, tag: string): DraftPlace {
-  const key = tagKey(tag)
-  const hasTag = draft.tags.some((item) => tagKey(item) === key)
+export function toggleDraftTag(draft: DraftPlace, tagId: string): DraftPlace {
+  const hasTag = draft.tags.includes(tagId)
 
   return {
     ...draft,
     tags: hasTag
-      ? draft.tags.filter((item) => tagKey(item) !== key)
-      : [...draft.tags, tag],
+      ? draft.tags.filter((item) => item !== tagId)
+      : [...draft.tags, tagId],
   }
 }

@@ -8,7 +8,7 @@ import {
 } from "react"
 
 import { places as initialPlaces, tags as initialTags } from "@/lib/places"
-import type { DraftPlace, Place } from "@/types/place"
+import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
 function draftToPlace(draft: DraftPlace): Place | null {
   const longitude = Number(draft.longitude)
@@ -35,7 +35,7 @@ function draftToPlace(draft: DraftPlace): Place | null {
 
 type AppStateContextValue = {
   places: Place[]
-  tags: string[]
+  tags: CatalogTag[]
   selectedPlaceId: string | null
   editorDraft: DraftPlace | null
   isCreatingDraft: boolean
@@ -49,7 +49,7 @@ type AppStateContextValue = {
   fitBoundsPlaces: Place[]
   draggableMarkerId: string | null
   setPlaces: (places: Place[]) => void
-  setTags: (tags: string[]) => void
+  setTags: (tags: CatalogTag[]) => void
   setEditorDraft: (draft: DraftPlace | null, isCreating: boolean) => void
   setImportPreviewPlaces: (places: Place[] | null) => void
   setActiveTag: (tag: string | null) => void
@@ -81,7 +81,7 @@ type AppStateProviderProps = {
 
 export function AppStateProvider({ children }: AppStateProviderProps) {
   const [places, setPlaces] = useState<Place[]>(initialPlaces)
-  const [tags, setTags] = useState<string[]>(initialTags)
+  const [tags, setTags] = useState<CatalogTag[]>(initialTags)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [editorDraft, setEditorDraftState] = useState<DraftPlace | null>(null)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)

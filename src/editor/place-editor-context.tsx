@@ -19,10 +19,10 @@ import {
   removeTagFromCatalog,
   removeTagFromPlaces,
   savePlacesCatalog,
+  setTagIcon,
 } from "@/lib/places"
 import { searchPlaces } from "@/lib/mapbox"
-import { tagKey } from "@/types/place"
-import type { DraftPlace, Place } from "@/types/place"
+import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
 import {
   fromDraft,
@@ -41,7 +41,7 @@ export type PlaceSaveError = {
 
 type PlaceEditorContextValue = {
   places: Place[]
-  tags: string[]
+  tags: CatalogTag[]
   selectedPlaceId: string | null
   draft: DraftPlace | null
   isCreating: boolean
@@ -66,12 +66,13 @@ type PlaceEditorContextValue = {
   placesScreen: PlacesScreen
   goToPlacesList: () => void
   onDraftChange: (draft: DraftPlace | null, isCreating: boolean) => void
-  persistCatalog: (nextTags: string[], nextPlaces: Place[]) => Promise<void>
+  persistCatalog: (nextTags: CatalogTag[], nextPlaces: Place[]) => Promise<void>
   clearImportPreview: () => void
   updateImportSelection: (key: string, selected: boolean) => void
   handleAddTag: () => Promise<void>
-  handleDeleteTag: (tag: string) => Promise<void>
+  handleDeleteTag: (tagId: string) => Promise<void>
   handleMoveTag: (index: number, direction: "up" | "down") => Promise<void>
+  handleSetTagIcon: (tagId: string, icon: string | null) => Promise<void>
   handleImportPreview: () => Promise<void>
   handleImportConfirm: () => Promise<void>
   handleSearch: () => Promise<void>
@@ -82,7 +83,7 @@ type PlaceEditorContextValue = {
   ) => void
   handleSave: (values: DraftPlace) => Promise<PlaceSaveError | null>
   handleDelete: (placeId: string) => Promise<void>
-  handleToggleDraftTag: (tag: string) => void
+  handleToggleDraftTag: (tagId: string) => void
   handleAddDraftTag: () => Promise<void>
 }
 
@@ -145,7 +146,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   }, [importPreview, setImportPreviewPlaces])
 
   const persistCatalog = useCallback(
-    async (nextTags: string[], nextPlaces: Place[]) => {
+    async (nextTags: CatalogTag[], nextPlaces: Place[]) => {
       setIsSaving(true)
       setError(null)
 
@@ -196,16 +197,24 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   }, [newTagLabel, persistCatalog, places, tags])
 
   const handleDeleteTag = useCallback(
-    async (tag: string) => {
-      const nextTags = removeTagFromCatalog(tags, tag)
-      const nextPlaces = removeTagFromPlaces(places, tag)
+    async (tagId: string) => {
+      const nextTags = removeTagFromCatalog(tags, tagId)
+      const nextPlaces = removeTagFromPlaces(places, tagId)
       await persistCatalog(nextTags, nextPlaces)
 
       if (draft) {
-        onDraftChange(toggleDraftTag(draft, tag), isCreating)
+        onDraftChange(toggleDraftTag(draft, tagId), isCreating)
       }
     },
     [draft, isCreating, onDraftChange, persistCatalog, places, tags]
+  )
+
+  const handleSetTagIcon = useCallback(
+    async (tagId: string, icon: string | null) => {
+      const nextTags = setTagIcon(tags, tagId, icon)
+      await persistCatalog(nextTags, places)
+    },
+    [persistCatalog, places, tags]
   )
 
   const handleMoveTag = useCallback(
@@ -438,12 +447,12 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   const handleToggleDraftTag = useCallback(
-    (tag: string) => {
+    (tagId: string) => {
       if (!draft) {
         return
       }
 
-      onDraftChange(toggleDraftTag(draft, tag), isCreating)
+      onDraftChange(toggleDraftTag(draft, tagId), isCreating)
     },
     [draft, isCreating, onDraftChange]
   )
@@ -465,9 +474,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     onDraftChange(
       {
         ...draft,
-        tags: draft.tags.some((item) => tagKey(item) === tagKey(addedTag))
+        tags: draft.tags.includes(addedTag.id)
           ? draft.tags
-          : [...draft.tags, addedTag],
+          : [...draft.tags, addedTag.id],
       },
       isCreating
     )
@@ -508,6 +517,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleAddTag,
       handleDeleteTag,
       handleMoveTag,
+      handleSetTagIcon,
       handleImportPreview,
       handleImportConfirm,
       handleSearch,
@@ -531,6 +541,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleAddTag,
       handleDelete,
       handleDeleteTag,
+      handleSetTagIcon,
       handleImportConfirm,
       handleImportPreview,
       handleMoveTag,
