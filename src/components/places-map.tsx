@@ -1,4 +1,5 @@
-import { useEffect, useMemo, useRef, useState } from "react"
+import { X } from "@phosphor-icons/react"
+import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox"
 import "mapbox-gl/dist/mapbox-gl.css"
 
@@ -20,13 +21,15 @@ type PlacesMapProps = {
   onActiveTagChange?: (tag: string | null) => void
   isDark: boolean
   selectedPlaceId?: string | null
-  onSelectPlace?: (placeId: string) => void
+  onSelectPlace?: (placeId: string | null) => void
   onMapClick?: (longitude: number, latitude: number) => void
   onMarkerDrag?: (placeId: string, longitude: number, latitude: number) => void
   draggableMarkerId?: string | null
 }
 
 const DEFAULT_PITCH = 50
+const ORBIT_SPEED = 5
+const FOCUS_ZOOM = 15
 
 const DEFAULT_VIEW = {
   longitude: 139.7,
@@ -72,9 +75,64 @@ export function PlacesMap({
   onMarkerDrag,
   draggableMarkerId = null,
 }: PlacesMapProps) {
+  const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapRef>(null)
+  const orbitFrameRef = useRef<number | null>(null)
+  const isOrbitingRef = useRef(false)
+  const awaitingFocusMoveEndRef = useRef(false)
   const [mapAppearance, setMapAppearance] = useState<MapAppearance>("monochrome")
-  const showTagFilter = !import.meta.env.DEV && tags.length > 0
+  const isDev = import.meta.env.DEV
+  const showTagFilter = !isDev && tags.length > 0
+  const showPlaceDetails = !isDev && selectedPlace
+
+  const stopOrbit = useCallback(() => {
+    isOrbitingRef.current = false
+
+    if (orbitFrameRef.current !== null) {
+      cancelAnimationFrame(orbitFrameRef.current)
+      orbitFrameRef.current = null
+    }
+  }, [])
+
+  const startOrbit = useCallback(
+    (place: Place) => {
+      const map = mapRef.current?.getMap()
+
+      if (!map) {
+        return
+      }
+
+      stopOrbit()
+      isOrbitingRef.current = true
+
+      const center: [number, number] = [place.longitude, place.latitude]
+      let bearing = map.getBearing()
+      let lastTime = performance.now()
+      const zoom = Math.max(map.getZoom(), FOCUS_ZOOM)
+
+      const tick = (time: number) => {
+        if (!isOrbitingRef.current) {
+          return
+        }
+
+        const delta = (time - lastTime) / 1000
+        lastTime = time
+        bearing = (bearing + ORBIT_SPEED * delta) % 360
+
+        map.jumpTo({
+          center,
+          bearing,
+          pitch: DEFAULT_PITCH,
+          zoom,
+        })
+
+        orbitFrameRef.current = requestAnimationFrame(tick)
+      }
+
+      orbitFrameRef.current = requestAnimationFrame(tick)
+    },
+    [stopOrbit]
+  )
 
   const basemapConfig = useMemo(
     () => getBasemapConfig(mapAppearance, isDark),
@@ -110,6 +168,22 @@ export function PlacesMap({
   )
 
   useEffect(() => {
+    const container = containerRef.current
+
+    if (!container) {
+      return
+    }
+
+    const resizeObserver = new ResizeObserver(() => {
+      mapRef.current?.resize()
+    })
+
+    resizeObserver.observe(container)
+
+    return () => resizeObserver.disconnect()
+  }, [])
+
+  useEffect(() => {
     const map = mapRef.current?.getMap()
     const bounds = getBounds(boundsPlaces)
 
@@ -143,6 +217,78 @@ export function PlacesMap({
     }
   }, [basemapConfig])
 
+  useEffect(() => {
+    if (isDev || !selectedPlace) {
+      awaitingFocusMoveEndRef.current = false
+      stopOrbit()
+      return
+    }
+
+    const map = mapRef.current?.getMap()
+
+    if (!map) {
+      return
+    }
+
+    awaitingFocusMoveEndRef.current = true
+
+    map.flyTo({
+      center: [selectedPlace.longitude, selectedPlace.latitude],
+      zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
+      pitch: DEFAULT_PITCH,
+      duration: 1200,
+      essential: true,
+    })
+
+    const handleMoveEnd = () => {
+      if (!awaitingFocusMoveEndRef.current) {
+        return
+      }
+
+      awaitingFocusMoveEndRef.current = false
+      startOrbit(selectedPlace)
+    }
+
+    map.once("moveend", handleMoveEnd)
+
+    return () => {
+      awaitingFocusMoveEndRef.current = false
+      map.off("moveend", handleMoveEnd)
+      stopOrbit()
+    }
+  }, [isDev, selectedPlace, startOrbit, stopOrbit])
+
+  useEffect(() => {
+    if (isDev) {
+      return
+    }
+
+    const map = mapRef.current?.getMap()
+
+    if (!map) {
+      return
+    }
+
+    const handleCameraInteraction = () => {
+      awaitingFocusMoveEndRef.current = false
+      stopOrbit()
+    }
+
+    map.on("dragstart", handleCameraInteraction)
+    map.on("wheel", handleCameraInteraction)
+    map.on("rotatestart", handleCameraInteraction)
+    map.on("pitchstart", handleCameraInteraction)
+    map.on("touchstart", handleCameraInteraction)
+
+    return () => {
+      map.off("dragstart", handleCameraInteraction)
+      map.off("wheel", handleCameraInteraction)
+      map.off("rotatestart", handleCameraInteraction)
+      map.off("pitchstart", handleCameraInteraction)
+      map.off("touchstart", handleCameraInteraction)
+    }
+  }, [isDev, stopOrbit])
+
   function handleTagClick(tag: string) {
     if (!onActiveTagChange) {
       return
@@ -152,7 +298,7 @@ export function PlacesMap({
   }
 
   return (
-    <div className="relative h-full w-full">
+    <div ref={containerRef} className="relative h-full w-full">
       <Map
         ref={mapRef}
         mapboxAccessToken={getMapboxToken()}
@@ -203,7 +349,7 @@ export function PlacesMap({
           </Marker>
         ))}
 
-        {selectedPlace && !draggableMarkerId ? (
+        {selectedPlace && isDev && !draggableMarkerId ? (
           <Popup
             longitude={selectedPlace.longitude}
             latitude={selectedPlace.latitude}
@@ -241,33 +387,78 @@ export function PlacesMap({
         </Button>
       </div>
 
-      {showTagFilter ? (
-        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center p-4">
-          <div
-            className="pointer-events-auto flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
-            role="toolbar"
-            aria-label="Filter places by tag"
-          >
-            {tags.map((tag) => {
-              const isActive = activeTag === tag
-
-              return (
-                <button
-                  key={tag}
+      {showPlaceDetails || showTagFilter ? (
+        <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex flex-col items-center gap-3 p-4">
+          {showPlaceDetails ? (
+            <div
+              className="pointer-events-auto w-full max-w-md rounded-2xl border border-border bg-background/95 p-4 shadow-lg backdrop-blur"
+              role="dialog"
+              aria-label={selectedPlace.name}
+            >
+              <div className="flex items-start justify-between gap-3">
+                <div className="min-w-0 space-y-2">
+                  <h2 className="text-lg font-medium">{selectedPlace.name}</h2>
+                  {selectedPlace.note ? (
+                    <p className="text-sm text-muted-foreground">
+                      {selectedPlace.note}
+                    </p>
+                  ) : null}
+                  {selectedPlace.tags.length > 0 ? (
+                    <div className="flex flex-wrap gap-1.5">
+                      {selectedPlace.tags.map((tag) => (
+                        <span
+                          key={tag}
+                          className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                        >
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  ) : null}
+                </div>
+                <Button
                   type="button"
-                  className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
-                    isActive
-                      ? "border-primary bg-primary text-primary-foreground"
-                      : "border-border bg-background hover:bg-muted"
-                  }`}
-                  aria-pressed={isActive}
-                  onClick={() => handleTagClick(tag)}
+                  size="icon-sm"
+                  variant="ghost"
+                  aria-label="Dismiss place details"
+                  onClick={() => {
+                    stopOrbit()
+                    onSelectPlace?.(null)
+                  }}
                 >
-                  {tag}
-                </button>
-              )
-            })}
-          </div>
+                  <X />
+                </Button>
+              </div>
+            </div>
+          ) : null}
+
+          {showTagFilter ? (
+            <div
+              className="pointer-events-auto flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-background/95 p-2 shadow-lg backdrop-blur"
+              role="toolbar"
+              aria-label="Filter places by tag"
+            >
+              {tags.map((tag) => {
+                const isActive = activeTag === tag
+
+                return (
+                  <button
+                    key={tag}
+                    type="button"
+                    className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+                      isActive
+                        ? "border-primary bg-primary text-primary-foreground"
+                        : "border-border bg-background hover:bg-muted"
+                    }`}
+                    aria-pressed={isActive}
+                    onClick={() => handleTagClick(tag)}
+                  >
+                    {tag}
+                  </button>
+                )
+              })}
+            </div>
+          ) : null}
         </div>
       ) : null}
     </div>

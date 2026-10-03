@@ -1,6 +1,8 @@
+import { Sidebar } from "@phosphor-icons/react"
 import { lazy, Suspense, useCallback, useMemo, useState } from "react"
 
 import { PlacesMap } from "@/components/places-map"
+import { Button } from "@/components/ui/button"
 import { places as initialPlaces, tags as initialTags } from "@/lib/places"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 import type { DraftPlace, Place } from "@/types/place"
@@ -42,6 +44,7 @@ export function App() {
     null
   )
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [isEditorOpen, setIsEditorOpen] = useState(true)
   const resolvedTheme = useResolvedTheme()
   const isDark = resolvedTheme === "dark"
 
@@ -121,8 +124,8 @@ export function App() {
   )
 
   return (
-    <div className="flex h-svh w-full">
-      <main className="min-w-0 flex-1">
+    <div className="flex h-svh w-full overflow-hidden">
+      <main className="relative min-h-0 min-w-0 flex-1">
         <PlacesMap
           places={displayPlaces}
           fitBoundsPlaces={import.meta.env.DEV ? displayPlaces : places}
@@ -137,26 +140,42 @@ export function App() {
           onMarkerDrag={handleMarkerDrag}
           draggableMarkerId={import.meta.env.DEV ? editorDraft?.id ?? null : null}
         />
+
+        {PlaceEditor ? (
+          <Button
+            type="button"
+            size="icon"
+            variant="secondary"
+            className="absolute right-4 bottom-4 z-20 shadow-lg"
+            aria-expanded={isEditorOpen}
+            aria-label={isEditorOpen ? "Close editor" : "Open editor"}
+            onClick={() => setIsEditorOpen((open) => !open)}
+          >
+            <Sidebar />
+          </Button>
+        ) : null}
       </main>
 
-      {PlaceEditor ? (
-        <Suspense fallback={null}>
-          <PlaceEditor
-            places={places}
-            tags={tags}
-            selectedPlaceId={selectedPlaceId}
-            draft={editorDraft}
-            isCreating={isCreatingDraft}
-            onPlacesChange={setPlaces}
-            onTagsChange={setTags}
-            onSelectPlace={handleSelectPlace}
-            onDraftChange={(nextDraft, isCreating) => {
-              setEditorDraft(nextDraft)
-              setIsCreatingDraft(isCreating)
-            }}
-            onImportPreviewChange={setImportPreviewPlaces}
-          />
-        </Suspense>
+      {PlaceEditor && isEditorOpen ? (
+        <div className="flex h-full w-sm shrink-0 flex-col overflow-hidden border-l border-border">
+          <Suspense fallback={null}>
+            <PlaceEditor
+              places={places}
+              tags={tags}
+              selectedPlaceId={selectedPlaceId}
+              draft={editorDraft}
+              isCreating={isCreatingDraft}
+              onPlacesChange={setPlaces}
+              onTagsChange={setTags}
+              onSelectPlace={handleSelectPlace}
+              onDraftChange={(nextDraft, isCreating) => {
+                setEditorDraft(nextDraft)
+                setIsCreatingDraft(isCreating)
+              }}
+              onImportPreviewChange={setImportPreviewPlaces}
+            />
+          </Suspense>
+        </div>
       ) : null}
     </div>
   )
