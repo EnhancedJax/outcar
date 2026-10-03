@@ -4,6 +4,11 @@ import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox"
 import "mapbox-gl/dist/mapbox-gl.css"
 
 import { useAppState } from "@/app-state"
+import {
+  PlacePin,
+  PreviewPlacePin,
+  SelectedPlacePin,
+} from "@/components/place-pin"
 import { Button } from "@/components/ui/button"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 import {
@@ -317,11 +322,7 @@ export function PlacesMap() {
                 handleMarkerDrag(place.id, event.lngLat.lng, event.lngLat.lat)
               }}
             >
-              <div
-                className={`size-4 rounded-full border-2 border-white shadow-md transition-transform ${
-                  isSelected ? "scale-125 bg-primary" : "bg-destructive"
-                }`}
-              />
+              {isSelected ? <SelectedPlacePin /> : <PlacePin />}
             </Marker>
           )
         })}
@@ -333,7 +334,7 @@ export function PlacesMap() {
             latitude={place.latitude}
             anchor="bottom"
           >
-            <div className="size-4 rounded-full border-2 border-primary bg-background shadow-md" />
+            <PreviewPlacePin />
           </Marker>
         ))}
 
