@@ -1,0 +1,23 @@
+[
+  {
+    "id": "tokyo-tower",
+    "name": "Tokyo Tower",
+    "note": "Classic city landmark with great night views.",
+    "longitude": 139.7454,
+    "latitude": 35.6586
+  },
+  {
+    "id": "shibuya-crossing",
+    "name": "Shibuya Crossing",
+    "note": "Busy scramble crossing and a great people-watching spot.",
+    "longitude": 139.7006,
+    "latitude": 35.6595
+  },
+  {
+    "id": "sensoji",
+    "name": "Senso-ji Temple",
+    "note": "Historic temple in Asakusa with a lively market street.",
+    "longitude": 139.7967,
+    "latitude": 35.7148
+  }
+]
