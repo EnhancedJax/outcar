@@ -3,6 +3,10 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
 import { useAppState } from "@/app-state"
+import MapAppearanceControl, {
+  MAX_PITCH,
+  MIN_PITCH,
+} from "@/components/map-appearance-control"
 import { MapHeader } from "@/components/map-header"
 import { PlacePathLayer } from "@/components/place-path-layer"
 import {
@@ -22,9 +26,9 @@ import {
 import { pathBounds } from "@/lib/path"
 import { resolvePlaceMapTagIcon } from "@/lib/places"
 import type { Place } from "@/types/place"
-import MapAppearanceControl from "./map-appearance-control"
 
 const DEFAULT_PITCH = 50
+const MAP_SETTINGS_STORAGE_KEY = "outcar-map-settings"
 const ORBIT_SPEED = 5
 const FOCUS_ZOOM = 15
 const SELECTED_PLACE_BOTTOM_PADDING = 220
@@ -34,6 +38,41 @@ const DEFAULT_VIEW = {
   latitude: 35.68,
   zoom: 10,
   pitch: DEFAULT_PITCH,
+}
+
+function readMapSettings() {
+  const fallback = {
+    appearance: "monochrome" as MapAppearance,
+    pitch: DEFAULT_PITCH,
+  }
+
+  try {
+    const raw = localStorage.getItem(MAP_SETTINGS_STORAGE_KEY)
+
+    if (!raw) {
+      return fallback
+    }
+
+    const parsed = JSON.parse(raw) as {
+      appearance?: unknown
+      pitch?: unknown
+    }
+    const appearance =
+      parsed.appearance === "colored" || parsed.appearance === "monochrome"
+        ? parsed.appearance
+        : fallback.appearance
+    const pitch =
+      typeof parsed.pitch === "number" &&
+      Number.isFinite(parsed.pitch) &&
+      parsed.pitch >= MIN_PITCH &&
+      parsed.pitch <= MAX_PITCH
+        ? parsed.pitch
+        : fallback.pitch
+
+    return { appearance, pitch }
+  } catch {
+    return fallback
+  }
 }
 
 function getBounds(places: Place[]) {
@@ -85,9 +124,31 @@ export function PlacesMap() {
   const isOrbitingRef = useRef(false)
   const awaitingFocusMoveEndRef = useRef(false)
   const hasFitEditorBoundsRef = useRef(false)
-  const [mapAppearance, setMapAppearance] =
-    useState<MapAppearance>("monochrome")
+  const [mapAppearance, setMapAppearance] = useState<MapAppearance>(
+    () => readMapSettings().appearance
+  )
+  const [pitch, setPitch] = useState(() => readMapSettings().pitch)
+  const pitchRef = useRef(pitch)
+  const [initialPitch] = useState(pitch)
   const [isMapLoaded, setIsMapLoaded] = useState(false)
+
+  const handlePitchChange = useCallback((nextPitch: number) => {
+    pitchRef.current = nextPitch
+    setPitch(nextPitch)
+
+    if (isOrbitingRef.current) {
+      return
+    }
+
+    mapRef.current?.getMap()?.setPitch(nextPitch)
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem(
+      MAP_SETTINGS_STORAGE_KEY,
+      JSON.stringify({ appearance: mapAppearance, pitch })
+    )
+  }, [mapAppearance, pitch])
 
   const stopOrbit = useCallback(() => {
     isOrbitingRef.current = false
@@ -129,7 +190,7 @@ export function PlacesMap() {
         map.jumpTo({
           center,
           bearing,
-          pitch: DEFAULT_PITCH,
+          pitch: pitchRef.current,
           zoom,
         })
 
@@ -173,7 +234,10 @@ export function PlacesMap() {
 
   const initialViewState = useMemo(() => {
     if (places.length === 0) {
-      return DEFAULT_VIEW
+      return {
+        ...DEFAULT_VIEW,
+        pitch: initialPitch,
+      }
     }
 
     const longitude =
@@ -185,9 +249,9 @@ export function PlacesMap() {
       longitude,
       latitude,
       zoom: 11,
-      pitch: DEFAULT_PITCH,
+      pitch: initialPitch,
     }
-  }, [places])
+  }, [initialPitch, places])
 
   const boundsPlaces = useMemo(
     () => [...(fitBoundsPlaces ?? places), ...previewPlaces],
@@ -231,7 +295,7 @@ export function PlacesMap() {
     map.fitBounds(bounds, {
       padding: 80,
       maxZoom: 16,
-      pitch: DEFAULT_PITCH,
+      pitch: pitchRef.current,
       duration: 600,
     })
   }, [boundsPlaces, viewerMode])
@@ -307,7 +371,7 @@ export function PlacesMap() {
           center: camera.center,
           zoom: camera.zoom,
           bearing: camera.bearing,
-          pitch: DEFAULT_PITCH,
+          pitch: pitchRef.current,
           duration: 1200,
           essential: true,
         })
@@ -316,7 +380,7 @@ export function PlacesMap() {
       map.flyTo({
         center: [selectedPlace.longitude, selectedPlace.latitude],
         zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
-        pitch: DEFAULT_PITCH,
+        pitch: pitchRef.current,
         duration: 1200,
         essential: true,
       })
@@ -441,6 +505,8 @@ export function PlacesMap() {
       <MapAppearanceControl
         mapAppearance={mapAppearance}
         setMapAppearance={setMapAppearance}
+        pitch={pitch}
+        onPitchChange={handlePitchChange}
       />
       <SelectedPlace />
       <TagList />

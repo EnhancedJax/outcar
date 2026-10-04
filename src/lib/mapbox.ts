@@ -8,7 +8,8 @@ export function getMapboxToken() {
   return MAPBOX_TOKEN
 }
 
-export const MAPBOX_STANDARD_STYLE = "mapbox://styles/mapbox/standard"
+export const MAPBOX_STANDARD_STYLE =
+  "mapbox://styles/enhancedjax/cmutsrmp7000l01sd0hts2hb2"
 
 export type MapAppearance = "colored" | "monochrome"
 

@@ -1,5 +1,13 @@
+import { useEffect } from "react"
+import { Layer, Source, useMap } from "react-map-gl/mapbox"
+
 import type { PathCoordinate } from "@/constants/path"
-import { Layer, Source } from "react-map-gl/mapbox"
+import { useResolvedTheme } from "@/hooks/use-resolved-theme"
+
+const LIGHT_CASING_COLOR = "#ffffff"
+const LIGHT_LINE_COLOR = "#2563eb"
+const DARK_CASING_COLOR = "#000000"
+const DARK_LINE_COLOR = "#9db4e5"
 
 type PlacePathLayerProps = {
   path: PathCoordinate[]
@@ -19,25 +27,67 @@ function pathFeature(path: PathCoordinate[]) {
 }
 
 export function PlacePathLayer({ path, pathType, id }: PlacePathLayerProps) {
+  const resolvedTheme = useResolvedTheme()
+  const isDark = resolvedTheme === "dark"
+  const { current: map } = useMap()
+
+  const sourceId = `place-path-${id}`
+  const casingId = `${sourceId}-casing`
+  const lineId = `${sourceId}-line`
+  const casingColor = isDark ? DARK_CASING_COLOR : LIGHT_CASING_COLOR
+  const lineColor = isDark ? LIGHT_LINE_COLOR : DARK_LINE_COLOR
+
+  useEffect(() => {
+    const mapbox = map?.getMap()
+
+    if (!mapbox) {
+      return
+    }
+
+    const applyLinePaint = (layerId: string, color: string) => {
+      if (!mapbox.getLayer(layerId)) {
+        return
+      }
+
+      if (mapbox.getPaintProperty(layerId, "line-color") !== color) {
+        mapbox.setPaintProperty(layerId, "line-color", color)
+      }
+
+      // Standard style lights shade layer colors. Night preset turns a
+      // full red into something like #1B0301 unless the line is emissive.
+      if (mapbox.getPaintProperty(layerId, "line-emissive-strength") !== 1) {
+        mapbox.setPaintProperty(layerId, "line-emissive-strength", 1)
+      }
+    }
+
+    const applyColors = () => {
+      applyLinePaint(casingId, casingColor)
+      applyLinePaint(lineId, lineColor)
+    }
+
+    applyColors()
+    mapbox.on("styledata", applyColors)
+
+    return () => {
+      mapbox.off("styledata", applyColors)
+    }
+  }, [map, casingId, lineId, casingColor, lineColor])
+
   if (pathType === -1 || path.length < 2) {
     return null
   }
 
-  const sourceId = `place-path-${id}`
   const isWalk = pathType === 1
 
   return (
-    <Source
-      id={sourceId}
-      type="geojson"
-      data={pathFeature(path)}
-    >
+    <Source id={sourceId} type="geojson" data={pathFeature(path)}>
       <Layer
-        id={`${sourceId}-casing`}
+        id={casingId}
         type="line"
         paint={{
-          "line-color": "#ffffff",
-          "line-width": 6,
+          "line-color": casingColor,
+          "line-emissive-strength": 1,
+          "line-width": 12,
           "line-opacity": 0.85,
         }}
         layout={{
@@ -46,11 +96,12 @@ export function PlacePathLayer({ path, pathType, id }: PlacePathLayerProps) {
         }}
       />
       <Layer
-        id={`${sourceId}-line`}
+        id={lineId}
         type="line"
         paint={{
-          "line-color": "#2563eb",
-          "line-width": 3,
+          "line-color": lineColor,
+          "line-emissive-strength": 1,
+          "line-width": 6,
           "line-opacity": 0.95,
           ...(isWalk ? { "line-dasharray": [1.5, 1.5] } : {}),
         }}
