@@ -1,4 +1,9 @@
-import { ArrowLeft, NavigationArrow } from "@phosphor-icons/react"
+import {
+  ArrowLeft,
+  ChatTeardropTextIcon,
+  GpsIcon,
+  NavigationArrow,
+} from "@phosphor-icons/react"
 import { cn } from "cn"
 import { useMemo } from "react"
 
@@ -68,32 +73,43 @@ export function SelectedPlace() {
     >
       <ProgressiveBlur direction="down" />
       <div className="relative flex w-full flex-col items-center px-6 pt-28 pb-6 text-center">
-        <div className="pointer-events-auto flex w-full flex-col items-center gap-2">
+        <div className="pointer-events-auto flex w-full flex-col items-center">
           <h2 className="text-lg font-medium">{selectedPlace.name}</h2>
-          {selectedPlace.note ? (
-            <p className="text-sm text-muted-foreground">
-              {selectedPlace.note}
-            </p>
-          ) : null}
-          <div className="flex flex-wrap justify-center gap-1.5">
-            <ParkingConditionChip value={selectedPlace.parkingCondition} />
-            {selectedPlace.tags.map((tagId) => {
-              const catalogTag = catalogTagById(tags, tagId)
-
-              if (!catalogTag) {
-                return null
-              }
-
-              return (
-                <span
-                  key={tagId}
-                  className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
-                >
-                  <TagChip catalogTag={catalogTag} />
-                </span>
-              )
-            })}
+          <div className="flex items-center text-muted-foreground">
+            <GpsIcon className="mr-1" />
+            <span className="text-xs">
+              {selectedPlace.latitude.toFixed(6)},{" "}
+              {selectedPlace.longitude.toFixed(6)}
+            </span>
+            <ParkingConditionChip
+              value={selectedPlace.parkingCondition}
+              className="ml-2"
+            />
           </div>
+          {selectedPlace.note ? (
+            <div className="mt-2 flex items-center gap-1">
+              <ChatTeardropTextIcon className="text-muted-foreground" />
+              <p className="text-sm">{selectedPlace.note}</p>
+            </div>
+          ) : null}
+        </div>
+        <div className="mt-4 flex flex-wrap justify-center gap-1.5">
+          {selectedPlace.tags.map((tagId) => {
+            const catalogTag = catalogTagById(tags, tagId)
+
+            if (!catalogTag) {
+              return null
+            }
+
+            return (
+              <span
+                key={tagId}
+                className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+              >
+                <TagChip catalogTag={catalogTag} />
+              </span>
+            )
+          })}
         </div>
         <div className="pointer-events-auto mt-4 flex items-center gap-2">
           <Button
@@ -116,12 +132,6 @@ export function SelectedPlace() {
               導航
             </PopoverTrigger>
             <PopoverContent side="top" align="center" className="w-52 p-2">
-              {/* <PopoverHeader className="px-2 pt-1 pb-2"> */}
-              {/* <PopoverTitle className="text-xs">導航</PopoverTitle> */}
-              {/* <PopoverDescription className="text-xs">
-                  開導航應用程式
-                </PopoverDescription> */}
-              {/* </PopoverHeader> */}
               <div className="flex flex-col gap-0.5">
                 {NAVIGATION_APPS.map((app) => {
                   const href =

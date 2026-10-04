@@ -11,6 +11,7 @@ const TAG_COLUMNS = [
   "id",
   "label",
   "icon",
+  "color",
   "description",
   "showOnMap",
 ] as const
@@ -183,6 +184,7 @@ export function parsePlacesCatalogCsv(
       id: record.id,
       label: record.label,
       icon: record.icon ? record.icon : null,
+      color: record.color ? record.color : null,
       description: record.description,
       showOnMap: record.showOnMap === "true",
     })
@@ -222,6 +224,7 @@ export function serializePlacesCatalog(catalog: PlacesCatalog) {
       tag.id,
       tag.label,
       tag.icon ?? "",
+      tag.color ?? "",
       tag.description,
       tag.showOnMap ? "true" : "false",
     ])

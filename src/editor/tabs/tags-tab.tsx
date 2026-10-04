@@ -18,6 +18,7 @@ export function TagsTab() {
     handleMoveTag,
     handleDeleteTag,
     handleSetTagIcon,
+    handleSetTagColor,
     handleSetTagShowOnMap,
   } = usePlaceEditor()
 
@@ -60,6 +61,30 @@ export function TagsTab() {
                 disabled={isSaving}
                 onSelect={(icon) => handleSetTagIcon(tag.id, icon)}
               />
+              <input
+                type="color"
+                value={tag.color ?? "#888888"}
+                aria-label={`Choose color for ${tag.label}`}
+                title={tag.color ? `Change color (${tag.color})` : "Choose color"}
+                disabled={isSaving}
+                onChange={(event) =>
+                  handleSetTagColor(tag.id, event.target.value)
+                }
+                className="h-6 w-6 cursor-pointer rounded border-0 bg-transparent p-0 disabled:cursor-not-allowed disabled:opacity-50"
+              />
+              {tag.color ? (
+                <Button
+                  type="button"
+                  size="icon-xs"
+                  variant="ghost"
+                  aria-label={`Clear color for ${tag.label}`}
+                  title="Clear color"
+                  onClick={() => handleSetTagColor(tag.id, null)}
+                  disabled={isSaving}
+                >
+                  ×
+                </Button>
+              ) : null}
               <Button
                 type="button"
                 size="icon-xs"

@@ -16,6 +16,7 @@ import {
   isValidGmapUrl,
   isValidParkingCondition,
   isValidPath,
+  isValidTagColor,
   normalizePlacesCatalog,
   normalizeTagLabel,
   tagKey,
@@ -29,6 +30,7 @@ function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
   return tags.map((tag) => ({
     ...tag,
     icon: normalizeIcon(tag.icon),
+    color: isValidTagColor(tag.color) ? tag.color : null,
     showOnMap: tag.showOnMap === true,
   }))
 }
@@ -154,7 +156,14 @@ export function addTagToCatalog(
 
   return [
     ...catalogTags,
-    { id, label: normalized, icon: null, description: "", showOnMap: false },
+    {
+      id,
+      label: normalized,
+      icon: null,
+      color: null,
+      description: "",
+      showOnMap: false,
+    },
   ]
 }
 
@@ -197,23 +206,36 @@ export function setTagShowOnMap(
   )
 }
 
+export function setTagColor(
+  catalogTags: CatalogTag[],
+  tagId: string,
+  color: string | null
+): CatalogTag[] {
+  return catalogTags.map((tag) =>
+    tag.id === tagId
+      ? { ...tag, color: isValidTagColor(color) ? color : null }
+      : tag
+  )
+}
+
+export function resolvePlaceMapTag(
+  placeTags: string[],
+  catalogTags: CatalogTag[]
+): CatalogTag | null {
+  const placeTagSet = new Set(placeTags)
+
+  return (
+    catalogTags.find(
+      (tag) => placeTagSet.has(tag.id) && tag.showOnMap
+    ) ?? null
+  )
+}
+
 export function resolvePlaceMapTagIcon(
   placeTags: string[],
   catalogTags: CatalogTag[]
 ): string | null {
-  const placeTagSet = new Set(placeTags)
-
-  for (const tag of catalogTags) {
-    if (!placeTagSet.has(tag.id)) {
-      continue
-    }
-
-    if (tag.showOnMap && tag.icon) {
-      return tag.icon
-    }
-  }
-
-  return null
+  return resolvePlaceMapTag(placeTags, catalogTags)?.icon ?? null
 }
 
 export function moveTag(

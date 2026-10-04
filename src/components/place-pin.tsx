@@ -9,14 +9,18 @@ import { TagIcon } from "@/lib/tag-icons"
 
 type PlacePinProps = {
   tagIcon?: string | null
+  tagColor?: string | null
   className?: string
 }
 
-function PlacePinContent({ tagIcon, className }: PlacePinProps) {
+function PlacePinContent({ tagIcon, tagColor, className }: PlacePinProps) {
   const resolvedTagIcon = tagIcon ?? null
 
   return (
-    <div className={cn("relative", className)}>
+    <div
+      className={cn("relative", className)}
+      style={tagColor ? { color: tagColor } : undefined}
+    >
       <MapPinIcon variant={resolvedTagIcon ? "solid" : "dotted"} />
       {resolvedTagIcon ? (
         <span
@@ -33,14 +37,33 @@ function PlacePinContent({ tagIcon, className }: PlacePinProps) {
   )
 }
 
-export function PlacePin({ tagIcon }: { tagIcon?: string | null }) {
-  return <PlacePinContent tagIcon={tagIcon} className="text-destructive" />
-}
-
-export function SelectedPlacePin({ tagIcon }: { tagIcon?: string | null }) {
+export function PlacePin({
+  tagIcon,
+  tagColor,
+}: {
+  tagIcon?: string | null
+  tagColor?: string | null
+}) {
   return (
     <PlacePinContent
       tagIcon={tagIcon}
+      tagColor={tagColor}
+      className="text-destructive"
+    />
+  )
+}
+
+export function SelectedPlacePin({
+  tagIcon,
+  tagColor,
+}: {
+  tagIcon?: string | null
+  tagColor?: string | null
+}) {
+  return (
+    <PlacePinContent
+      tagIcon={tagIcon}
+      tagColor={tagColor}
       className="scale-125 text-primary"
     />
   )

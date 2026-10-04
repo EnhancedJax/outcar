@@ -24,7 +24,7 @@ import {
   type MapAppearance,
 } from "@/lib/mapbox"
 import { pathBounds } from "@/lib/path"
-import { resolvePlaceMapTagIcon } from "@/lib/places"
+import { resolvePlaceMapTag } from "@/lib/places"
 import type { Place } from "@/types/place"
 
 const DEFAULT_PITCH = 50
@@ -464,7 +464,7 @@ export function PlacesMap() {
         {visiblePlaces.map((place) => {
           const isSelected = place.id === selectedPlaceId
           const isDraggable = place.id === draggableMarkerId
-          const mapTagIcon = resolvePlaceMapTagIcon(place.tags, tags)
+          const mapTag = resolvePlaceMapTag(place.tags, tags)
 
           return (
             <Marker
@@ -482,9 +482,15 @@ export function PlacesMap() {
               }}
             >
               {isSelected ? (
-                <SelectedPlacePin tagIcon={mapTagIcon} />
+                <SelectedPlacePin
+                  tagIcon={mapTag?.icon}
+                  tagColor={mapTag?.color}
+                />
               ) : (
-                <PlacePin tagIcon={mapTagIcon} />
+                <PlacePin
+                  tagIcon={mapTag?.icon}
+                  tagColor={mapTag?.color}
+                />
               )}
             </Marker>
           )

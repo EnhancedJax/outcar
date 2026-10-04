@@ -5,6 +5,7 @@ export type CatalogTag = {
   id: string
   label: string
   icon: string | null
+  color: string | null
   description: string
   showOnMap: boolean
 }
@@ -81,9 +82,16 @@ export function isValidCatalogTag(value: unknown): value is CatalogTag {
     typeof tag.label === "string" &&
     tag.label.trim().length > 0 &&
     (tag.icon === null || typeof tag.icon === "string") &&
+    (tag.color === undefined ||
+      tag.color === null ||
+      isValidTagColor(tag.color)) &&
     (tag.description === undefined || typeof tag.description === "string") &&
     typeof tag.showOnMap === "boolean"
   )
+}
+
+export function isValidTagColor(value: unknown): value is string {
+  return typeof value === "string" && /^#[0-9a-f]{6}$/i.test(value)
 }
 
 function isValidCatalogTagsArray(value: unknown): value is CatalogTag[] {
@@ -303,7 +311,14 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
 
       const id = createUniqueTagId(label, seenIds)
 
-      result.push({ id, label, icon: null, description: "", showOnMap: false })
+      result.push({
+        id,
+        label,
+        icon: null,
+        color: null,
+        description: "",
+        showOnMap: false,
+      })
       seenIds.add(id)
       seenLabelKeys.add(tagKey(label))
       continue
@@ -333,11 +348,13 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
           : typeof raw.icon === "string" && raw.icon.trim()
             ? raw.icon.trim()
             : null
+      const color = isValidTagColor(raw.color) ? raw.color : null
 
       result.push({
         id,
         label,
         icon,
+        color,
         description: normalizeTagDescription(raw.description),
         showOnMap: raw.showOnMap === true,
       })
@@ -415,7 +432,14 @@ export function reconcileCatalogTags(catalog: PlacesCatalog): PlacesCatalog {
 
       const id = createUniqueTagId(label, idSet)
 
-      tags.push({ id, label, icon: null, description: "", showOnMap: false })
+      tags.push({
+        id,
+        label,
+        icon: null,
+        color: null,
+        description: "",
+        showOnMap: false,
+      })
       idSet.add(id)
       labelToId.set(key, id)
     }
