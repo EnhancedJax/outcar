@@ -11,7 +11,7 @@ import {
 import { FormProvider, useForm } from "react-hook-form"
 
 import { useAppState } from "@/app-state"
-import type { PathTypeValue } from "@/constants/path"
+import { isPathTypeValue, type PathTypeValue } from "@/constants/path"
 import { pathAnchoredAtPin, reversePath } from "@/lib/path"
 import { fetchDirections, searchPlaces } from "@/lib/mapbox"
 import {
@@ -300,7 +300,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       const pathType = Number(getValues("pathType"))
       const path = getValues("path")
 
-      if (pathType !== -1 && path.length > 0) {
+      if (isPathTypeValue(pathType) && pathType !== -1 && path.length > 0) {
         setValue("path", pathAnchoredAtPin(pathType, longitude, latitude, path))
       }
     },
@@ -661,7 +661,11 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     const values = getValues()
     const pathType = Number(values.pathType)
 
-    if (pathType === -1 || values.path.length < 2) {
+    if (
+      !isPathTypeValue(pathType) ||
+      pathType === -1 ||
+      values.path.length < 2
+    ) {
       return
     }
 

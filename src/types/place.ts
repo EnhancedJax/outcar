@@ -1,5 +1,5 @@
-import { isParkingConditionValue } from "../constants/parking"
-import { isPathTypeValue, type PathCoordinate } from "../constants/path"
+import { isParkingConditionValue } from "../constants/parking.js"
+import { isPathTypeValue, type PathCoordinate } from "../constants/path.js"
 
 export type CatalogTag = {
   id: string

@@ -1,4 +1,10 @@
-import { createElement } from "react"
+import {
+  CheckCircleIcon,
+  ProhibitIcon,
+  QuestionIcon,
+} from "@phosphor-icons/react"
+import type { IconProps } from "@phosphor-icons/react"
+import { createElement, type ComponentType } from "react"
 
 import {
   Popover,
@@ -11,6 +17,14 @@ import {
 import { parkingConditionByValue } from "@/constants/parking"
 import { cn } from "cn"
 
+const parkingIcons: Record<number, ComponentType<IconProps>> = {
+  [-1]: QuestionIcon,
+  0: ProhibitIcon,
+  1: CheckCircleIcon,
+  2: CheckCircleIcon,
+  3: CheckCircleIcon,
+}
+
 type ParkingConditionChipProps = {
   value: number
   className?: string
@@ -21,12 +35,11 @@ export function ParkingConditionChip({
   className,
 }: ParkingConditionChipProps) {
   const condition = parkingConditionByValue(value)
+  const Icon = parkingIcons[value]
 
-  if (!condition) {
+  if (!condition || !Icon) {
     return null
   }
-
-  const Icon = condition.icon
 
   return (
     <Popover>

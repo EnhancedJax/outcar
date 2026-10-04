@@ -1,17 +1,8 @@
-import type { IconProps } from "@phosphor-icons/react"
-import {
-  CheckCircleIcon,
-  ProhibitIcon,
-  QuestionIcon,
-} from "@phosphor-icons/react"
-import type { ComponentType } from "react"
-
 export type ParkingConditionValue = -1 | 0 | 1 | 2 | 3
 
 export type ParkingConditionDefinition = {
   value: ParkingConditionValue
   title: string
-  icon: ComponentType<IconProps>
   description: string
 }
 
@@ -19,32 +10,27 @@ export const PARKING_CONDITIONS: readonly ParkingConditionDefinition[] = [
   {
     value: -1,
     title: "未有",
-    icon: QuestionIcon,
     description: "未有泊車資訊",
   },
   {
     value: 0,
     title: "有限制",
-    icon: ProhibitIcon,
     description:
       "停車位喺上落客區，雙黃線或單黃線旁邊。只要你喺架車附近，泊車就冇問題。",
   },
   {
     value: 1,
     title: "任停",
-    icon: CheckCircleIcon,
     description: "唔使擔心俾人抄牌",
   },
   {
     value: 2,
     title: "不停路段",
-    icon: CheckCircleIcon,
     description: "風景一路揸一路睇，唔好停",
   },
   {
     value: 3,
     title: "收費停車場",
-    icon: CheckCircleIcon,
     description: "要俾錢先入到",
   },
 ]

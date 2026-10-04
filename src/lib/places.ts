@@ -16,7 +16,6 @@ import {
   isValidGmapUrl,
   isValidParkingCondition,
   isValidPath,
-  isValidPathType,
   normalizePlacesCatalog,
   normalizeTagLabel,
   tagKey,
@@ -259,6 +258,11 @@ export function fromDraft(draft: DraftPlace): Place | null {
   const parkingCondition = Number(draft.parkingCondition)
   const pathType = Number(draft.pathType)
   const gmapUrl = draft.gmapUrl.trim()
+
+  if (!isPathTypeValue(pathType)) {
+    return null
+  }
+
   const path =
     pathType === -1
       ? []
@@ -271,7 +275,6 @@ export function fromDraft(draft: DraftPlace): Place | null {
     !isValidLatitudeString(draft.latitude) ||
     !isValidParkingCondition(parkingCondition) ||
     (gmapUrl !== "" && !isValidGmapUrl(gmapUrl)) ||
-    !isValidPathType(pathType) ||
     !isValidPath(path) ||
     (pathType !== -1 && path.length < 2)
   ) {
