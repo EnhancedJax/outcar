@@ -1,29 +1,26 @@
-import { useEffect } from "react"
-import { useForm } from "react-hook-form"
+import { useFormContext } from "react-hook-form"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { TagChip } from "@/components/tag-chip"
+import {
+  validateGmapUrl,
+  validateLatitude,
+  validateLongitude,
+  validateParkingCondition,
+} from "@/lib/places"
 import type { DraftPlace } from "@/types/place"
 
 import { usePlaceEditor } from "../place-editor-context"
-import type { PlaceFormValues } from "../place-editor-utils"
-
-function isValidCoordinate(value: string) {
-  const number = Number(value)
-  return value.trim().length > 0 && Number.isFinite(number)
-}
 
 export function PlaceForm() {
   const {
-    draft,
     isCreating,
     tags,
     draftNewTagLabel,
     setDraftNewTagLabel,
-    onDraftChange,
     handleApply,
     handleToggleDraftTag,
     handleAddDraftTag,
@@ -33,71 +30,15 @@ export function PlaceForm() {
   const {
     register,
     handleSubmit,
-    reset,
-    setValue,
     setError,
+    watch,
     formState: { errors },
-  } = useForm<PlaceFormValues>({
-    defaultValues: draft ?? undefined,
-    mode: "onSubmit",
-  })
+  } = useFormContext<DraftPlace>()
 
-  const draftId = draft?.id
-
-  useEffect(() => {
-    if (!draft) {
-      return
-    }
-
-    reset({
-      id: draft.id,
-      name: draft.name,
-      note: draft.note,
-      longitude: draft.longitude,
-      latitude: draft.latitude,
-      parkingCondition: draft.parkingCondition,
-      gmapUrl: draft.gmapUrl,
-    })
-  }, [draft, draftId, reset])
-
-  useEffect(() => {
-    if (!draft) {
-      return
-    }
-
-    setValue("longitude", draft.longitude)
-    setValue("latitude", draft.latitude)
-  }, [draft?.longitude, draft?.latitude, draft, setValue])
-
-  if (!draft) {
-    return null
-  }
-
-  const currentDraft = draft
-
-  function syncCoordinates(field: "longitude" | "latitude", value: string) {
-    onDraftChange({ ...currentDraft, [field]: value }, isCreating)
-  }
-
-  const longitudeField = register("longitude", {
-    required: "Longitude is required",
-    validate: (value) => isValidCoordinate(value) || "Enter a valid longitude",
-    onChange: (event) => syncCoordinates("longitude", event.target.value),
-  })
-
-  const latitudeField = register("latitude", {
-    required: "Latitude is required",
-    validate: (value) => isValidCoordinate(value) || "Enter a valid latitude",
-    onChange: (event) => syncCoordinates("latitude", event.target.value),
-  })
+  const selectedTags = watch("tags")
 
   const onSubmit = handleSubmit((values) => {
-    const nextDraft: DraftPlace = {
-      ...currentDraft,
-      ...values,
-    }
-
-    const applyError = handleApply(nextDraft)
+    const applyError = handleApply(values)
 
     if (!applyError) {
       return
@@ -148,7 +89,7 @@ export function PlaceForm() {
         {tags.length > 0 ? (
           <div className="flex flex-wrap gap-1.5">
             {tags.map((tag) => {
-              const isSelected = draft.tags.includes(tag.id)
+              const isSelected = selectedTags.includes(tag.id)
 
               return (
                 <button
@@ -199,7 +140,7 @@ export function PlaceForm() {
           <Input
             id="longitude"
             aria-invalid={Boolean(errors.longitude)}
-            {...longitudeField}
+            {...register("longitude", { validate: validateLongitude })}
           />
           {errors.longitude ? (
             <p className="text-xs text-destructive">
@@ -212,7 +153,7 @@ export function PlaceForm() {
           <Input
             id="latitude"
             aria-invalid={Boolean(errors.latitude)}
-            {...latitudeField}
+            {...register("latitude", { validate: validateLatitude })}
           />
           {errors.latitude ? (
             <p className="text-xs text-destructive">
@@ -233,9 +174,7 @@ export function PlaceForm() {
           inputMode="numeric"
           aria-invalid={Boolean(errors.parkingCondition)}
           {...register("parkingCondition", {
-            required: "Parking condition is required",
-            validate: (value) =>
-              Number.isInteger(Number(value)) || "Enter a whole number",
+            validate: validateParkingCondition,
           })}
         />
         {errors.parkingCondition ? (
@@ -251,26 +190,7 @@ export function PlaceForm() {
           id="gmapUrl"
           type="url"
           aria-invalid={Boolean(errors.gmapUrl)}
-          {...register("gmapUrl", {
-            validate: (value) => {
-              const trimmed = value.trim()
-
-              if (!trimmed) {
-                return true
-              }
-
-              try {
-                const url = new URL(trimmed)
-                return (
-                  url.protocol === "http:" ||
-                  url.protocol === "https:" ||
-                  "Enter an http or https URL"
-                )
-              } catch {
-                return "Enter an http or https URL"
-              }
-            },
-          })}
+          {...register("gmapUrl", { validate: validateGmapUrl })}
         />
         {errors.gmapUrl ? (
           <p className="text-xs text-destructive">{errors.gmapUrl.message}</p>

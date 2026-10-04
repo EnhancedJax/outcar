@@ -1,6 +1,7 @@
 import placesCsv from "@/data/places.csv?raw"
 import tagsCsv from "@/data/tags.csv?raw"
-import type { CatalogTag, Place, PlacesCatalog } from "@/types/place"
+import type { CatalogTag, DraftPlace, Place, PlacesCatalog } from "@/types/place"
+import { isValidGmapUrl, isValidParkingCondition } from "@/types/place"
 import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import {
@@ -194,4 +195,137 @@ export function moveTag(
   const [item] = next.splice(fromIndex, 1)
   next.splice(toIndex, 0, item)
   return next
+}
+
+export function toDraft(place: Place): DraftPlace {
+  return {
+    id: place.id,
+    name: place.name,
+    note: place.note,
+    longitude: String(place.longitude),
+    latitude: String(place.latitude),
+    tags: [...place.tags],
+    parkingCondition: String(place.parkingCondition),
+    gmapUrl: place.gmapUrl ?? "",
+  }
+}
+
+export function fromDraft(draft: DraftPlace): Place | null {
+  const longitude = Number(draft.longitude)
+  const latitude = Number(draft.latitude)
+  const parkingCondition = Number(draft.parkingCondition)
+  const gmapUrl = draft.gmapUrl.trim()
+
+  if (
+    !draft.id.trim() ||
+    !draft.name.trim() ||
+    !isValidLongitudeString(draft.longitude) ||
+    !isValidLatitudeString(draft.latitude) ||
+    !isValidParkingCondition(parkingCondition) ||
+    (gmapUrl !== "" && !isValidGmapUrl(gmapUrl))
+  ) {
+    return null
+  }
+
+  return {
+    id: draft.id.trim(),
+    name: draft.name.trim(),
+    note: draft.note,
+    longitude,
+    latitude,
+    tags: draft.tags,
+    parkingCondition,
+    gmapUrl: gmapUrl === "" ? null : gmapUrl,
+  }
+}
+
+export function isValidLongitudeString(value: string) {
+  const number = Number(value)
+
+  return (
+    value.trim().length > 0 &&
+    Number.isFinite(number) &&
+    number >= -180 &&
+    number <= 180
+  )
+}
+
+export function isValidLatitudeString(value: string) {
+  const number = Number(value)
+
+  return (
+    value.trim().length > 0 &&
+    Number.isFinite(number) &&
+    number >= -90 &&
+    number <= 90
+  )
+}
+
+export function validateLongitude(value: string) {
+  if (!value.trim()) {
+    return "Longitude is required"
+  }
+
+  if (!isValidLongitudeString(value)) {
+    return "Enter a valid longitude"
+  }
+
+  return true
+}
+
+export function validateLatitude(value: string) {
+  if (!value.trim()) {
+    return "Latitude is required"
+  }
+
+  if (!isValidLatitudeString(value)) {
+    return "Enter a valid latitude"
+  }
+
+  return true
+}
+
+export function validateParkingCondition(value: string) {
+  if (!value.trim()) {
+    return "Parking condition is required"
+  }
+
+  if (!Number.isInteger(Number(value))) {
+    return "Enter a whole number"
+  }
+
+  return true
+}
+
+export function validateGmapUrl(value: string) {
+  const trimmed = value.trim()
+
+  if (!trimmed) {
+    return true
+  }
+
+  try {
+    const url = new URL(trimmed)
+
+    if (url.protocol === "http:" || url.protocol === "https:") {
+      return true
+    }
+
+    return "Enter an http or https URL"
+  } catch {
+    return "Enter an http or https URL"
+  }
+}
+
+export function createEmptyDraft(): DraftPlace {
+  return {
+    id: `draft-${Date.now()}`,
+    name: "",
+    note: "",
+    longitude: "139.7",
+    latitude: "35.68",
+    tags: [],
+    parkingCondition: "-1",
+    gmapUrl: "",
+  }
 }

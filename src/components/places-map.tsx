@@ -1,6 +1,6 @@
 import "mapbox-gl/dist/mapbox-gl.css"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
-import Map, { Marker, Popup, type MapRef } from "react-map-gl/mapbox"
+import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
 import { useAppState } from "@/app-state"
 import {
@@ -61,7 +61,7 @@ export function PlacesMap() {
     importPreviewPlaces,
     viewerMode,
     selectedPlaceId,
-    selectPlace,
+    selectPlaceFromMap,
     handleMapClick,
     handleMarkerDrag,
     draggableMarkerId,
@@ -308,7 +308,7 @@ export function PlacesMap() {
               draggable={isDraggable}
               onClick={(event) => {
                 event.originalEvent.stopPropagation()
-                selectPlace(place.id)
+                selectPlaceFromMap(place.id)
               }}
               onDragEnd={(event) => {
                 handleMarkerDrag(place.id, event.lngLat.lng, event.lngLat.lat)
@@ -330,25 +330,6 @@ export function PlacesMap() {
           </Marker>
         ))}
 
-        {selectedPlace && !viewerMode && !draggableMarkerId ? (
-          <Popup
-            longitude={selectedPlace.longitude}
-            latitude={selectedPlace.latitude}
-            anchor="top"
-            closeButton={false}
-            closeOnClick={false}
-            offset={12}
-          >
-            <div className="max-w-56 space-y-1">
-              <p className="font-medium">{selectedPlace.name}</p>
-              {selectedPlace.note ? (
-                <p className="text-sm text-muted-foreground">
-                  {selectedPlace.note}
-                </p>
-              ) : null}
-            </div>
-          </Popup>
-        ) : null}
       </Map>
 
       <div className="absolute top-4 left-4 z-10 flex gap-1 rounded-lg border border-border bg-background/95 p-1 shadow-lg backdrop-blur">

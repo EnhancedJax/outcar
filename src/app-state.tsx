@@ -3,42 +3,22 @@ import {
   useCallback,
   useContext,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
 
-import { places as initialPlaces, tags as initialTags } from "@/lib/places"
+import {
+  fromDraft,
+  places as initialPlaces,
+  tags as initialTags,
+} from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
-import { isValidGmapUrl, isValidParkingCondition } from "@/types/place"
 
-function draftToPlace(draft: DraftPlace): Place | null {
-  const longitude = Number(draft.longitude)
-  const latitude = Number(draft.latitude)
-  const parkingCondition = Number(draft.parkingCondition)
-  const gmapUrl = draft.gmapUrl.trim()
-
-  if (
-    !draft.id.trim() ||
-    !draft.name.trim() ||
-    !Number.isFinite(longitude) ||
-    !Number.isFinite(latitude) ||
-    !isValidParkingCondition(parkingCondition) ||
-    (gmapUrl !== "" && !isValidGmapUrl(gmapUrl))
-  ) {
-    return null
-  }
-
-  return {
-    id: draft.id.trim(),
-    name: draft.name.trim(),
-    note: draft.note,
-    longitude,
-    latitude,
-    tags: draft.tags,
-    parkingCondition,
-    gmapUrl: gmapUrl === "" ? null : gmapUrl,
-  }
-}
+type EditorCoordinateHandler = (
+  longitude: number,
+  latitude: number
+) => void
 
 type AppStateContextValue = {
   places: Place[]
@@ -62,6 +42,13 @@ type AppStateContextValue = {
   setActiveTag: (tag: string | null) => void
   setIsEditorOpen: (open: boolean | ((open: boolean) => boolean)) => void
   selectPlace: (placeId: string | null) => void
+  selectPlaceFromMap: (placeId: string) => void
+  registerEditorPlaceSelect: (
+    handler: ((placeId: string) => void) | null
+  ) => void
+  registerEditorCoordinateHandler: (
+    handler: EditorCoordinateHandler | null
+  ) => void
   handleMapClick: (longitude: number, latitude: number) => void
   handleMarkerDrag: (
     placeId: string,
@@ -97,6 +84,8 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   >(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(true)
+  const editorPlaceSelectRef = useRef<((placeId: string) => void) | null>(null)
+  const editorCoordinateHandlerRef = useRef<EditorCoordinateHandler | null>(null)
 
   const isEditorActive = import.meta.env.DEV && isEditorOpen
   const viewerMode = !isEditorActive
@@ -124,7 +113,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       return basePlaces
     }
 
-    const draftPlace = draftToPlace(editorDraft)
+    const draftPlace = fromDraft(editorDraft)
 
     if (!draftPlace) {
       return basePlaces
@@ -142,32 +131,35 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const fitBoundsPlaces = isEditorActive ? displayPlaces : places
   const draggableMarkerId = isEditorActive ? (editorDraft?.id ?? null) : null
 
+  const registerEditorCoordinateHandler = useCallback(
+    (handler: EditorCoordinateHandler | null) => {
+      editorCoordinateHandlerRef.current = handler
+    },
+    []
+  )
+
   const handleMapClick = useCallback(
     (longitude: number, latitude: number) => {
-      if (!isEditorActive || !editorDraft) {
+      if (!isEditorActive || !editorDraft || !editorCoordinateHandlerRef.current) {
         return
       }
 
-      setEditorDraftState({
-        ...editorDraft,
-        longitude: String(longitude),
-        latitude: String(latitude),
-      })
+      editorCoordinateHandlerRef.current(longitude, latitude)
     },
     [editorDraft, isEditorActive]
   )
 
   const handleMarkerDrag = useCallback(
     (placeId: string, longitude: number, latitude: number) => {
-      if (!isEditorActive || editorDraft?.id !== placeId) {
+      if (
+        !isEditorActive ||
+        editorDraft?.id !== placeId ||
+        !editorCoordinateHandlerRef.current
+      ) {
         return
       }
 
-      setEditorDraftState({
-        ...editorDraft,
-        longitude: String(longitude),
-        latitude: String(latitude),
-      })
+      editorCoordinateHandlerRef.current(longitude, latitude)
     },
     [editorDraft, isEditorActive]
   )
@@ -185,6 +177,25 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       }
     },
     [activeTag, filteredPlaces]
+  )
+
+  const registerEditorPlaceSelect = useCallback(
+    (handler: ((placeId: string) => void) | null) => {
+      editorPlaceSelectRef.current = handler
+    },
+    []
+  )
+
+  const selectPlaceFromMap = useCallback(
+    (placeId: string) => {
+      if (isEditorActive && editorPlaceSelectRef.current) {
+        editorPlaceSelectRef.current(placeId)
+        return
+      }
+
+      selectPlace(placeId)
+    },
+    [isEditorActive, selectPlace]
   )
 
   const value = useMemo<AppStateContextValue>(
@@ -210,6 +221,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setActiveTag,
       setIsEditorOpen,
       selectPlace,
+      selectPlaceFromMap,
+      registerEditorPlaceSelect,
+      registerEditorCoordinateHandler,
       handleMapClick,
       handleMarkerDrag,
     }),
@@ -230,6 +244,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       draggableMarkerId,
       setEditorDraft,
       selectPlace,
+      selectPlaceFromMap,
+      registerEditorPlaceSelect,
+      registerEditorCoordinateHandler,
       handleMapClick,
       handleMarkerDrag,
     ]

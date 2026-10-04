@@ -4,30 +4,33 @@ import {
   useContext,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type ReactNode,
 } from "react"
+import { FormProvider, useForm } from "react-hook-form"
 
 import { useAppState } from "@/app-state"
 import { searchPlaces } from "@/lib/mapbox"
 import {
   addTagToCatalog,
+  createEmptyDraft,
   createPlaceId,
   createUniquePlaceId,
   fetchGoogleMapsList,
+  fromDraft,
   moveTag,
   placeAlreadyExists,
   removeTagFromCatalog,
   removeTagFromPlaces,
   savePlacesCatalog,
   setTagIcon,
+  toDraft,
 } from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
 import {
-  fromDraft,
   importPreviewToPlaces,
-  toDraft,
   toggleDraftTag,
   type EditorTab,
   type ImportPreviewItem,
@@ -35,7 +38,7 @@ import {
 } from "./place-editor-utils"
 
 export type PlaceApplyError = {
-  field?: keyof import("./place-editor-utils").PlaceFormValues
+  field?: keyof DraftPlace
   message: string
 }
 
@@ -70,7 +73,6 @@ type PlaceEditorContextValue = {
   setActiveTab: (tab: EditorTab) => void
   placesScreen: PlacesScreen
   goToPlacesList: () => void
-  onDraftChange: (draft: DraftPlace | null, isCreating: boolean) => void
   handleCommit: () => Promise<void>
   clearImportPreview: () => void
   updateImportSelection: (key: string, selected: boolean) => void
@@ -120,7 +122,16 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     setEditorDraft: onDraftChange,
     setImportPreviewPlaces,
     selectPlace: onSelectPlace,
+    registerEditorPlaceSelect,
+    registerEditorCoordinateHandler,
   } = useAppState()
+
+  const isCreatingRef = useRef(false)
+  const formMethods = useForm<DraftPlace>({
+    defaultValues: createEmptyDraft(),
+    mode: "onSubmit",
+  })
+  const { reset, watch, setValue, getValues } = formMethods
 
   const [query, setQuery] = useState("")
   const [importUrl, setImportUrl] = useState("")
@@ -145,6 +156,56 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
   const selectedPlace =
     places.find((place) => place.id === selectedPlaceId) ?? null
+
+  const openPlaceForm = useCallback(
+    (nextDraft: DraftPlace, creating: boolean) => {
+      isCreatingRef.current = creating
+      reset(nextDraft)
+      onDraftChange(nextDraft, creating)
+      setActiveTab("places")
+      setPlacesScreen("form")
+    },
+    [onDraftChange, reset]
+  )
+
+  useEffect(() => {
+    if (placesScreen !== "form") {
+      return
+    }
+
+    const subscription = watch((values) => {
+      onDraftChange(values as DraftPlace, isCreatingRef.current)
+    })
+
+    return () => subscription.unsubscribe()
+  }, [onDraftChange, placesScreen, watch])
+
+  useEffect(() => {
+    if (placesScreen !== "form") {
+      registerEditorCoordinateHandler(null)
+      return
+    }
+
+    registerEditorCoordinateHandler((longitude, latitude) => {
+      setValue("longitude", String(longitude))
+      setValue("latitude", String(latitude))
+    })
+
+    return () => registerEditorCoordinateHandler(null)
+  }, [placesScreen, registerEditorCoordinateHandler, setValue])
+
+  useEffect(() => {
+    registerEditorPlaceSelect((placeId) => {
+      const place = places.find((item) => item.id === placeId)
+
+      if (place) {
+        openPlaceForm(toDraft(place), false)
+        onSelectPlace(place.id)
+      }
+    })
+
+    return () => registerEditorPlaceSelect(null)
+  }, [onSelectPlace, openPlaceForm, places, registerEditorPlaceSelect])
 
   useEffect(() => {
     if (importPreview.length === 0) {
@@ -220,11 +281,12 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       const nextPlaces = removeTagFromPlaces(places, tagId)
       applyCatalog(nextTags, nextPlaces)
 
-      if (draft) {
-        onDraftChange(toggleDraftTag(draft, tagId), isCreating)
+      if (placesScreen === "form") {
+        const currentDraft = getValues()
+        setValue("tags", toggleDraftTag(currentDraft, tagId).tags)
       }
     },
-    [applyCatalog, draft, isCreating, onDraftChange, places, tags]
+    [applyCatalog, getValues, places, placesScreen, setValue, tags]
   )
 
   const handleSetTagIcon = useCallback(
@@ -336,73 +398,59 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   }, [query])
 
   const goToPlacesList = useCallback(() => {
+    setPlacesScreen("list")
+    isCreatingRef.current = false
     onDraftChange(null, false)
     onSelectPlace(null)
-    setPlacesScreen("list")
   }, [onDraftChange, onSelectPlace])
 
   const startCreate = useCallback(() => {
-    onDraftChange(
-      {
-        id: `draft-${Date.now()}`,
-        name: "",
-        note: "",
-        longitude: "139.7",
-        latitude: "35.68",
-        tags: [],
-        parkingCondition: "-1",
-        gmapUrl: "",
-      },
-      true
-    )
+    openPlaceForm(createEmptyDraft(), true)
     onSelectPlace(null)
-    setActiveTab("places")
-    setPlacesScreen("form")
-  }, [onDraftChange, onSelectPlace])
+  }, [onSelectPlace, openPlaceForm])
 
   const startEdit = useCallback(
     (place: Place) => {
-      onDraftChange(toDraft(place), false)
+      openPlaceForm(toDraft(place), false)
       onSelectPlace(place.id)
-      setActiveTab("places")
-      setPlacesScreen("form")
     },
-    [onDraftChange, onSelectPlace]
+    [onSelectPlace, openPlaceForm]
   )
 
   const applySearchResult = useCallback(
     (feature: Awaited<ReturnType<typeof searchPlaces>>[number]) => {
       const [longitude, latitude] = feature.center
 
-      const base =
-        draft ??
-        (selectedPlace
-          ? toDraft(selectedPlace)
-          : {
-              id: createPlaceId(feature.place_name),
-              name: feature.place_name,
-              note: "",
-              longitude: String(longitude),
-              latitude: String(latitude),
-              tags: [],
-              parkingCondition: "-1",
-              gmapUrl: "",
-            })
+      if (placesScreen === "form") {
+        setValue("longitude", String(longitude))
+        setValue("latitude", String(latitude))
 
-      onDraftChange(
-        {
-          ...base,
-          name: base.name || feature.place_name,
-          id: base.id || createPlaceId(feature.place_name),
-          longitude: String(longitude),
-          latitude: String(latitude),
-        },
-        draft ? isCreating : !selectedPlace
-      )
-      setActiveTab("places")
-      setPlacesScreen("form")
+        const name = getValues("name")
+        const id = getValues("id")
+
+        if (!name) {
+          setValue("name", feature.place_name)
+        }
+
+        if (!id) {
+          setValue("id", createPlaceId(feature.place_name))
+        }
+
+        return
+      }
+
+      const nextDraft = {
+        ...createEmptyDraft(),
+        id: createPlaceId(feature.place_name),
+        name: feature.place_name,
+        longitude: String(longitude),
+        latitude: String(latitude),
+      }
+
+      openPlaceForm(nextDraft, true)
+      onSelectPlace(null)
     },
-    [draft, isCreating, onDraftChange, selectedPlace]
+    [getValues, onSelectPlace, openPlaceForm, placesScreen, setValue]
   )
 
   const handleApply = useCallback(
@@ -430,9 +478,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
           )
 
       applyCatalog(tags, nextPlaces)
+      setPlacesScreen("list")
+      isCreatingRef.current = false
       onDraftChange(null, false)
       onSelectPlace(nextPlace.id)
-      setPlacesScreen("list")
       setResults([])
       setQuery("")
 
@@ -455,9 +504,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       applyCatalog(tags, nextPlaces)
 
       if (selectedPlaceId === placeId) {
-        onSelectPlace(null)
-        onDraftChange(null, false)
         setPlacesScreen("list")
+        isCreatingRef.current = false
+        onDraftChange(null, false)
+        onSelectPlace(null)
       }
     },
     [
@@ -472,17 +522,18 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
   const handleToggleDraftTag = useCallback(
     (tagId: string) => {
-      if (!draft) {
+      if (placesScreen !== "form") {
         return
       }
 
-      onDraftChange(toggleDraftTag(draft, tagId), isCreating)
+      const currentDraft = getValues()
+      setValue("tags", toggleDraftTag(currentDraft, tagId).tags)
     },
-    [draft, isCreating, onDraftChange]
+    [getValues, placesScreen, setValue]
   )
 
   const handleAddDraftTag = useCallback(() => {
-    if (!draft) {
+    if (placesScreen !== "form") {
       return
     }
 
@@ -494,24 +545,22 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     }
 
     const addedTag = nextTags[nextTags.length - 1]
+    const currentDraft = getValues()
     applyCatalog(nextTags, places)
-    onDraftChange(
-      {
-        ...draft,
-        tags: draft.tags.includes(addedTag.id)
-          ? draft.tags
-          : [...draft.tags, addedTag.id],
-      },
-      isCreating
+    setValue(
+      "tags",
+      currentDraft.tags.includes(addedTag.id)
+        ? currentDraft.tags
+        : [...currentDraft.tags, addedTag.id]
     )
     setDraftNewTagLabel("")
   }, [
     applyCatalog,
-    draft,
     draftNewTagLabel,
-    isCreating,
-    onDraftChange,
+    getValues,
     places,
+    placesScreen,
+    setValue,
     tags,
   ])
 
@@ -543,7 +592,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       setActiveTab,
       placesScreen,
       goToPlacesList,
-      onDraftChange,
       handleCommit,
       clearImportPreview,
       updateImportSelection,
@@ -591,7 +639,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       isSaving,
       isSearching,
       newTagLabel,
-      onDraftChange,
       places,
       placesScreen,
       query,
@@ -606,8 +653,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   return (
-    <PlaceEditorContext.Provider value={value}>
-      {children}
-    </PlaceEditorContext.Provider>
+    <FormProvider {...formMethods}>
+      <PlaceEditorContext.Provider value={value}>
+        {children}
+      </PlaceEditorContext.Provider>
+    </FormProvider>
   )
 }

@@ -16,7 +16,7 @@ export function TagList() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center p-4">
       <div
-        className="pointer-events-auto flex max-w-full gap-2 overflow-x-auto rounded-2xl border border-border bg-background/95 p-1"
+        className="pointer-events-auto flex w-full flex-wrap items-center justify-center gap-2"
         role="toolbar"
         aria-label="Filter places by tag"
       >
