@@ -1,10 +1,12 @@
 import { useFormContext } from "react-hook-form"
+import { cn } from "cn"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { TagChip } from "@/components/tag-chip"
+import { PARKING_CONDITIONS } from "@/constants/parking"
 import {
   validateGmapUrl,
   validateLatitude,
@@ -25,6 +27,7 @@ export function PlaceForm() {
     handleToggleDraftTag,
     handleAddDraftTag,
     goToPlacesList,
+    hasNextPlace,
   } = usePlaceEditor()
 
   const {
@@ -37,8 +40,8 @@ export function PlaceForm() {
 
   const selectedTags = watch("tags")
 
-  const onSubmit = handleSubmit((values) => {
-    const applyError = handleApply(values)
+  const applyDraft = (values: DraftPlace, advance: boolean) => {
+    const applyError = handleApply(values, { advance })
 
     if (!applyError) {
       return
@@ -50,6 +53,14 @@ export function PlaceForm() {
     }
 
     setError("root", { message: applyError.message })
+  }
+
+  const onSubmit = handleSubmit((values) => {
+    applyDraft(values, false)
+  })
+
+  const onDoneAndNext = handleSubmit((values) => {
+    applyDraft(values, true)
   })
 
   return (
@@ -169,14 +180,22 @@ export function PlaceForm() {
 
       <div className="space-y-1">
         <Label htmlFor="parkingCondition">Parking condition</Label>
-        <Input
+        <select
           id="parkingCondition"
-          inputMode="numeric"
           aria-invalid={Boolean(errors.parkingCondition)}
+          className={cn(
+            "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30"
+          )}
           {...register("parkingCondition", {
             validate: validateParkingCondition,
           })}
-        />
+        >
+          {PARKING_CONDITIONS.map((condition) => (
+            <option key={condition.value} value={String(condition.value)}>
+              {condition.title}
+            </option>
+          ))}
+        </select>
         {errors.parkingCondition ? (
           <p className="text-xs text-destructive">
             {errors.parkingCondition.message}
@@ -201,8 +220,18 @@ export function PlaceForm() {
         <p className="text-sm text-destructive">{errors.root.message}</p>
       ) : null}
 
-      <div className="flex gap-2">
+      <div className="flex flex-wrap gap-2">
         <Button type="submit">Done</Button>
+        {!isCreating ? (
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!hasNextPlace}
+            onClick={() => void onDoneAndNext()}
+          >
+            Done & next
+          </Button>
+        ) : null}
         <Button type="button" variant="secondary" onClick={goToPlacesList}>
           Cancel
         </Button>

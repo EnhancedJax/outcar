@@ -72,6 +72,7 @@ type PlaceEditorContextValue = {
   activeTab: EditorTab
   setActiveTab: (tab: EditorTab) => void
   placesScreen: PlacesScreen
+  hasNextPlace: boolean
   goToPlacesList: () => void
   handleCommit: () => Promise<void>
   clearImportPreview: () => void
@@ -88,7 +89,10 @@ type PlaceEditorContextValue = {
   applySearchResult: (
     feature: Awaited<ReturnType<typeof searchPlaces>>[number]
   ) => void
-  handleApply: (values: DraftPlace) => PlaceApplyError | null
+  handleApply: (
+    values: DraftPlace,
+    options?: { advance?: boolean }
+  ) => PlaceApplyError | null
   handleDelete: (placeId: string) => void
   handleToggleDraftTag: (tagId: string) => void
   handleAddDraftTag: () => void
@@ -156,6 +160,13 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
   const selectedPlace =
     places.find((place) => place.id === selectedPlaceId) ?? null
+  const selectedPlaceIndex = selectedPlace
+    ? places.findIndex((place) => place.id === selectedPlace.id)
+    : -1
+  const hasNextPlace =
+    !isCreating &&
+    selectedPlaceIndex >= 0 &&
+    selectedPlaceIndex < places.length - 1
 
   const openPlaceForm = useCallback(
     (nextDraft: DraftPlace, creating: boolean) => {
@@ -454,7 +465,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   const handleApply = useCallback(
-    (values: DraftPlace): PlaceApplyError | null => {
+    (
+      values: DraftPlace,
+      options?: { advance?: boolean }
+    ): PlaceApplyError | null => {
       const nextPlace = fromDraft(values)
 
       if (!nextPlace) {
@@ -471,6 +485,14 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         return { field: "id", message: "A place with this id already exists." }
       }
 
+      const currentIndex = selectedPlace
+        ? places.findIndex((place) => place.id === selectedPlace.id)
+        : -1
+      const followingPlace =
+        options?.advance && !isCreating && currentIndex >= 0
+          ? places[currentIndex + 1]
+          : undefined
+
       const nextPlaces = isCreating
         ? [...places, nextPlace]
         : places.map((place) =>
@@ -478,12 +500,19 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
           )
 
       applyCatalog(tags, nextPlaces)
+      setResults([])
+      setQuery("")
+
+      if (followingPlace) {
+        openPlaceForm(toDraft(followingPlace), false)
+        onSelectPlace(followingPlace.id)
+        return null
+      }
+
       setPlacesScreen("list")
       isCreatingRef.current = false
       onDraftChange(null, false)
       onSelectPlace(nextPlace.id)
-      setResults([])
-      setQuery("")
 
       return null
     },
@@ -492,6 +521,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       isCreating,
       onDraftChange,
       onSelectPlace,
+      openPlaceForm,
       places,
       selectedPlace,
       tags,
@@ -591,6 +621,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       activeTab,
       setActiveTab,
       placesScreen,
+      hasNextPlace,
       goToPlacesList,
       handleCommit,
       clearImportPreview,
@@ -630,6 +661,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleCommit,
       handleSearch,
       handleToggleDraftTag,
+      hasNextPlace,
       importListName,
       importPreview,
       importUrl,

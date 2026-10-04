@@ -1,8 +1,10 @@
 import "mapbox-gl/dist/mapbox-gl.css"
+import { cn } from "cn"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
 import { useAppState } from "@/app-state"
+import { MapHeader } from "@/components/map-header"
 import {
   PlacePin,
   PreviewPlacePin,
@@ -329,10 +331,16 @@ export function PlacesMap() {
             <PreviewPlacePin />
           </Marker>
         ))}
-
       </Map>
 
-      <div className="absolute top-4 left-4 z-10 flex gap-1 rounded-lg border border-border bg-background/95 p-1 shadow-lg backdrop-blur">
+      <MapHeader />
+
+      <div
+        className={cn(
+          "absolute top-4 z-20 flex gap-1 rounded-lg border border-border bg-background/95 p-1 shadow-lg backdrop-blur",
+          import.meta.env.DEV ? "right-16" : "right-4"
+        )}
+      >
         <Button
           type="button"
           variant={mapAppearance === "monochrome" ? "default" : "ghost"}

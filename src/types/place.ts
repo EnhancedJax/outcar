@@ -1,3 +1,5 @@
+import { isParkingConditionValue } from "../constants/parking"
+
 export type CatalogTag = {
   id: string
   label: string
@@ -144,7 +146,7 @@ function isHttpUrl(value: string) {
 }
 
 export function isValidParkingCondition(value: unknown): value is number {
-  return typeof value === "number" && Number.isInteger(value)
+  return isParkingConditionValue(value)
 }
 
 export function isValidGmapUrl(value: unknown): value is string | null {

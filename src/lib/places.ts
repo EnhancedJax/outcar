@@ -1,3 +1,4 @@
+import { isParkingConditionValue } from "@/constants/parking"
 import placesCsv from "@/data/places.csv?raw"
 import tagsCsv from "@/data/tags.csv?raw"
 import type { CatalogTag, DraftPlace, Place, PlacesCatalog } from "@/types/place"
@@ -290,8 +291,8 @@ export function validateParkingCondition(value: string) {
     return "Parking condition is required"
   }
 
-  if (!Number.isInteger(Number(value))) {
-    return "Enter a whole number"
+  if (!isParkingConditionValue(Number(value))) {
+    return "Select a valid parking condition"
   }
 
   return true
