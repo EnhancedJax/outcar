@@ -31,6 +31,7 @@ const DEFAULT_PITCH = 50
 const MAP_SETTINGS_STORAGE_KEY = "outcar-map-settings"
 const ORBIT_SPEED = 5
 const FOCUS_ZOOM = 15
+const FOCUS_DURATION = 1200
 const SELECTED_PLACE_BOTTOM_PADDING = 220
 
 const DEFAULT_VIEW = {
@@ -372,7 +373,7 @@ export function PlacesMap() {
           zoom: camera.zoom,
           bearing: camera.bearing,
           pitch: pitchRef.current,
-          duration: 1200,
+          duration: FOCUS_DURATION,
           essential: true,
         })
       }
@@ -381,7 +382,7 @@ export function PlacesMap() {
         center: [selectedPlace.longitude, selectedPlace.latitude],
         zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
         pitch: pitchRef.current,
-        duration: 1200,
+        duration: FOCUS_DURATION,
         essential: true,
       })
     }
@@ -456,6 +457,7 @@ export function PlacesMap() {
             id={pathPlace.id}
             path={pathPlace.path}
             pathType={pathPlace.pathType}
+            animate={viewerMode}
           />
         ) : null}
 

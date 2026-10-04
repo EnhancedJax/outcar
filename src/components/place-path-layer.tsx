@@ -6,14 +6,18 @@ import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 
 const LIGHT_CASING_COLOR = "#ffffff"
 const LIGHT_LINE_COLOR = "#2563eb"
-const DARK_CASING_COLOR = "#000000"
+const DARK_CASING_COLOR = "#fff"
 const DARK_LINE_COLOR = "#9db4e5"
 
 type PlacePathLayerProps = {
   path: PathCoordinate[]
   pathType: number
   id: string
+  animate?: boolean
 }
+
+export const PATH_DRAW_DELAY = 300
+export const PATH_DRAW_DURATION = 900
 
 function pathFeature(path: PathCoordinate[]) {
   return {
@@ -26,7 +30,12 @@ function pathFeature(path: PathCoordinate[]) {
   }
 }
 
-export function PlacePathLayer({ path, pathType, id }: PlacePathLayerProps) {
+export function PlacePathLayer({
+  path,
+  pathType,
+  id,
+  animate = false,
+}: PlacePathLayerProps) {
   const resolvedTheme = useResolvedTheme()
   const isDark = resolvedTheme === "dark"
   const { current: map } = useMap()
@@ -36,6 +45,73 @@ export function PlacePathLayer({ path, pathType, id }: PlacePathLayerProps) {
   const lineId = `${sourceId}-line`
   const casingColor = isDark ? DARK_CASING_COLOR : LIGHT_CASING_COLOR
   const lineColor = isDark ? LIGHT_LINE_COLOR : DARK_LINE_COLOR
+
+  useEffect(() => {
+    const mapbox = map?.getMap()
+
+    if (!mapbox || !animate) {
+      return
+    }
+
+    let frame: number | null = null
+    const startedAt = performance.now() + PATH_DRAW_DELAY
+
+    const setRevealProgress = (progress: number) => {
+      const gradient = [
+        "step",
+        ["line-progress"],
+        casingColor,
+        progress,
+        "rgba(0, 0, 0, 0)",
+      ] as const
+      const innerGradient = [
+        "step",
+        ["line-progress"],
+        lineColor,
+        progress,
+        "rgba(0, 0, 0, 0)",
+      ] as const
+
+      for (const [layerId, colorGradient] of [
+        [casingId, gradient],
+        [lineId, innerGradient],
+      ] as const) {
+        if (mapbox.getLayer(layerId)) {
+          mapbox.setPaintProperty(
+            layerId,
+            "line-gradient",
+            colorGradient as any
+          )
+        }
+      }
+    }
+
+    const animatePath = (time: number) => {
+      const progress = Math.min(
+        Math.max((time - startedAt) / PATH_DRAW_DURATION, 0),
+        1
+      )
+      setRevealProgress(progress)
+
+      if (progress < 1) {
+        frame = requestAnimationFrame(animatePath)
+      } else {
+        for (const layerId of [casingId, lineId]) {
+          if (mapbox.getLayer(layerId)) {
+            mapbox.setPaintProperty(layerId, "line-gradient", undefined)
+          }
+        }
+      }
+    }
+
+    frame = requestAnimationFrame(animatePath)
+
+    return () => {
+      if (frame !== null) {
+        cancelAnimationFrame(frame)
+      }
+    }
+  }, [animate, casingColor, casingId, lineColor, lineId, map])
 
   useEffect(() => {
     const mapbox = map?.getMap()
@@ -80,7 +156,7 @@ export function PlacePathLayer({ path, pathType, id }: PlacePathLayerProps) {
   const isWalk = pathType === 1
 
   return (
-    <Source id={sourceId} type="geojson" data={pathFeature(path)}>
+    <Source id={sourceId} type="geojson" data={pathFeature(path)} lineMetrics>
       <Layer
         id={casingId}
         type="line"
