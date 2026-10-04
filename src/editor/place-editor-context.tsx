@@ -27,6 +27,7 @@ import {
   removeTagFromPlaces,
   savePlacesCatalog,
   setTagIcon,
+  setTagShowOnMap,
   toDraft,
   validatePathForDraft,
 } from "@/lib/places"
@@ -84,6 +85,7 @@ type PlaceEditorContextValue = {
   handleDeleteTag: (tagId: string) => void
   handleMoveTag: (index: number, direction: "up" | "down") => void
   handleSetTagIcon: (tagId: string, icon: string | null) => void
+  handleSetTagShowOnMap: (tagId: string, showOnMap: boolean) => void
   handleImportPreview: () => Promise<void>
   handleImportConfirm: () => void
   handleSearch: () => Promise<void>
@@ -435,6 +437,14 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const handleSetTagIcon = useCallback(
     (tagId: string, icon: string | null) => {
       const nextTags = setTagIcon(tags, tagId, icon)
+      applyCatalog(nextTags, places)
+    },
+    [applyCatalog, places, tags]
+  )
+
+  const handleSetTagShowOnMap = useCallback(
+    (tagId: string, showOnMap: boolean) => {
+      const nextTags = setTagShowOnMap(tags, tagId, showOnMap)
       applyCatalog(nextTags, places)
     },
     [applyCatalog, places, tags]
@@ -854,6 +864,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleDeleteTag,
       handleMoveTag,
       handleSetTagIcon,
+      handleSetTagShowOnMap,
       handleImportPreview,
       handleImportConfirm,
       handleSearch,
@@ -885,6 +896,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleDelete,
       handleDeleteTag,
       handleSetTagIcon,
+      handleSetTagShowOnMap,
       handleImportConfirm,
       handleImportPreview,
       handleMoveTag,

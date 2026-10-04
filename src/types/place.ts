@@ -6,6 +6,7 @@ export type CatalogTag = {
   label: string
   icon: string | null
   description: string
+  showOnMap: boolean
 }
 
 export type Place = {
@@ -80,7 +81,8 @@ export function isValidCatalogTag(value: unknown): value is CatalogTag {
     typeof tag.label === "string" &&
     tag.label.trim().length > 0 &&
     (tag.icon === null || typeof tag.icon === "string") &&
-    (tag.description === undefined || typeof tag.description === "string")
+    (tag.description === undefined || typeof tag.description === "string") &&
+    typeof tag.showOnMap === "boolean"
   )
 }
 
@@ -301,7 +303,7 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
 
       const id = createUniqueTagId(label, seenIds)
 
-      result.push({ id, label, icon: null, description: "" })
+      result.push({ id, label, icon: null, description: "", showOnMap: false })
       seenIds.add(id)
       seenLabelKeys.add(tagKey(label))
       continue
@@ -337,6 +339,7 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
         label,
         icon,
         description: normalizeTagDescription(raw.description),
+        showOnMap: raw.showOnMap === true,
       })
       seenIds.add(id)
       seenLabelKeys.add(tagKey(label))
@@ -412,7 +415,7 @@ export function reconcileCatalogTags(catalog: PlacesCatalog): PlacesCatalog {
 
       const id = createUniqueTagId(label, idSet)
 
-      tags.push({ id, label, icon: null, description: "" })
+      tags.push({ id, label, icon: null, description: "", showOnMap: false })
       idSet.add(id)
       labelToId.set(key, id)
     }

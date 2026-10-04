@@ -30,6 +30,7 @@ function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
   return tags.map((tag) => ({
     ...tag,
     icon: normalizeIcon(tag.icon),
+    showOnMap: tag.showOnMap === true,
   }))
 }
 
@@ -154,7 +155,7 @@ export function addTagToCatalog(
 
   return [
     ...catalogTags,
-    { id, label: normalized, icon: null, description: "" },
+    { id, label: normalized, icon: null, description: "", showOnMap: false },
   ]
 }
 
@@ -185,6 +186,35 @@ export function setTagIcon(
   return catalogTags.map((tag) =>
     tag.id === tagId ? { ...tag, icon: normalizedIcon } : tag
   )
+}
+
+export function setTagShowOnMap(
+  catalogTags: CatalogTag[],
+  tagId: string,
+  showOnMap: boolean
+): CatalogTag[] {
+  return catalogTags.map((tag) =>
+    tag.id === tagId ? { ...tag, showOnMap } : tag
+  )
+}
+
+export function resolvePlaceMapTagIcon(
+  placeTags: string[],
+  catalogTags: CatalogTag[]
+): string | null {
+  const placeTagSet = new Set(placeTags)
+
+  for (const tag of catalogTags) {
+    if (!placeTagSet.has(tag.id)) {
+      continue
+    }
+
+    if (tag.showOnMap && tag.icon) {
+      return tag.icon
+    }
+  }
+
+  return null
 }
 
 export function moveTag(

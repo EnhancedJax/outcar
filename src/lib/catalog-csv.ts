@@ -7,7 +7,13 @@ import {
   type PlacesCatalog,
 } from "../types/place.js"
 
-const TAG_COLUMNS = ["id", "label", "icon", "description"] as const
+const TAG_COLUMNS = [
+  "id",
+  "label",
+  "icon",
+  "description",
+  "showOnMap",
+] as const
 const PLACE_COLUMNS = [
   "id",
   "name",
@@ -178,6 +184,7 @@ export function parsePlacesCatalogCsv(
       label: record.label,
       icon: record.icon ? record.icon : null,
       description: record.description,
+      showOnMap: record.showOnMap === "true",
     })
   )
 
@@ -216,6 +223,7 @@ export function serializePlacesCatalog(catalog: PlacesCatalog) {
       tag.label,
       tag.icon ?? "",
       tag.description,
+      tag.showOnMap ? "true" : "false",
     ])
   )
 

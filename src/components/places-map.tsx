@@ -15,6 +15,7 @@ import { SelectedPlace } from "@/components/selected-place"
 import { TagList } from "@/components/tag-list"
 import { Button } from "@/components/ui/button"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
+import { resolvePlaceMapTagIcon } from "@/lib/places"
 import { pathBounds } from "@/lib/path"
 import {
   getBasemapConfig,
@@ -64,6 +65,7 @@ export function PlacesMap() {
     displayPlaces: places,
     fitBoundsPlaces,
     importPreviewPlaces,
+    tags,
     viewerMode,
     selectedPlaceId,
     selectPlaceFromMap,
@@ -382,6 +384,7 @@ export function PlacesMap() {
         {visiblePlaces.map((place) => {
           const isSelected = place.id === selectedPlaceId
           const isDraggable = place.id === draggableMarkerId
+          const mapTagIcon = resolvePlaceMapTagIcon(place.tags, tags)
 
           return (
             <Marker
@@ -398,7 +401,11 @@ export function PlacesMap() {
                 handleMarkerDrag(place.id, event.lngLat.lng, event.lngLat.lat)
               }}
             >
-              {isSelected ? <SelectedPlacePin /> : <PlacePin />}
+              {isSelected ? (
+                <SelectedPlacePin tagIcon={mapTagIcon} />
+              ) : (
+                <PlacePin tagIcon={mapTagIcon} />
+              )}
             </Marker>
           )
         })}

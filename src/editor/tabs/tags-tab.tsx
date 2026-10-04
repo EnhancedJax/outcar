@@ -1,4 +1,4 @@
-import { ArrowDown, ArrowUp, Trash } from "@phosphor-icons/react"
+import { ArrowDown, ArrowUp, MapPin, Trash } from "@phosphor-icons/react"
 
 import { TagChip } from "@/components/tag-chip"
 import { TagIconPicker } from "@/components/tag-icon-picker"
@@ -18,13 +18,14 @@ export function TagsTab() {
     handleMoveTag,
     handleDeleteTag,
     handleSetTagIcon,
+    handleSetTagShowOnMap,
   } = usePlaceEditor()
 
   return (
     <div className="space-y-2">
       <Label>Tags</Label>
       <p className="text-xs text-muted-foreground">
-        Order controls the filter bar in production.
+        Order controls the filter bar and map pin icon priority in production.
       </p>
       <div className="flex gap-2">
         <Input
@@ -59,6 +60,17 @@ export function TagsTab() {
                 disabled={isSaving}
                 onSelect={(icon) => handleSetTagIcon(tag.id, icon)}
               />
+              <Button
+                type="button"
+                size="icon-xs"
+                variant={tag.showOnMap ? "secondary" : "ghost"}
+                aria-pressed={tag.showOnMap}
+                title="Show on map pin"
+                onClick={() => handleSetTagShowOnMap(tag.id, !tag.showOnMap)}
+                disabled={isSaving}
+              >
+                <MapPin weight={tag.showOnMap ? "fill" : "regular"} />
+              </Button>
               <span className="min-w-0 flex-1 truncate text-sm font-medium">
                 <TagChip catalogTag={tag} />
               </span>
