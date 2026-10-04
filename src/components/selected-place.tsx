@@ -10,9 +10,6 @@ import { Button, buttonVariants } from "@/components/ui/button"
 import {
   Popover,
   PopoverContent,
-  PopoverDescription,
-  PopoverHeader,
-  PopoverTitle,
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { catalogTagById } from "@/types/place"
@@ -38,7 +35,7 @@ const NAVIGATION_APPS = [
   },
   {
     id: "amap",
-    label: "Amap",
+    label: "Amap 高德地圖",
     href: (latitude: number, longitude: number, name: string) => {
       const destination = `${longitude},${latitude},${encodeURIComponent(name)}`
 
@@ -116,15 +113,15 @@ export function SelectedPlace() {
               )}
             >
               <NavigationArrow weight="bold" />
-              Navigate
+              導航
             </PopoverTrigger>
             <PopoverContent side="top" align="center" className="w-52 p-2">
-              <PopoverHeader className="px-2 pt-1 pb-2">
-                <PopoverTitle className="text-xs">Navigate</PopoverTitle>
-                <PopoverDescription className="text-xs">
-                  Open directions in
-                </PopoverDescription>
-              </PopoverHeader>
+              {/* <PopoverHeader className="px-2 pt-1 pb-2"> */}
+              {/* <PopoverTitle className="text-xs">導航</PopoverTitle> */}
+              {/* <PopoverDescription className="text-xs">
+                  開導航應用程式
+                </PopoverDescription> */}
+              {/* </PopoverHeader> */}
               <div className="flex flex-col gap-0.5">
                 {NAVIGATION_APPS.map((app) => {
                   const href =
