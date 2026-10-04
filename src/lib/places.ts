@@ -1,5 +1,7 @@
-import placesData from "@/data/places.json"
+import placesCsv from "@/data/places.csv?raw"
+import tagsCsv from "@/data/tags.csv?raw"
 import type { CatalogTag, Place, PlacesCatalog } from "@/types/place"
+import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import {
   createUniqueTagId,
@@ -8,7 +10,9 @@ import {
   tagKey,
 } from "@/types/place"
 
-const catalog = normalizePlacesCatalog(placesData)
+const catalog = normalizePlacesCatalog(
+  parsePlacesCatalogCsv(tagsCsv, placesCsv)
+)
 
 function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
   return tags.map((tag) => ({
@@ -44,9 +48,9 @@ export async function fetchGoogleMapsList(
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
     throw new Error(payload?.error ?? "Failed to fetch Google Maps link")
   }
 
@@ -68,9 +72,9 @@ export async function savePlacesCatalog(nextCatalog: PlacesCatalog) {
   })
 
   if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as
-      | { error?: string }
-      | null
+    const payload = (await response.json().catch(() => null)) as {
+      error?: string
+    } | null
     throw new Error(payload?.error ?? "Failed to save places")
   }
 }
@@ -98,8 +102,7 @@ export function placeAlreadyExists(
 
   return existingPlaces.some(
     (place) =>
-      place.id === slug ||
-      place.name.trim().toLowerCase() === normalizedName
+      place.id === slug || place.name.trim().toLowerCase() === normalizedName
   )
 }
 

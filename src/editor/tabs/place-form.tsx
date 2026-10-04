@@ -23,9 +23,8 @@ export function PlaceForm() {
     tags,
     draftNewTagLabel,
     setDraftNewTagLabel,
-    isSaving,
     onDraftChange,
-    handleSave,
+    handleApply,
     handleToggleDraftTag,
     handleAddDraftTag,
     goToPlacesList,
@@ -56,6 +55,8 @@ export function PlaceForm() {
       note: draft.note,
       longitude: draft.longitude,
       latitude: draft.latitude,
+      parkingCondition: draft.parkingCondition,
+      gmapUrl: draft.gmapUrl,
     })
   }, [draft, draftId, reset])
 
@@ -72,42 +73,42 @@ export function PlaceForm() {
     return null
   }
 
+  const currentDraft = draft
+
   function syncCoordinates(field: "longitude" | "latitude", value: string) {
-    onDraftChange({ ...draft, [field]: value }, isCreating)
+    onDraftChange({ ...currentDraft, [field]: value }, isCreating)
   }
 
   const longitudeField = register("longitude", {
     required: "Longitude is required",
-    validate: (value) =>
-      isValidCoordinate(value) || "Enter a valid longitude",
+    validate: (value) => isValidCoordinate(value) || "Enter a valid longitude",
     onChange: (event) => syncCoordinates("longitude", event.target.value),
   })
 
   const latitudeField = register("latitude", {
     required: "Latitude is required",
-    validate: (value) =>
-      isValidCoordinate(value) || "Enter a valid latitude",
+    validate: (value) => isValidCoordinate(value) || "Enter a valid latitude",
     onChange: (event) => syncCoordinates("latitude", event.target.value),
   })
 
-  const onSubmit = handleSubmit(async (values) => {
+  const onSubmit = handleSubmit((values) => {
     const nextDraft: DraftPlace = {
-      ...draft,
+      ...currentDraft,
       ...values,
     }
 
-    const saveError = await handleSave(nextDraft)
+    const applyError = handleApply(nextDraft)
 
-    if (!saveError) {
+    if (!applyError) {
       return
     }
 
-    if (saveError.field) {
-      setError(saveError.field, { message: saveError.message })
+    if (applyError.field) {
+      setError(applyError.field, { message: applyError.message })
       return
     }
 
-    setError("root", { message: saveError.message })
+    setError("root", { message: applyError.message })
   })
 
   return (
@@ -178,14 +179,14 @@ export function PlaceForm() {
             onKeyDown={(event) => {
               if (event.key === "Enter") {
                 event.preventDefault()
-                void handleAddDraftTag()
+                handleAddDraftTag()
               }
             }}
           />
           <Button
             type="button"
             variant="secondary"
-            onClick={() => void handleAddDraftTag()}
+            onClick={handleAddDraftTag}
           >
             Add
           </Button>
@@ -201,7 +202,9 @@ export function PlaceForm() {
             {...longitudeField}
           />
           {errors.longitude ? (
-            <p className="text-xs text-destructive">{errors.longitude.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.longitude.message}
+            </p>
           ) : null}
         </div>
         <div className="space-y-1">
@@ -212,7 +215,9 @@ export function PlaceForm() {
             {...latitudeField}
           />
           {errors.latitude ? (
-            <p className="text-xs text-destructive">{errors.latitude.message}</p>
+            <p className="text-xs text-destructive">
+              {errors.latitude.message}
+            </p>
           ) : null}
         </div>
       </div>
@@ -221,14 +226,63 @@ export function PlaceForm() {
         Click the map or drag the selected marker to set coordinates.
       </p>
 
+      <div className="space-y-1">
+        <Label htmlFor="parkingCondition">Parking condition</Label>
+        <Input
+          id="parkingCondition"
+          inputMode="numeric"
+          aria-invalid={Boolean(errors.parkingCondition)}
+          {...register("parkingCondition", {
+            required: "Parking condition is required",
+            validate: (value) =>
+              Number.isInteger(Number(value)) || "Enter a whole number",
+          })}
+        />
+        {errors.parkingCondition ? (
+          <p className="text-xs text-destructive">
+            {errors.parkingCondition.message}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-1">
+        <Label htmlFor="gmapUrl">Google Maps URL</Label>
+        <Input
+          id="gmapUrl"
+          type="url"
+          aria-invalid={Boolean(errors.gmapUrl)}
+          {...register("gmapUrl", {
+            validate: (value) => {
+              const trimmed = value.trim()
+
+              if (!trimmed) {
+                return true
+              }
+
+              try {
+                const url = new URL(trimmed)
+                return (
+                  url.protocol === "http:" ||
+                  url.protocol === "https:" ||
+                  "Enter an http or https URL"
+                )
+              } catch {
+                return "Enter an http or https URL"
+              }
+            },
+          })}
+        />
+        {errors.gmapUrl ? (
+          <p className="text-xs text-destructive">{errors.gmapUrl.message}</p>
+        ) : null}
+      </div>
+
       {errors.root ? (
         <p className="text-sm text-destructive">{errors.root.message}</p>
       ) : null}
 
       <div className="flex gap-2">
-        <Button type="submit" disabled={isSaving}>
-          {isSaving ? "Saving..." : "Save"}
-        </Button>
+        <Button type="submit">Done</Button>
         <Button type="button" variant="secondary" onClick={goToPlacesList}>
           Cancel
         </Button>

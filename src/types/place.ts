@@ -12,6 +12,8 @@ export type Place = {
   longitude: number
   latitude: number
   tags: string[]
+  parkingCondition: number
+  gmapUrl: string | null
 }
 
 export type DraftPlace = {
@@ -21,6 +23,8 @@ export type DraftPlace = {
   longitude: string
   latitude: string
   tags: string[]
+  parkingCondition: string
+  gmapUrl: string
 }
 
 export type PlacesCatalog = {
@@ -130,6 +134,27 @@ function isLegacyCatalogTagsArray(value: unknown): value is string[] {
   return true
 }
 
+function isHttpUrl(value: string) {
+  try {
+    const url = new URL(value)
+    return url.protocol === "http:" || url.protocol === "https:"
+  } catch {
+    return false
+  }
+}
+
+export function isValidParkingCondition(value: unknown): value is number {
+  return typeof value === "number" && Number.isInteger(value)
+}
+
+export function isValidGmapUrl(value: unknown): value is string | null {
+  if (value === null) {
+    return true
+  }
+
+  return typeof value === "string" && value.trim() === value && isHttpUrl(value)
+}
+
 export function isValidPlace(value: unknown): value is Place {
   if (!value || typeof value !== "object") {
     return false
@@ -153,7 +178,9 @@ export function isValidPlace(value: unknown): value is Place {
     Number.isFinite(place.latitude) &&
     place.latitude >= -90 &&
     place.latitude <= 90 &&
-    isValidPlaceTagIdsArray(tags)
+    isValidPlaceTagIdsArray(tags) &&
+    isValidParkingCondition(place.parkingCondition) &&
+    isValidGmapUrl(place.gmapUrl)
   )
 }
 
@@ -201,7 +228,10 @@ export function createTagId(label: string): string {
   return `tag-${Date.now()}`
 }
 
-export function createUniqueTagId(label: string, existingIds: Set<string>): string {
+export function createUniqueTagId(
+  label: string,
+  existingIds: Set<string>
+): string {
   const base = createTagId(label)
 
   if (!existingIds.has(base)) {
@@ -255,8 +285,7 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
         continue
       }
 
-      const requestedId =
-        typeof raw.id === "string" ? raw.id.trim() : ""
+      const requestedId = typeof raw.id === "string" ? raw.id.trim() : ""
       const id =
         requestedId && !seenIds.has(requestedId)
           ? requestedId

@@ -2,10 +2,12 @@ import { writeFile } from "node:fs/promises"
 import { resolve } from "node:path"
 import type { Plugin } from "vite"
 
-import { fetchGoogleMapsList } from "./google-maps-list.js"
+import { serializePlacesCatalog } from "../src/lib/catalog-csv.js"
 import { isValidPlacesCatalog } from "../src/types/place.js"
+import { fetchGoogleMapsList } from "./google-maps-list.js"
 
-const PLACES_PATH = resolve(import.meta.dirname, "../src/data/places.json")
+const TAGS_PATH = resolve(import.meta.dirname, "../src/data/tags.csv")
+const PLACES_PATH = resolve(import.meta.dirname, "../src/data/places.csv")
 
 async function readJsonBody(req: import("node:http").IncomingMessage) {
   const chunks: Buffer[] = []
@@ -57,7 +59,7 @@ export function placesApiPlugin(): Plugin {
           return
         }
 
-        if (req.method !== "PUT" || pathname !== "" && pathname !== "/") {
+        if (req.method !== "PUT" || (pathname !== "" && pathname !== "/")) {
           next()
           return
         }
@@ -70,11 +72,10 @@ export function placesApiPlugin(): Plugin {
             return
           }
 
-          await writeFile(
-            PLACES_PATH,
-            `${JSON.stringify(body, null, 2)}\n`,
-            "utf8"
-          )
+          const files = serializePlacesCatalog(body)
+
+          await writeFile(TAGS_PATH, files.tags, "utf8")
+          await writeFile(PLACES_PATH, files.places, "utf8")
 
           sendJson(res, 200, { ok: true })
         } catch (error) {

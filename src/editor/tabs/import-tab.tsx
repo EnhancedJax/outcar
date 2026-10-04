@@ -55,9 +55,8 @@ export function ImportTab() {
                   (item) => item.selected && !item.alreadyExists
                 ).length
               }{" "}
-              of{" "}
-              {importPreview.filter((item) => !item.alreadyExists).length} new
-              places selected
+              of {importPreview.filter((item) => !item.alreadyExists).length}{" "}
+              new places selected
             </p>
           </div>
           <ul className="max-h-48 space-y-1 overflow-y-auto">
@@ -88,7 +87,9 @@ export function ImportTab() {
                     {item.latitude.toFixed(4)}, {item.longitude.toFixed(4)}
                   </p>
                   {item.alreadyExists ? (
-                    <p className="text-xs text-muted-foreground">Already saved</p>
+                    <p className="text-xs text-muted-foreground">
+                      Already saved
+                    </p>
                   ) : null}
                 </div>
               </li>
@@ -97,11 +98,11 @@ export function ImportTab() {
           <div className="flex gap-2">
             <Button
               type="button"
-              onClick={() => void handleImportConfirm()}
+              onClick={handleImportConfirm}
               disabled={isSaving}
             >
               <ArrowSquareIn data-icon="inline-start" />
-              {isSaving ? "Importing..." : "Import selected"}
+              Import selected
             </Button>
             <Button
               type="button"

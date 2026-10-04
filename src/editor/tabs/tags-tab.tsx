@@ -34,14 +34,14 @@ export function TagsTab() {
           onKeyDown={(event) => {
             if (event.key === "Enter") {
               event.preventDefault()
-              void handleAddTag()
+              handleAddTag()
             }
           }}
         />
         <Button
           type="button"
           variant="secondary"
-          onClick={() => void handleAddTag()}
+          onClick={handleAddTag}
           disabled={isSaving}
         >
           Add
@@ -57,7 +57,7 @@ export function TagsTab() {
               <TagIconPicker
                 value={tag.icon}
                 disabled={isSaving}
-                onSelect={(icon) => void handleSetTagIcon(tag.id, icon)}
+                onSelect={(icon) => handleSetTagIcon(tag.id, icon)}
               />
               <span className="min-w-0 flex-1 truncate text-sm font-medium">
                 <TagChip catalogTag={tag} />
@@ -66,7 +66,7 @@ export function TagsTab() {
                 type="button"
                 size="icon-xs"
                 variant="ghost"
-                onClick={() => void handleMoveTag(index, "up")}
+                onClick={() => handleMoveTag(index, "up")}
                 disabled={isSaving || index === 0}
               >
                 <ArrowUp />
@@ -75,7 +75,7 @@ export function TagsTab() {
                 type="button"
                 size="icon-xs"
                 variant="ghost"
-                onClick={() => void handleMoveTag(index, "down")}
+                onClick={() => handleMoveTag(index, "down")}
                 disabled={isSaving || index === tags.length - 1}
               >
                 <ArrowDown />
@@ -84,7 +84,7 @@ export function TagsTab() {
                 type="button"
                 size="icon-xs"
                 variant="ghost"
-                onClick={() => void handleDeleteTag(tag.id)}
+                onClick={() => handleDeleteTag(tag.id)}
                 disabled={isSaving}
               >
                 <Trash />

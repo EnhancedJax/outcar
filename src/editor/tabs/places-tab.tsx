@@ -46,7 +46,7 @@ export function PlacesTab() {
   return (
     <div className="space-y-4">
       <div className="flex items-center justify-between gap-2">
-        <h3 className="text-sm font-medium">Saved places</h3>
+        <h3 className="text-sm font-medium">Places</h3>
         <Button size="sm" onClick={startCreate}>
           <Plus data-icon="inline-start" />
           Add
@@ -97,7 +97,7 @@ export function PlacesTab() {
               type="button"
               size="icon-sm"
               variant="ghost"
-              onClick={() => void handleDelete(place.id)}
+              onClick={() => handleDelete(place.id)}
               disabled={isSaving}
             >
               <Trash />

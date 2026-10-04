@@ -9,16 +9,21 @@ import {
 
 import { places as initialPlaces, tags as initialTags } from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
+import { isValidGmapUrl, isValidParkingCondition } from "@/types/place"
 
 function draftToPlace(draft: DraftPlace): Place | null {
   const longitude = Number(draft.longitude)
   const latitude = Number(draft.latitude)
+  const parkingCondition = Number(draft.parkingCondition)
+  const gmapUrl = draft.gmapUrl.trim()
 
   if (
     !draft.id.trim() ||
     !draft.name.trim() ||
     !Number.isFinite(longitude) ||
-    !Number.isFinite(latitude)
+    !Number.isFinite(latitude) ||
+    !isValidParkingCondition(parkingCondition) ||
+    (gmapUrl !== "" && !isValidGmapUrl(gmapUrl))
   ) {
     return null
   }
@@ -30,6 +35,8 @@ function draftToPlace(draft: DraftPlace): Place | null {
     longitude,
     latitude,
     tags: draft.tags,
+    parkingCondition,
+    gmapUrl: gmapUrl === "" ? null : gmapUrl,
   }
 }
 
@@ -85,9 +92,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [editorDraft, setEditorDraftState] = useState<DraftPlace | null>(null)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
-  const [importPreviewPlaces, setImportPreviewPlaces] = useState<Place[] | null>(
-    null
-  )
+  const [importPreviewPlaces, setImportPreviewPlaces] = useState<
+    Place[] | null
+  >(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(true)
 
@@ -133,7 +140,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   }, [places, filteredPlaces, editorDraft, isCreatingDraft, isEditorActive])
 
   const fitBoundsPlaces = isEditorActive ? displayPlaces : places
-  const draggableMarkerId = isEditorActive ? editorDraft?.id ?? null : null
+  const draggableMarkerId = isEditorActive ? (editorDraft?.id ?? null) : null
 
   const handleMapClick = useCallback(
     (longitude: number, latitude: number) => {
@@ -229,6 +236,8 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   )
 
   return (
-    <AppStateContext.Provider value={value}>{children}</AppStateContext.Provider>
+    <AppStateContext.Provider value={value}>
+      {children}
+    </AppStateContext.Provider>
   )
 }

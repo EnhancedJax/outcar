@@ -9,6 +9,7 @@ import {
 } from "react"
 
 import { useAppState } from "@/app-state"
+import { searchPlaces } from "@/lib/mapbox"
 import {
   addTagToCatalog,
   createPlaceId,
@@ -21,7 +22,6 @@ import {
   savePlacesCatalog,
   setTagIcon,
 } from "@/lib/places"
-import { searchPlaces } from "@/lib/mapbox"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
 import {
@@ -34,9 +34,13 @@ import {
   type PlacesScreen,
 } from "./place-editor-utils"
 
-export type PlaceSaveError = {
+export type PlaceApplyError = {
   field?: keyof import("./place-editor-utils").PlaceFormValues
   message: string
+}
+
+function catalogSnapshot(tags: CatalogTag[], places: Place[]) {
+  return JSON.stringify({ tags, places })
 }
 
 type PlaceEditorContextValue = {
@@ -59,6 +63,7 @@ type PlaceEditorContextValue = {
   results: Awaited<ReturnType<typeof searchPlaces>>
   isSearching: boolean
   isImporting: boolean
+  isDirty: boolean
   isSaving: boolean
   error: string | null
   activeTab: EditorTab
@@ -66,25 +71,25 @@ type PlaceEditorContextValue = {
   placesScreen: PlacesScreen
   goToPlacesList: () => void
   onDraftChange: (draft: DraftPlace | null, isCreating: boolean) => void
-  persistCatalog: (nextTags: CatalogTag[], nextPlaces: Place[]) => Promise<void>
+  handleCommit: () => Promise<void>
   clearImportPreview: () => void
   updateImportSelection: (key: string, selected: boolean) => void
-  handleAddTag: () => Promise<void>
-  handleDeleteTag: (tagId: string) => Promise<void>
-  handleMoveTag: (index: number, direction: "up" | "down") => Promise<void>
-  handleSetTagIcon: (tagId: string, icon: string | null) => Promise<void>
+  handleAddTag: () => void
+  handleDeleteTag: (tagId: string) => void
+  handleMoveTag: (index: number, direction: "up" | "down") => void
+  handleSetTagIcon: (tagId: string, icon: string | null) => void
   handleImportPreview: () => Promise<void>
-  handleImportConfirm: () => Promise<void>
+  handleImportConfirm: () => void
   handleSearch: () => Promise<void>
   startCreate: () => void
   startEdit: (place: Place) => void
   applySearchResult: (
     feature: Awaited<ReturnType<typeof searchPlaces>>[number]
   ) => void
-  handleSave: (values: DraftPlace) => Promise<PlaceSaveError | null>
-  handleDelete: (placeId: string) => Promise<void>
+  handleApply: (values: DraftPlace) => PlaceApplyError | null
+  handleDelete: (placeId: string) => void
   handleToggleDraftTag: (tagId: string) => void
-  handleAddDraftTag: () => Promise<void>
+  handleAddDraftTag: () => void
 }
 
 const PlaceEditorContext = createContext<PlaceEditorContextValue | null>(null)
@@ -129,9 +134,14 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const [isSearching, setIsSearching] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
+  const [committedSnapshot, setCommittedSnapshot] = useState(() =>
+    catalogSnapshot(tags, places)
+  )
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<EditorTab>("places")
   const [placesScreen, setPlacesScreen] = useState<PlacesScreen>("list")
+
+  const isDirty = catalogSnapshot(tags, places) !== committedSnapshot
 
   const selectedPlace =
     places.find((place) => place.id === selectedPlaceId) ?? null
@@ -145,27 +155,35 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     setImportPreviewPlaces(importPreviewToPlaces(importPreview))
   }, [importPreview, setImportPreviewPlaces])
 
-  const persistCatalog = useCallback(
-    async (nextTags: CatalogTag[], nextPlaces: Place[]) => {
-      setIsSaving(true)
-      setError(null)
-
-      try {
-        await savePlacesCatalog({ tags: nextTags, places: nextPlaces })
-        setTags(nextTags)
-        setPlaces(nextPlaces)
-      } catch (persistError) {
-        setError(
-          persistError instanceof Error
-            ? persistError.message
-            : "Failed to save places"
-        )
-      } finally {
-        setIsSaving(false)
-      }
+  const applyCatalog = useCallback(
+    (nextTags: CatalogTag[], nextPlaces: Place[]) => {
+      setTags(nextTags)
+      setPlaces(nextPlaces)
     },
     [setPlaces, setTags]
   )
+
+  const handleCommit = useCallback(async () => {
+    if (!isDirty) {
+      return
+    }
+
+    setIsSaving(true)
+    setError(null)
+
+    try {
+      await savePlacesCatalog({ tags, places })
+      setCommittedSnapshot(catalogSnapshot(tags, places))
+    } catch (commitError) {
+      setError(
+        commitError instanceof Error
+          ? commitError.message
+          : "Failed to save places"
+      )
+    } finally {
+      setIsSaving(false)
+    }
+  }, [isDirty, places, tags])
 
   const clearImportPreview = useCallback(() => {
     setImportListName(null)
@@ -184,7 +202,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     []
   )
 
-  const handleAddTag = useCallback(async () => {
+  const handleAddTag = useCallback(() => {
     const nextTags = addTagToCatalog(tags, newTagLabel)
 
     if (!nextTags) {
@@ -192,38 +210,38 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       return
     }
 
-    await persistCatalog(nextTags, places)
+    applyCatalog(nextTags, places)
     setNewTagLabel("")
-  }, [newTagLabel, persistCatalog, places, tags])
+  }, [applyCatalog, newTagLabel, places, tags])
 
   const handleDeleteTag = useCallback(
-    async (tagId: string) => {
+    (tagId: string) => {
       const nextTags = removeTagFromCatalog(tags, tagId)
       const nextPlaces = removeTagFromPlaces(places, tagId)
-      await persistCatalog(nextTags, nextPlaces)
+      applyCatalog(nextTags, nextPlaces)
 
       if (draft) {
         onDraftChange(toggleDraftTag(draft, tagId), isCreating)
       }
     },
-    [draft, isCreating, onDraftChange, persistCatalog, places, tags]
+    [applyCatalog, draft, isCreating, onDraftChange, places, tags]
   )
 
   const handleSetTagIcon = useCallback(
-    async (tagId: string, icon: string | null) => {
+    (tagId: string, icon: string | null) => {
       const nextTags = setTagIcon(tags, tagId, icon)
-      await persistCatalog(nextTags, places)
+      applyCatalog(nextTags, places)
     },
-    [persistCatalog, places, tags]
+    [applyCatalog, places, tags]
   )
 
   const handleMoveTag = useCallback(
-    async (index: number, direction: "up" | "down") => {
+    (index: number, direction: "up" | "down") => {
       const targetIndex = direction === "up" ? index - 1 : index + 1
       const nextTags = moveTag(tags, index, targetIndex)
-      await persistCatalog(nextTags, places)
+      applyCatalog(nextTags, places)
     },
-    [persistCatalog, places, tags]
+    [applyCatalog, places, tags]
   )
 
   const handleImportPreview = useCallback(async () => {
@@ -264,7 +282,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     }
   }, [clearImportPreview, importUrl, places])
 
-  const handleImportConfirm = useCallback(async () => {
+  const handleImportConfirm = useCallback(() => {
     const selectedItems = importPreview.filter(
       (item) => item.selected && !item.alreadyExists
     )
@@ -286,12 +304,14 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         longitude: item.longitude,
         latitude: item.latitude,
         tags: [],
+        parkingCondition: -1,
+        gmapUrl: null,
       }
     })
 
-    await persistCatalog(tags, [...places, ...importedPlaces])
+    applyCatalog(tags, [...places, ...importedPlaces])
     clearImportPreview()
-  }, [clearImportPreview, importPreview, persistCatalog, places, tags])
+  }, [applyCatalog, clearImportPreview, importPreview, places, tags])
 
   const handleSearch = useCallback(async () => {
     if (!query.trim()) {
@@ -330,6 +350,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         longitude: "139.7",
         latitude: "35.68",
         tags: [],
+        parkingCondition: "-1",
+        gmapUrl: "",
       },
       true
     )
@@ -363,6 +385,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
               longitude: String(longitude),
               latitude: String(latitude),
               tags: [],
+              parkingCondition: "-1",
+              gmapUrl: "",
             })
 
       onDraftChange(
@@ -381,8 +405,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     [draft, isCreating, onDraftChange, selectedPlace]
   )
 
-  const handleSave = useCallback(
-    async (values: DraftPlace): Promise<PlaceSaveError | null> => {
+  const handleApply = useCallback(
+    (values: DraftPlace): PlaceApplyError | null => {
       const nextPlace = fromDraft(values)
 
       if (!nextPlace) {
@@ -405,7 +429,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
             place.id === selectedPlace?.id ? nextPlace : place
           )
 
-      await persistCatalog(tags, nextPlaces)
+      applyCatalog(tags, nextPlaces)
       onDraftChange(null, false)
       onSelectPlace(nextPlace.id)
       setPlacesScreen("list")
@@ -415,10 +439,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       return null
     },
     [
+      applyCatalog,
       isCreating,
       onDraftChange,
       onSelectPlace,
-      persistCatalog,
       places,
       selectedPlace,
       tags,
@@ -426,9 +450,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   const handleDelete = useCallback(
-    async (placeId: string) => {
+    (placeId: string) => {
       const nextPlaces = places.filter((place) => place.id !== placeId)
-      await persistCatalog(tags, nextPlaces)
+      applyCatalog(tags, nextPlaces)
 
       if (selectedPlaceId === placeId) {
         onSelectPlace(null)
@@ -437,9 +461,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       }
     },
     [
+      applyCatalog,
       onDraftChange,
       onSelectPlace,
-      persistCatalog,
       places,
       selectedPlaceId,
       tags,
@@ -457,7 +481,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     [draft, isCreating, onDraftChange]
   )
 
-  const handleAddDraftTag = useCallback(async () => {
+  const handleAddDraftTag = useCallback(() => {
     if (!draft) {
       return
     }
@@ -470,7 +494,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     }
 
     const addedTag = nextTags[nextTags.length - 1]
-    await persistCatalog(nextTags, places)
+    applyCatalog(nextTags, places)
     onDraftChange(
       {
         ...draft,
@@ -481,7 +505,15 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       isCreating
     )
     setDraftNewTagLabel("")
-  }, [draft, draftNewTagLabel, isCreating, onDraftChange, persistCatalog, places, tags])
+  }, [
+    applyCatalog,
+    draft,
+    draftNewTagLabel,
+    isCreating,
+    onDraftChange,
+    places,
+    tags,
+  ])
 
   const value = useMemo<PlaceEditorContextValue>(
     () => ({
@@ -504,6 +536,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       results,
       isSearching,
       isImporting,
+      isDirty,
       isSaving,
       error,
       activeTab,
@@ -511,7 +544,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       placesScreen,
       goToPlacesList,
       onDraftChange,
-      persistCatalog,
+      handleCommit,
       clearImportPreview,
       updateImportSelection,
       handleAddTag,
@@ -524,7 +557,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       startCreate,
       startEdit,
       applySearchResult,
-      handleSave,
+      handleApply,
       handleDelete,
       handleToggleDraftTag,
       handleAddDraftTag,
@@ -545,19 +578,20 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleImportConfirm,
       handleImportPreview,
       handleMoveTag,
-      handleSave,
+      handleApply,
+      handleCommit,
       handleSearch,
       handleToggleDraftTag,
       importListName,
       importPreview,
       importUrl,
       isCreating,
+      isDirty,
       isImporting,
       isSaving,
       isSearching,
       newTagLabel,
       onDraftChange,
-      persistCatalog,
       places,
       placesScreen,
       query,
