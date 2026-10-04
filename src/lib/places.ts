@@ -163,6 +163,7 @@ export function addTagToCatalog(
       color: null,
       description: "",
       showOnMap: false,
+      displayTitle: "",
     },
   ]
 }
@@ -225,9 +226,7 @@ export function resolvePlaceMapTag(
   const placeTagSet = new Set(placeTags)
 
   return (
-    catalogTags.find(
-      (tag) => placeTagSet.has(tag.id) && tag.showOnMap
-    ) ?? null
+    catalogTags.find((tag) => placeTagSet.has(tag.id) && tag.showOnMap) ?? null
   )
 }
 

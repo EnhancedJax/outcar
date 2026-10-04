@@ -12,9 +12,9 @@ export const MAX_PITCH = 70
 const PANEL_MS = 220
 
 const THEME_OPTIONS = [
-  { value: "system", label: "System", icon: Desktop },
-  { value: "light", label: "Light", icon: Sun },
-  { value: "dark", label: "Dark", icon: Moon },
+  { value: "system", label: "系統", icon: Desktop },
+  { value: "light", label: "亮色", icon: Sun },
+  { value: "dark", label: "暗色", icon: Moon },
 ] as const
 
 export default function MapAppearanceControl({
@@ -126,7 +126,7 @@ export default function MapAppearanceControl({
           >
             <div className="mx-auto flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-border bg-background/95 p-4 shadow-lg backdrop-blur">
               <div className="flex flex-col gap-2">
-                <Label>Style</Label>
+                <Label>地圖</Label>
                 <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
                   <Button
                     type="button"
@@ -137,7 +137,7 @@ export default function MapAppearanceControl({
                     aria-pressed={mapAppearance === "monochrome"}
                     onClick={() => setMapAppearance("monochrome")}
                   >
-                    B&W
+                    黑白
                   </Button>
                   <Button
                     type="button"
@@ -146,13 +146,13 @@ export default function MapAppearanceControl({
                     aria-pressed={mapAppearance === "colored"}
                     onClick={() => setMapAppearance("colored")}
                   >
-                    Color
+                    彩色
                   </Button>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
-                <Label>Theme</Label>
+                <Label>主題</Label>
                 <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
                   {THEME_OPTIONS.map((option) => {
                     const Icon = option.icon
@@ -176,7 +176,7 @@ export default function MapAppearanceControl({
 
               <div className="flex flex-col gap-2">
                 <div className="flex items-center justify-between">
-                  <Label htmlFor="map-pitch">Pitch</Label>
+                  <Label htmlFor="map-pitch">傾斜度</Label>
                   <span className="text-sm text-muted-foreground tabular-nums">
                     {pitch}°
                   </span>

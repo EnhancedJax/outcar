@@ -3,6 +3,7 @@ import {
   ChatTeardropTextIcon,
   GpsIcon,
   NavigationArrow,
+  PersonIcon,
 } from "@phosphor-icons/react"
 import { cn } from "cn"
 import { useMemo } from "react"
@@ -17,37 +18,8 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "@/components/ui/popover"
+import { gmapStreetViewUrl, NAVIGATION_APPS } from "@/lib/urls"
 import { catalogTagById } from "@/types/place"
-
-const NAVIGATION_APPS = [
-  {
-    id: "apple-maps",
-    label: "Apple Maps",
-    href: (latitude: number, longitude: number) =>
-      `https://maps.apple.com/?daddr=${latitude},${longitude}&dirflg=d`,
-  },
-  {
-    id: "google-maps",
-    label: "Google Maps",
-    href: (latitude: number, longitude: number) =>
-      `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}&travelmode=driving&dir_action=navigate`,
-  },
-  {
-    id: "waze",
-    label: "Waze",
-    href: (latitude: number, longitude: number) =>
-      `https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`,
-  },
-  {
-    id: "amap",
-    label: "Amap 高德地圖",
-    href: (latitude: number, longitude: number, name: string) => {
-      const destination = `${longitude},${latitude},${encodeURIComponent(name)}`
-
-      return `https://uri.amap.com/navigation?to=${destination}&mode=car&coordinate=wgs84&callnative=1&src=outcar`
-    },
-  },
-] as const
 
 const frostedButtonClassName =
   "lg:h-9 rounded-full bg-foreground/10 lg:px-5 p-2 backdrop-blur-md hover:bg-foreground/20"
@@ -163,6 +135,23 @@ export function SelectedPlace() {
               </div>
             </PopoverContent>
           </Popover>
+          <Button
+            type="button"
+            variant="ghost"
+            size="lg"
+            className={frostedButtonClassName}
+            onClick={() => {
+              window.open(
+                gmapStreetViewUrl(
+                  selectedPlace.latitude,
+                  selectedPlace.longitude
+                ),
+                "_blank"
+              )
+            }}
+          >
+            <PersonIcon weight="fill" />
+          </Button>
         </div>
       </div>
     </div>

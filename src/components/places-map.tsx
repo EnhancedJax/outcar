@@ -276,6 +276,10 @@ export function PlacesMap() {
   }, [])
 
   useEffect(() => {
+    if (!isMapLoaded) {
+      return
+    }
+
     const isEditorMode = !viewerMode
 
     if (isEditorMode && hasFitEditorBoundsRef.current) {
@@ -299,7 +303,7 @@ export function PlacesMap() {
       pitch: pitchRef.current,
       duration: 600,
     })
-  }, [boundsPlaces, viewerMode])
+  }, [boundsPlaces, isMapLoaded, viewerMode])
 
   useEffect(() => {
     if (!isMapLoaded) {
