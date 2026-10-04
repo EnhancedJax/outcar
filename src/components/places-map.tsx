@@ -27,6 +27,13 @@ import { DEFAULT_VIEW, readMapSettings, saveMapSettings } from "@/lib/settings"
 
 const FOCUS_DURATION = 1200
 const FOCUS_ZOOM = 15
+const ORBIT_DEGREES_PER_SECOND = 8
+const ORBIT_PADDING = {
+  top: 80,
+  right: 80,
+  bottom: 220,
+  left: 80,
+}
 
 export function PlacesMap() {
   const {
@@ -51,6 +58,8 @@ export function PlacesMap() {
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapRef>(null)
   const awaitingFocusMoveEndRef = useRef(false)
+  const orbitFrameRef = useRef<number | null>(null)
+  const previousSelectedPlaceIdRef = useRef<string | null>(null)
   const hasFitEditorBoundsRef = useRef(false)
   const [mapAppearance, setMapAppearance] = useState<MapAppearance>(
     () => readMapSettings().appearance
@@ -216,20 +225,63 @@ export function PlacesMap() {
 
     const hasPath =
       selectedPlace.pathType !== -1 && selectedPlace.path.length >= 2
+    const bounds = hasPath
+      ? pathBounds(
+          selectedPlace.longitude,
+          selectedPlace.latitude,
+          selectedPlace.path
+        )
+      : null
+    const pointZoom = Math.max(map.getZoom(), FOCUS_ZOOM)
 
-    if (hasPath) {
-      const bounds = pathBounds(
-        selectedPlace.longitude,
-        selectedPlace.latitude,
-        selectedPlace.path
+    const stopOrbit = () => {
+      if (orbitFrameRef.current !== null) {
+        cancelAnimationFrame(orbitFrameRef.current)
+        orbitFrameRef.current = null
+      }
+    }
+
+    const orbit = (startTime: number, startBearing: number) => {
+      if (!awaitingFocusMoveEndRef.current) {
+        return
+      }
+
+      const elapsed = performance.now() - startTime
+      const bearing =
+        (startBearing + (elapsed / 1000) * ORBIT_DEGREES_PER_SECOND) % 360
+
+      if (bounds) {
+        const camera = map.cameraForBounds(bounds, {
+          padding: ORBIT_PADDING,
+          bearing,
+          pitch: pitchRef.current,
+        })
+
+        if (camera) {
+          map.jumpTo({
+            center: camera.center,
+            zoom: camera.zoom,
+            bearing,
+            pitch: pitchRef.current,
+          })
+        }
+      } else {
+        map.jumpTo({
+          center: [selectedPlace.longitude, selectedPlace.latitude],
+          zoom: pointZoom,
+          bearing,
+          pitch: pitchRef.current,
+        })
+      }
+
+      orbitFrameRef.current = requestAnimationFrame(() =>
+        orbit(startTime, startBearing)
       )
+    }
+
+    if (bounds) {
       const camera = map.cameraForBounds(bounds, {
-        padding: {
-          top: 80,
-          right: 80,
-          bottom: 220, // selected place bottom padding
-          left: 80,
-        },
+        padding: ORBIT_PADDING,
       })
 
       if (camera) {
@@ -245,7 +297,7 @@ export function PlacesMap() {
     } else {
       map.flyTo({
         center: [selectedPlace.longitude, selectedPlace.latitude],
-        zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
+        zoom: pointZoom,
         pitch: pitchRef.current,
         duration: FOCUS_DURATION,
         essential: true,
@@ -257,16 +309,49 @@ export function PlacesMap() {
         return
       }
 
-      awaitingFocusMoveEndRef.current = false
+      const startBearing = map.getBearing()
+      orbitFrameRef.current = requestAnimationFrame((startTime) =>
+        orbit(startTime, startBearing)
+      )
     }
 
     map.once("moveend", handleMoveEnd)
 
     return () => {
       awaitingFocusMoveEndRef.current = false
+      stopOrbit()
       map.off("moveend", handleMoveEnd)
     }
   }, [viewerMode, selectedPlace])
+
+  useEffect(() => {
+    const previousSelectedPlaceId = previousSelectedPlaceIdRef.current
+    previousSelectedPlaceIdRef.current = selectedPlaceId
+
+    if (!viewerMode || previousSelectedPlaceId === null || selectedPlaceId) {
+      return
+    }
+
+    const map = mapRef.current?.getMap()
+
+    if (!map) {
+      return
+    }
+
+    awaitingFocusMoveEndRef.current = false
+
+    if (orbitFrameRef.current !== null) {
+      cancelAnimationFrame(orbitFrameRef.current)
+      orbitFrameRef.current = null
+    }
+
+    map.flyTo({
+      zoom: 12,
+      bearing: 0,
+      duration: FOCUS_DURATION,
+      essential: true,
+    })
+  }, [selectedPlaceId, viewerMode])
 
   useEffect(() => {
     if (!viewerMode) {
@@ -280,20 +365,31 @@ export function PlacesMap() {
     }
 
     const handleCameraInteraction = () => {
+      console.log("Camera interaction detected, stopping orbiting.")
       awaitingFocusMoveEndRef.current = false
+      if (orbitFrameRef.current !== null) {
+        cancelAnimationFrame(orbitFrameRef.current)
+        orbitFrameRef.current = null
+      }
     }
 
+    map.on("mousedown", handleCameraInteraction)
     map.on("dragstart", handleCameraInteraction)
     map.on("wheel", handleCameraInteraction)
     map.on("rotatestart", handleCameraInteraction)
     map.on("pitchstart", handleCameraInteraction)
+    map.on("zoomstart", handleCameraInteraction)
+    map.on("boxzoomstart", handleCameraInteraction)
     map.on("touchstart", handleCameraInteraction)
 
     return () => {
+      map.off("mousedown", handleCameraInteraction)
       map.off("dragstart", handleCameraInteraction)
       map.off("wheel", handleCameraInteraction)
       map.off("rotatestart", handleCameraInteraction)
       map.off("pitchstart", handleCameraInteraction)
+      map.off("zoomstart", handleCameraInteraction)
+      map.off("boxzoomstart", handleCameraInteraction)
       map.off("touchstart", handleCameraInteraction)
     }
   }, [viewerMode])
