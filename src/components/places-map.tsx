@@ -1,5 +1,4 @@
 import "mapbox-gl/dist/mapbox-gl.css"
-import { cn } from "cn"
 import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
@@ -13,17 +12,17 @@ import {
 } from "@/components/place-pin"
 import { SelectedPlace } from "@/components/selected-place"
 import { TagList } from "@/components/tag-list"
-import { Button } from "@/components/ui/button"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
-import { resolvePlaceMapTagIcon } from "@/lib/places"
-import { pathBounds } from "@/lib/path"
 import {
   getBasemapConfig,
   getMapStyle,
   getMapboxToken,
   type MapAppearance,
 } from "@/lib/mapbox"
+import { pathBounds } from "@/lib/path"
+import { resolvePlaceMapTagIcon } from "@/lib/places"
 import type { Place } from "@/types/place"
+import MapAppearanceControl from "./map-appearance-control"
 
 const DEFAULT_PITCH = 50
 const ORBIT_SPEED = 5
@@ -88,6 +87,7 @@ export function PlacesMap() {
   const hasFitEditorBoundsRef = useRef(false)
   const [mapAppearance, setMapAppearance] =
     useState<MapAppearance>("monochrome")
+  const [isMapLoaded, setIsMapLoaded] = useState(false)
 
   const stopOrbit = useCallback(() => {
     isOrbitingRef.current = false
@@ -109,8 +109,10 @@ export function PlacesMap() {
       stopOrbit()
       isOrbitingRef.current = true
 
-      const center: [number, number] =
-        orbitCenter ?? [place.longitude, place.latitude]
+      const center: [number, number] = orbitCenter ?? [
+        place.longitude,
+        place.latitude,
+      ]
       let bearing = map.getBearing()
       let lastTime = performance.now()
       const zoom = Math.max(map.getZoom(), FOCUS_ZOOM)
@@ -235,6 +237,10 @@ export function PlacesMap() {
   }, [boundsPlaces, viewerMode])
 
   useEffect(() => {
+    if (!isMapLoaded) {
+      return
+    }
+
     const map = mapRef.current?.getMap()
 
     if (!map) {
@@ -247,10 +253,15 @@ export function PlacesMap() {
 
     if (map.isStyleLoaded()) {
       applyConfig()
-    } else {
-      map.once("style.load", applyConfig)
+      return
     }
-  }, [basemapConfig])
+
+    map.once("style.load", applyConfig)
+
+    return () => {
+      map.off("style.load", applyConfig)
+    }
+  }, [basemapConfig, isMapLoaded])
 
   useEffect(() => {
     if (!viewerMode || !selectedPlace) {
@@ -368,6 +379,9 @@ export function PlacesMap() {
         mapStyle={getMapStyle()}
         config={{ basemap: basemapConfig }}
         initialViewState={initialViewState}
+        onLoad={() => {
+          setIsMapLoaded(true)
+        }}
         style={{ width: "100%", height: "100%" }}
         onClick={(event) => {
           handleMapClick(event.lngLat.lng, event.lngLat.lat)
@@ -424,30 +438,10 @@ export function PlacesMap() {
 
       <MapHeader />
 
-      <div
-        className={cn(
-          "absolute top-4 z-20 flex gap-1 rounded-lg border border-border bg-background/95 p-1 shadow-lg backdrop-blur",
-          import.meta.env.DEV ? "right-16" : "right-4"
-        )}
-      >
-        <Button
-          type="button"
-          variant={mapAppearance === "monochrome" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setMapAppearance("monochrome")}
-        >
-          B&W
-        </Button>
-        <Button
-          type="button"
-          variant={mapAppearance === "colored" ? "default" : "ghost"}
-          size="sm"
-          onClick={() => setMapAppearance("colored")}
-        >
-          Color
-        </Button>
-      </div>
-
+      <MapAppearanceControl
+        mapAppearance={mapAppearance}
+        setMapAppearance={setMapAppearance}
+      />
       <SelectedPlace />
       <TagList />
     </div>
