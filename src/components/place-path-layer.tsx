@@ -6,8 +6,8 @@ import { useResolvedTheme } from "@/hooks/use-resolved-theme"
 
 const LIGHT_CASING_COLOR = "#ffffff"
 const LIGHT_LINE_COLOR = "#2563eb"
-const DARK_CASING_COLOR = "#fff"
-const DARK_LINE_COLOR = "#9db4e5"
+const DARK_CASING_COLOR = "#000"
+const DARK_LINE_COLOR = "#2563eb"
 
 type PlacePathLayerProps = {
   path: PathCoordinate[]
@@ -44,7 +44,7 @@ export function PlacePathLayer({
   const casingId = `${sourceId}-casing`
   const lineId = `${sourceId}-line`
   const casingColor = isDark ? DARK_CASING_COLOR : LIGHT_CASING_COLOR
-  const lineColor = isDark ? LIGHT_LINE_COLOR : DARK_LINE_COLOR
+  const lineColor = isDark ? DARK_LINE_COLOR : LIGHT_LINE_COLOR
 
   useEffect(() => {
     const mapbox = map?.getMap()
