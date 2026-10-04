@@ -219,11 +219,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   }, [onDraftChange, placesScreen, watch])
 
   const handlePathMapClick = useCallback(
-    async (
-      longitude: number,
-      latitude: number,
-      mode: "roads" | "points"
-    ) => {
+    async (longitude: number, latitude: number, mode: "roads" | "points") => {
       const values = getValues()
       const pathType = Number(values.pathType) as PathTypeValue
 
@@ -246,7 +242,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
               ? [pin, click]
               : [pin, ...values.path.slice(1), click]
 
-        setValue("path", pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, nextPath))
+        setValue(
+          "path",
+          pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, nextPath)
+        )
         return
       }
 
@@ -254,14 +253,29 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
       try {
         const profile = pathType === 0 ? "driving" : "walking"
+        const hasExistingPath = values.path.length > 0
         const route =
           pathType === 0
-            ? await fetchDirections(profile, click, pin)
-            : await fetchDirections(profile, pin, click)
+            ? await fetchDirections(
+                profile,
+                click,
+                hasExistingPath ? values.path[0] : pin
+              )
+            : await fetchDirections(
+                profile,
+                hasExistingPath ? values.path[values.path.length - 1] : pin,
+                click
+              )
+        const nextPath =
+          pathType === 0 && hasExistingPath
+            ? [...route.slice(0, -1), ...values.path]
+            : pathType === 1 && hasExistingPath
+              ? [...values.path, ...route.slice(1)]
+              : route
 
         setValue(
           "path",
-          pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, route)
+          pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, nextPath)
         )
       } catch (routeError) {
         setPathDrawingError(
@@ -285,10 +299,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       const path = getValues("path")
 
       if (pathType !== -1 && path.length > 0) {
-        setValue(
-          "path",
-          pathAnchoredAtPin(pathType, longitude, latitude, path)
-        )
+        setValue("path", pathAnchoredAtPin(pathType, longitude, latitude, path))
       }
     },
     [getValues, setValue]
@@ -605,7 +616,11 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
       const currentPathType = Number(values.pathType)
 
-      if (values.path.length > 0 && currentPathType !== -1 && currentPathType !== pathType) {
+      if (
+        values.path.length > 0 &&
+        currentPathType !== -1 &&
+        currentPathType !== pathType
+      ) {
         setValue(
           "path",
           pathAnchoredAtPin(
@@ -756,14 +771,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         onSelectPlace(null)
       }
     },
-    [
-      applyCatalog,
-      onDraftChange,
-      onSelectPlace,
-      places,
-      selectedPlaceId,
-      tags,
-    ]
+    [applyCatalog, onDraftChange, onSelectPlace, places, selectedPlaceId, tags]
   )
 
   const handleToggleDraftTag = useCallback(
