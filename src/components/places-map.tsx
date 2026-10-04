@@ -27,7 +27,7 @@ import { pathBounds } from "@/lib/path"
 import { resolvePlaceMapTag } from "@/lib/places"
 import type { Place } from "@/types/place"
 
-const DEFAULT_PITCH = 50
+const DEFAULT_PITCH = 0
 const MAP_SETTINGS_STORAGE_KEY = "outcar-map-settings"
 const ORBIT_SPEED = 5
 const FOCUS_ZOOM = 15
@@ -487,10 +487,7 @@ export function PlacesMap() {
                   tagColor={mapTag?.color}
                 />
               ) : (
-                <PlacePin
-                  tagIcon={mapTag?.icon}
-                  tagColor={mapTag?.color}
-                />
+                <PlacePin tagIcon={mapTag?.icon} tagColor={mapTag?.color} />
               )}
             </Marker>
           )
