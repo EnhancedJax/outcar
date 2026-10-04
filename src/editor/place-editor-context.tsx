@@ -11,7 +11,9 @@ import {
 import { FormProvider, useForm } from "react-hook-form"
 
 import { useAppState } from "@/app-state"
-import { searchPlaces } from "@/lib/mapbox"
+import type { PathTypeValue } from "@/constants/path"
+import { pathAnchoredAtPin, reversePath } from "@/lib/path"
+import { fetchDirections, searchPlaces } from "@/lib/mapbox"
 import {
   addTagToCatalog,
   createEmptyDraft,
@@ -26,6 +28,7 @@ import {
   savePlacesCatalog,
   setTagIcon,
   toDraft,
+  validatePathForDraft,
 } from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
@@ -96,6 +99,13 @@ type PlaceEditorContextValue = {
   handleDelete: (placeId: string) => void
   handleToggleDraftTag: (tagId: string) => void
   handleAddDraftTag: () => void
+  pathDrawMode: "roads" | "points" | null
+  isFetchingPath: boolean
+  pathDrawingError: string | null
+  setPathDrawMode: (mode: "roads" | "points" | null) => void
+  handlePathTypeChange: (pathType: string) => void
+  clearPath: () => void
+  undoPathPoint: () => void
 }
 
 const PlaceEditorContext = createContext<PlaceEditorContextValue | null>(null)
@@ -128,6 +138,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     selectPlace: onSelectPlace,
     registerEditorPlaceSelect,
     registerEditorCoordinateHandler,
+    registerEditorMarkerDragHandler,
   } = useAppState()
 
   const isCreatingRef = useRef(false)
@@ -155,6 +166,12 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<EditorTab>("places")
   const [placesScreen, setPlacesScreen] = useState<PlacesScreen>("list")
+  const [pathDrawMode, setPathDrawModeState] = useState<
+    "roads" | "points" | null
+  >(null)
+  const [isFetchingPath, setIsFetchingPath] = useState(false)
+  const [pathDrawingError, setPathDrawingError] = useState<string | null>(null)
+  const pathDrawModeRef = useRef<"roads" | "points" | null>(null)
 
   const isDirty = catalogSnapshot(tags, places) !== committedSnapshot
 
@@ -168,6 +185,12 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     selectedPlaceIndex >= 0 &&
     selectedPlaceIndex < places.length - 1
 
+  const setPathDrawMode = useCallback((mode: "roads" | "points" | null) => {
+    pathDrawModeRef.current = mode
+    setPathDrawModeState(mode)
+    setPathDrawingError(null)
+  }, [])
+
   const openPlaceForm = useCallback(
     (nextDraft: DraftPlace, creating: boolean) => {
       isCreatingRef.current = creating
@@ -175,6 +198,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       onDraftChange(nextDraft, creating)
       setActiveTab("places")
       setPlacesScreen("form")
+      pathDrawModeRef.current = null
+      setPathDrawModeState(null)
+      setPathDrawingError(null)
+      setIsFetchingPath(false)
     },
     [onDraftChange, reset]
   )
@@ -191,19 +218,113 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     return () => subscription.unsubscribe()
   }, [onDraftChange, placesScreen, watch])
 
+  const handlePathMapClick = useCallback(
+    async (
+      longitude: number,
+      latitude: number,
+      mode: "roads" | "points"
+    ) => {
+      const values = getValues()
+      const pathType = Number(values.pathType) as PathTypeValue
+
+      if (pathType === -1) {
+        return
+      }
+
+      const pinLongitude = Number(values.longitude)
+      const pinLatitude = Number(values.latitude)
+      const pin: [number, number] = [pinLongitude, pinLatitude]
+      const click: [number, number] = [longitude, latitude]
+
+      setPathDrawingError(null)
+
+      if (mode === "points") {
+        const nextPath =
+          pathType === 0
+            ? [...values.path.slice(0, -1), click, pin]
+            : values.path.length === 0
+              ? [pin, click]
+              : [pin, ...values.path.slice(1), click]
+
+        setValue("path", pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, nextPath))
+        return
+      }
+
+      setIsFetchingPath(true)
+
+      try {
+        const profile = pathType === 0 ? "driving" : "walking"
+        const route =
+          pathType === 0
+            ? await fetchDirections(profile, click, pin)
+            : await fetchDirections(profile, pin, click)
+
+        setValue(
+          "path",
+          pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, route)
+        )
+      } catch (routeError) {
+        setPathDrawingError(
+          routeError instanceof Error
+            ? routeError.message
+            : "Failed to fetch route"
+        )
+      } finally {
+        setIsFetchingPath(false)
+      }
+    },
+    [getValues, setValue]
+  )
+
+  const snapPathToPin = useCallback(
+    (longitude: number, latitude: number) => {
+      setValue("longitude", String(longitude))
+      setValue("latitude", String(latitude))
+
+      const pathType = Number(getValues("pathType"))
+      const path = getValues("path")
+
+      if (pathType !== -1 && path.length > 0) {
+        setValue(
+          "path",
+          pathAnchoredAtPin(pathType, longitude, latitude, path)
+        )
+      }
+    },
+    [getValues, setValue]
+  )
+
   useEffect(() => {
     if (placesScreen !== "form") {
       registerEditorCoordinateHandler(null)
+      registerEditorMarkerDragHandler(null)
       return
     }
 
     registerEditorCoordinateHandler((longitude, latitude) => {
-      setValue("longitude", String(longitude))
-      setValue("latitude", String(latitude))
+      const drawMode = pathDrawModeRef.current
+
+      if (drawMode) {
+        void handlePathMapClick(longitude, latitude, drawMode)
+        return
+      }
+
+      snapPathToPin(longitude, latitude)
     })
 
-    return () => registerEditorCoordinateHandler(null)
-  }, [placesScreen, registerEditorCoordinateHandler, setValue])
+    registerEditorMarkerDragHandler(snapPathToPin)
+
+    return () => {
+      registerEditorCoordinateHandler(null)
+      registerEditorMarkerDragHandler(null)
+    }
+  }, [
+    handlePathMapClick,
+    placesScreen,
+    registerEditorCoordinateHandler,
+    registerEditorMarkerDragHandler,
+    snapPathToPin,
+  ])
 
   useEffect(() => {
     registerEditorPlaceSelect((placeId) => {
@@ -379,6 +500,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         tags: [],
         parkingCondition: -1,
         gmapUrl: null,
+        pathType: -1,
+        path: [],
       }
     })
 
@@ -464,11 +587,104 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     [getValues, onSelectPlace, openPlaceForm, placesScreen, setValue]
   )
 
+  const handlePathTypeChange = useCallback(
+    (nextPathType: string) => {
+      const pathType = Number(nextPathType) as PathTypeValue
+      const values = getValues()
+      const pinLongitude = Number(values.longitude)
+      const pinLatitude = Number(values.latitude)
+
+      setValue("pathType", nextPathType)
+      setPathDrawingError(null)
+
+      if (pathType === -1) {
+        setValue("path", [])
+        setPathDrawMode(null)
+        return
+      }
+
+      const currentPathType = Number(values.pathType)
+
+      if (values.path.length > 0 && currentPathType !== -1 && currentPathType !== pathType) {
+        setValue(
+          "path",
+          pathAnchoredAtPin(
+            pathType,
+            pinLongitude,
+            pinLatitude,
+            reversePath(values.path)
+          )
+        )
+        return
+      }
+
+      if (values.path.length === 0) {
+        setValue("path", [])
+      }
+    },
+    [getValues, setPathDrawMode, setValue]
+  )
+
+  const clearPath = useCallback(() => {
+    setValue("pathType", "-1")
+    setValue("path", [])
+    setPathDrawMode(null)
+    setPathDrawingError(null)
+  }, [setPathDrawMode, setValue])
+
+  const undoPathPoint = useCallback(() => {
+    const values = getValues()
+    const pathType = Number(values.pathType)
+
+    if (pathType === -1 || values.path.length < 2) {
+      return
+    }
+
+    const pinLongitude = Number(values.longitude)
+    const pinLatitude = Number(values.latitude)
+
+    if (pathType === 0) {
+      if (values.path.length <= 2) {
+        setValue("path", [])
+        return
+      }
+
+      const nextPath = values.path.slice(0, -2)
+      setValue(
+        "path",
+        pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, [
+          ...nextPath,
+          [pinLongitude, pinLatitude],
+        ])
+      )
+      return
+    }
+
+    if (values.path.length <= 2) {
+      setValue("path", [])
+      return
+    }
+
+    setValue(
+      "path",
+      pathAnchoredAtPin(pathType, pinLongitude, pinLatitude, [
+        [pinLongitude, pinLatitude],
+        ...values.path.slice(1, -1),
+      ])
+    )
+  }, [getValues, setValue])
+
   const handleApply = useCallback(
     (
       values: DraftPlace,
       options?: { advance?: boolean }
     ): PlaceApplyError | null => {
+      const pathValidation = validatePathForDraft(values)
+
+      if (pathValidation !== true) {
+        return { field: "pathType", message: pathValidation }
+      }
+
       const nextPlace = fromDraft(values)
 
       if (!nextPlace) {
@@ -640,6 +856,13 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleDelete,
       handleToggleDraftTag,
       handleAddDraftTag,
+      pathDrawMode,
+      isFetchingPath,
+      pathDrawingError,
+      setPathDrawMode,
+      handlePathTypeChange,
+      clearPath,
+      undoPathPoint,
     }),
     [
       activeTab,
@@ -661,7 +884,14 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleCommit,
       handleSearch,
       handleToggleDraftTag,
+      handlePathTypeChange,
+      clearPath,
+      undoPathPoint,
       hasNextPlace,
+      isFetchingPath,
+      pathDrawMode,
+      pathDrawingError,
+      setPathDrawMode,
       importListName,
       importPreview,
       importUrl,

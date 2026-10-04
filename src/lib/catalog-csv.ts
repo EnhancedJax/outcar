@@ -1,3 +1,4 @@
+import { parsePath, parsePathType, serializePath } from "./path.js"
 import {
   isValidGmapUrl,
   isValidParkingCondition,
@@ -16,6 +17,8 @@ const PLACE_COLUMNS = [
   "tags",
   "parkingCondition",
   "gmapUrl",
+  "pathType",
+  "path",
 ] as const
 const TAG_SEPARATOR = "|"
 
@@ -179,16 +182,23 @@ export function parsePlacesCatalogCsv(
   )
 
   const places: Place[] = recordsFromCsv(placesSource, PLACE_COLUMNS).map(
-    (record) => ({
-      id: record.id,
-      name: record.name,
-      note: record.note,
-      longitude: parseCoordinate(record.longitude, "longitude"),
-      latitude: parseCoordinate(record.latitude, "latitude"),
-      tags: parseTagIds(record.tags),
-      parkingCondition: parseParkingCondition(record.parkingCondition),
-      gmapUrl: parseGmapUrl(record.gmapUrl),
-    })
+    (record) => {
+      const pathType = parsePathType(record.pathType)
+      const path = parsePath(record.path)
+
+      return {
+        id: record.id,
+        name: record.name,
+        note: record.note,
+        longitude: parseCoordinate(record.longitude, "longitude"),
+        latitude: parseCoordinate(record.latitude, "latitude"),
+        tags: parseTagIds(record.tags),
+        parkingCondition: parseParkingCondition(record.parkingCondition),
+        gmapUrl: parseGmapUrl(record.gmapUrl),
+        pathType,
+        path: pathType === -1 ? [] : path,
+      }
+    }
   )
 
   return { tags, places }
@@ -220,6 +230,8 @@ export function serializePlacesCatalog(catalog: PlacesCatalog) {
       place.tags.join(TAG_SEPARATOR),
       String(place.parkingCondition),
       place.gmapUrl ?? "",
+      String(place.pathType),
+      place.pathType === -1 ? "" : serializePath(place.path),
     ])
   )
 

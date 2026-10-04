@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
 import { TagChip } from "@/components/tag-chip"
 import { PARKING_CONDITIONS } from "@/constants/parking"
+import { PATH_TYPES } from "@/constants/path"
 import {
   validateGmapUrl,
   validateLatitude,
@@ -28,6 +29,13 @@ export function PlaceForm() {
     handleAddDraftTag,
     goToPlacesList,
     hasNextPlace,
+    pathDrawMode,
+    isFetchingPath,
+    pathDrawingError,
+    setPathDrawMode,
+    handlePathTypeChange,
+    clearPath,
+    undoPathPoint,
   } = usePlaceEditor()
 
   const {
@@ -39,6 +47,8 @@ export function PlaceForm() {
   } = useFormContext<DraftPlace>()
 
   const selectedTags = watch("tags")
+  const pathType = watch("pathType")
+  const path = watch("path")
 
   const applyDraft = (values: DraftPlace, advance: boolean) => {
     const applyError = handleApply(values, { advance })
@@ -200,6 +210,75 @@ export function PlaceForm() {
           <p className="text-xs text-destructive">
             {errors.parkingCondition.message}
           </p>
+        ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="pathType">Path</Label>
+        <select
+          id="pathType"
+          aria-invalid={Boolean(errors.pathType)}
+          className={cn(
+            "h-8 w-full min-w-0 rounded-lg border border-input bg-transparent px-2.5 py-1 text-base transition-colors outline-none focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50 disabled:pointer-events-none disabled:cursor-not-allowed disabled:bg-input/50 disabled:opacity-50 aria-invalid:border-destructive aria-invalid:ring-3 aria-invalid:ring-destructive/20 md:text-sm dark:bg-input/30"
+          )}
+          value={pathType}
+          onChange={(event) => handlePathTypeChange(event.target.value)}
+        >
+          {PATH_TYPES.map((pathTypeOption) => (
+            <option key={pathTypeOption.value} value={String(pathTypeOption.value)}>
+              {pathTypeOption.title}
+            </option>
+          ))}
+        </select>
+        {errors.pathType ? (
+          <p className="text-xs text-destructive">{errors.pathType.message}</p>
+        ) : null}
+        {pathType !== "-1" ? (
+          <div className="space-y-2">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                type="button"
+                size="sm"
+                variant={pathDrawMode === "roads" ? "default" : "secondary"}
+                onClick={() => setPathDrawMode("roads")}
+              >
+                Follow roads
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant={pathDrawMode === "points" ? "default" : "secondary"}
+                onClick={() => setPathDrawMode("points")}
+              >
+                Draw points
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                disabled={path.length < 2}
+                onClick={undoPathPoint}
+              >
+                Undo
+              </Button>
+              <Button type="button" size="sm" variant="secondary" onClick={clearPath}>
+                Clear
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              {pathDrawMode === "roads"
+                ? "Click the map to set the route end and snap to roads."
+                : pathDrawMode === "points"
+                  ? "Click the map to add path points."
+                  : "Choose a drawing mode, then click the map."}
+            </p>
+            {isFetchingPath ? (
+              <p className="text-xs text-muted-foreground">Fetching route...</p>
+            ) : null}
+            {pathDrawingError ? (
+              <p className="text-xs text-destructive">{pathDrawingError}</p>
+            ) : null}
+          </div>
         ) : null}
       </div>
 

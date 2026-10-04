@@ -1,8 +1,15 @@
 import { isParkingConditionValue } from "@/constants/parking"
+import { isPathTypeValue } from "@/constants/path"
 import placesCsv from "@/data/places.csv?raw"
 import tagsCsv from "@/data/tags.csv?raw"
 import type { CatalogTag, DraftPlace, Place, PlacesCatalog } from "@/types/place"
-import { isValidGmapUrl, isValidParkingCondition } from "@/types/place"
+import {
+  isValidGmapUrl,
+  isValidParkingCondition,
+  isValidPath,
+  isValidPathType,
+} from "@/types/place"
+import { pathAnchoredAtPin } from "@/lib/path"
 import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import {
@@ -208,6 +215,8 @@ export function toDraft(place: Place): DraftPlace {
     tags: [...place.tags],
     parkingCondition: String(place.parkingCondition),
     gmapUrl: place.gmapUrl ?? "",
+    pathType: String(place.pathType),
+    path: [...place.path],
   }
 }
 
@@ -215,7 +224,12 @@ export function fromDraft(draft: DraftPlace): Place | null {
   const longitude = Number(draft.longitude)
   const latitude = Number(draft.latitude)
   const parkingCondition = Number(draft.parkingCondition)
+  const pathType = Number(draft.pathType)
   const gmapUrl = draft.gmapUrl.trim()
+  const path =
+    pathType === -1
+      ? []
+      : pathAnchoredAtPin(pathType, longitude, latitude, draft.path)
 
   if (
     !draft.id.trim() ||
@@ -223,7 +237,10 @@ export function fromDraft(draft: DraftPlace): Place | null {
     !isValidLongitudeString(draft.longitude) ||
     !isValidLatitudeString(draft.latitude) ||
     !isValidParkingCondition(parkingCondition) ||
-    (gmapUrl !== "" && !isValidGmapUrl(gmapUrl))
+    (gmapUrl !== "" && !isValidGmapUrl(gmapUrl)) ||
+    !isValidPathType(pathType) ||
+    !isValidPath(path) ||
+    (pathType !== -1 && path.length < 2)
   ) {
     return null
   }
@@ -237,6 +254,8 @@ export function fromDraft(draft: DraftPlace): Place | null {
     tags: draft.tags,
     parkingCondition,
     gmapUrl: gmapUrl === "" ? null : gmapUrl,
+    pathType,
+    path,
   }
 }
 
@@ -298,6 +317,36 @@ export function validateParkingCondition(value: string) {
   return true
 }
 
+export function validatePathType(value: string) {
+  if (!value.trim()) {
+    return "Path type is required"
+  }
+
+  if (!isPathTypeValue(Number(value))) {
+    return "Select a valid path type"
+  }
+
+  return true
+}
+
+export function validatePathForDraft(draft: DraftPlace) {
+  const pathType = Number(draft.pathType)
+
+  if (!isPathTypeValue(pathType)) {
+    return "Select a valid path type"
+  }
+
+  if (pathType === -1) {
+    return true
+  }
+
+  if (!isValidPath(draft.path) || draft.path.length < 2) {
+    return "Draw a path with at least two points"
+  }
+
+  return true
+}
+
 export function validateGmapUrl(value: string) {
   const trimmed = value.trim()
 
@@ -328,5 +377,7 @@ export function createEmptyDraft(): DraftPlace {
     tags: [],
     parkingCondition: "-1",
     gmapUrl: "",
+    pathType: "-1",
+    path: [],
   }
 }

@@ -5,6 +5,7 @@ import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
 import { useAppState } from "@/app-state"
 import { MapHeader } from "@/components/map-header"
+import { PlacePathLayer } from "@/components/place-path-layer"
 import {
   PlacePin,
   PreviewPlacePin,
@@ -14,6 +15,7 @@ import { SelectedPlace } from "@/components/selected-place"
 import { TagList } from "@/components/tag-list"
 import { Button } from "@/components/ui/button"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
+import { pathBounds } from "@/lib/path"
 import {
   getBasemapConfig,
   getMapStyle,
@@ -25,6 +27,7 @@ import type { Place } from "@/types/place"
 const DEFAULT_PITCH = 50
 const ORBIT_SPEED = 5
 const FOCUS_ZOOM = 15
+const SELECTED_PLACE_BOTTOM_PADDING = 220
 
 const DEFAULT_VIEW = {
   longitude: 139.7,
@@ -90,7 +93,7 @@ export function PlacesMap() {
   }, [])
 
   const startOrbit = useCallback(
-    (place: Place) => {
+    (place: Place, orbitCenter?: [number, number]) => {
       const map = mapRef.current?.getMap()
 
       if (!map) {
@@ -100,7 +103,8 @@ export function PlacesMap() {
       stopOrbit()
       isOrbitingRef.current = true
 
-      const center: [number, number] = [place.longitude, place.latitude]
+      const center: [number, number] =
+        orbitCenter ?? [place.longitude, place.latitude]
       let bearing = map.getBearing()
       let lastTime = performance.now()
       const zoom = Math.max(map.getZoom(), FOCUS_ZOOM)
@@ -138,6 +142,26 @@ export function PlacesMap() {
     () => places.find((place) => place.id === selectedPlaceId) ?? null,
     [places, selectedPlaceId]
   )
+
+  const visiblePlaces = useMemo(() => {
+    if (viewerMode && selectedPlaceId) {
+      return places.filter((place) => place.id === selectedPlaceId)
+    }
+
+    return places
+  }, [places, selectedPlaceId, viewerMode])
+
+  const pathPlace = useMemo(() => {
+    if (viewerMode) {
+      return selectedPlace
+    }
+
+    if (draggableMarkerId) {
+      return places.find((place) => place.id === draggableMarkerId) ?? null
+    }
+
+    return selectedPlace
+  }, [draggableMarkerId, places, selectedPlace, viewerMode])
 
   const initialViewState = useMemo(() => {
     if (places.length === 0) {
@@ -227,13 +251,49 @@ export function PlacesMap() {
 
     awaitingFocusMoveEndRef.current = true
 
-    map.flyTo({
-      center: [selectedPlace.longitude, selectedPlace.latitude],
-      zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
-      pitch: DEFAULT_PITCH,
-      duration: 1200,
-      essential: true,
-    })
+    const hasPath =
+      selectedPlace.pathType !== -1 && selectedPlace.path.length >= 2
+    let orbitCenter: [number, number] | undefined
+
+    if (hasPath) {
+      const bounds = pathBounds(
+        selectedPlace.longitude,
+        selectedPlace.latitude,
+        selectedPlace.path
+      )
+      const camera = map.cameraForBounds(bounds, {
+        padding: {
+          top: 80,
+          right: 80,
+          bottom: SELECTED_PLACE_BOTTOM_PADDING,
+          left: 80,
+        },
+      })
+
+      orbitCenter = [
+        (bounds[0][0] + bounds[1][0]) / 2,
+        (bounds[0][1] + bounds[1][1]) / 2,
+      ]
+
+      if (camera) {
+        map.flyTo({
+          center: camera.center,
+          zoom: camera.zoom,
+          bearing: camera.bearing,
+          pitch: DEFAULT_PITCH,
+          duration: 1200,
+          essential: true,
+        })
+      }
+    } else {
+      map.flyTo({
+        center: [selectedPlace.longitude, selectedPlace.latitude],
+        zoom: Math.max(map.getZoom(), FOCUS_ZOOM),
+        pitch: DEFAULT_PITCH,
+        duration: 1200,
+        essential: true,
+      })
+    }
 
     const handleMoveEnd = () => {
       if (!awaitingFocusMoveEndRef.current) {
@@ -241,7 +301,7 @@ export function PlacesMap() {
       }
 
       awaitingFocusMoveEndRef.current = false
-      startOrbit(selectedPlace)
+      startOrbit(selectedPlace, orbitCenter)
     }
 
     map.once("moveend", handleMoveEnd)
@@ -297,7 +357,15 @@ export function PlacesMap() {
           handleMapClick(event.lngLat.lng, event.lngLat.lat)
         }}
       >
-        {places.map((place) => {
+        {pathPlace ? (
+          <PlacePathLayer
+            id={pathPlace.id}
+            path={pathPlace.path}
+            pathType={pathPlace.pathType}
+          />
+        ) : null}
+
+        {visiblePlaces.map((place) => {
           const isSelected = place.id === selectedPlaceId
           const isDraggable = place.id === draggableMarkerId
 

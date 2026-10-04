@@ -20,6 +20,11 @@ type EditorCoordinateHandler = (
   latitude: number
 ) => void
 
+type EditorMarkerDragHandler = (
+  longitude: number,
+  latitude: number
+) => void
+
 type AppStateContextValue = {
   places: Place[]
   tags: CatalogTag[]
@@ -48,6 +53,9 @@ type AppStateContextValue = {
   ) => void
   registerEditorCoordinateHandler: (
     handler: EditorCoordinateHandler | null
+  ) => void
+  registerEditorMarkerDragHandler: (
+    handler: EditorMarkerDragHandler | null
   ) => void
   handleMapClick: (longitude: number, latitude: number) => void
   handleMarkerDrag: (
@@ -86,6 +94,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [isEditorOpen, setIsEditorOpen] = useState(true)
   const editorPlaceSelectRef = useRef<((placeId: string) => void) | null>(null)
   const editorCoordinateHandlerRef = useRef<EditorCoordinateHandler | null>(null)
+  const editorMarkerDragHandlerRef = useRef<EditorMarkerDragHandler | null>(
+    null
+  )
 
   const isEditorActive = import.meta.env.DEV && isEditorOpen
   const viewerMode = !isEditorActive
@@ -138,6 +149,13 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
     []
   )
 
+  const registerEditorMarkerDragHandler = useCallback(
+    (handler: EditorMarkerDragHandler | null) => {
+      editorMarkerDragHandlerRef.current = handler
+    },
+    []
+  )
+
   const handleMapClick = useCallback(
     (longitude: number, latitude: number) => {
       if (!isEditorActive || !editorDraft || !editorCoordinateHandlerRef.current) {
@@ -151,15 +169,16 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
 
   const handleMarkerDrag = useCallback(
     (placeId: string, longitude: number, latitude: number) => {
-      if (
-        !isEditorActive ||
-        editorDraft?.id !== placeId ||
-        !editorCoordinateHandlerRef.current
-      ) {
+      if (!isEditorActive || editorDraft?.id !== placeId) {
         return
       }
 
-      editorCoordinateHandlerRef.current(longitude, latitude)
+      if (editorMarkerDragHandlerRef.current) {
+        editorMarkerDragHandlerRef.current(longitude, latitude)
+        return
+      }
+
+      editorCoordinateHandlerRef.current?.(longitude, latitude)
     },
     [editorDraft, isEditorActive]
   )
@@ -224,6 +243,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       selectPlaceFromMap,
       registerEditorPlaceSelect,
       registerEditorCoordinateHandler,
+      registerEditorMarkerDragHandler,
       handleMapClick,
       handleMarkerDrag,
     }),
@@ -247,6 +267,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       selectPlaceFromMap,
       registerEditorPlaceSelect,
       registerEditorCoordinateHandler,
+      registerEditorMarkerDragHandler,
       handleMapClick,
       handleMarkerDrag,
     ]

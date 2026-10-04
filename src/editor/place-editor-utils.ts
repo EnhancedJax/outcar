@@ -27,6 +27,8 @@ export function importPreviewToPlaces(items: ImportPreviewItem[]): Place[] {
       tags: [],
       parkingCondition: -1,
       gmapUrl: null,
+      pathType: -1,
+      path: [],
     }))
 }
 

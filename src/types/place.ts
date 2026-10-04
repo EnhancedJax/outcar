@@ -1,4 +1,5 @@
 import { isParkingConditionValue } from "../constants/parking"
+import { isPathTypeValue, type PathCoordinate } from "../constants/path"
 
 export type CatalogTag = {
   id: string
@@ -16,6 +17,8 @@ export type Place = {
   tags: string[]
   parkingCondition: number
   gmapUrl: string | null
+  pathType: number
+  path: PathCoordinate[]
 }
 
 export type DraftPlace = {
@@ -27,6 +30,8 @@ export type DraftPlace = {
   tags: string[]
   parkingCondition: string
   gmapUrl: string
+  pathType: string
+  path: PathCoordinate[]
 }
 
 export type PlacesCatalog = {
@@ -157,6 +162,29 @@ export function isValidGmapUrl(value: unknown): value is string | null {
   return typeof value === "string" && value.trim() === value && isHttpUrl(value)
 }
 
+function isValidPathCoordinate(value: unknown): value is PathCoordinate {
+  return (
+    Array.isArray(value) &&
+    value.length === 2 &&
+    typeof value[0] === "number" &&
+    Number.isFinite(value[0]) &&
+    value[0] >= -180 &&
+    value[0] <= 180 &&
+    typeof value[1] === "number" &&
+    Number.isFinite(value[1]) &&
+    value[1] >= -90 &&
+    value[1] <= 90
+  )
+}
+
+export function isValidPath(value: unknown): value is PathCoordinate[] {
+  return Array.isArray(value) && value.every(isValidPathCoordinate)
+}
+
+export function isValidPathType(value: unknown): value is number {
+  return isPathTypeValue(value)
+}
+
 export function isValidPlace(value: unknown): value is Place {
   if (!value || typeof value !== "object") {
     return false
@@ -165,6 +193,8 @@ export function isValidPlace(value: unknown): value is Place {
   const place = value as Record<string, unknown>
 
   const tags = place.tags === undefined ? [] : place.tags
+  const path = place.path === undefined ? [] : place.path
+  const pathType = place.pathType === undefined ? -1 : place.pathType
 
   return (
     typeof place.id === "string" &&
@@ -182,7 +212,10 @@ export function isValidPlace(value: unknown): value is Place {
     place.latitude <= 90 &&
     isValidPlaceTagIdsArray(tags) &&
     isValidParkingCondition(place.parkingCondition) &&
-    isValidGmapUrl(place.gmapUrl)
+    isValidGmapUrl(place.gmapUrl) &&
+    isValidPathType(pathType) &&
+    isValidPath(path) &&
+    (pathType === -1 ? path.length === 0 : path.length >= 2)
   )
 }
 
@@ -315,10 +348,16 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
 
 export function normalizePlacesCatalog(value: unknown): PlacesCatalog {
   if (Array.isArray(value)) {
-    const places = value.map((place) => ({
-      ...(place as Place),
-      tags: Array.isArray((place as Place).tags) ? (place as Place).tags : [],
-    }))
+    const places = value.map((place) => {
+      const raw = place as Place
+
+      return {
+        ...raw,
+        tags: Array.isArray(raw.tags) ? raw.tags : [],
+        pathType: raw.pathType ?? -1,
+        path: Array.isArray(raw.path) ? raw.path : [],
+      }
+    })
 
     return reconcileCatalogTags({ tags: [], places })
   }
