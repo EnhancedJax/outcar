@@ -1,4 +1,3 @@
-import { parsePath, parsePathType, serializePath } from "./path.js"
 import {
   isValidGmapUrl,
   isValidParkingCondition,
@@ -6,6 +5,7 @@ import {
   type Place,
   type PlacesCatalog,
 } from "../types/place.js"
+import { parsePath, parsePathType, serializePath } from "./path.js"
 
 const TAG_COLUMNS = [
   "id",
@@ -14,6 +14,7 @@ const TAG_COLUMNS = [
   "color",
   "description",
   "showOnMap",
+  "displayTitle",
 ] as const
 const PLACE_COLUMNS = [
   "id",
@@ -187,6 +188,7 @@ export function parsePlacesCatalogCsv(
       color: record.color ? record.color : null,
       description: record.description,
       showOnMap: record.showOnMap === "true",
+      displayTitle: record.displayTitle ? record.displayTitle : "",
     })
   )
 
@@ -227,6 +229,7 @@ export function serializePlacesCatalog(catalog: PlacesCatalog) {
       tag.color ?? "",
       tag.description,
       tag.showOnMap ? "true" : "false",
+      tag.displayTitle,
     ])
   )
 

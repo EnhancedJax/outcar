@@ -14,9 +14,9 @@ export function TagList() {
   }
 
   return (
-    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center p-4">
+    <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center">
       <div
-        className="pointer-events-auto flex w-full flex-wrap items-center justify-center gap-2"
+        className="pointer-events-auto flex w-full gap-2 overflow-visible overflow-x-auto px-4 pb-4"
         role="toolbar"
         aria-label="Filter places by tag"
       >
@@ -27,7 +27,7 @@ export function TagList() {
             <button
               key={tag.id}
               type="button"
-              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium transition-colors ${
+              className={`shrink-0 rounded-full border px-3 py-1.5 text-sm font-medium shadow-lg transition-colors ${
                 isActive
                   ? "border-primary bg-primary text-primary-foreground"
                   : "border-border bg-background hover:bg-muted"

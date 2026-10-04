@@ -1,4 +1,4 @@
-import { Desktop, Gear, Moon, Sun } from "@phosphor-icons/react"
+import { Desktop, GearIcon, Moon, Sun } from "@phosphor-icons/react"
 import { cn } from "cn"
 import { useCallback, useEffect, useRef, useState } from "react"
 
@@ -102,7 +102,7 @@ export default function MapAppearanceControl({
           openPanel()
         }}
       >
-        <Gear />
+        <GearIcon />
       </Button>
 
       {open ? (

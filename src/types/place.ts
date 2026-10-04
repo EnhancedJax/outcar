@@ -8,6 +8,7 @@ export type CatalogTag = {
   color: string | null
   description: string
   showOnMap: boolean
+  displayTitle: string
 }
 
 export type Place = {
@@ -317,6 +318,7 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
         icon: null,
         color: null,
         description: "",
+        displayTitle: "",
         showOnMap: false,
       })
       seenIds.add(id)
@@ -357,6 +359,8 @@ function normalizeCatalogTagsInput(tags: unknown): CatalogTag[] {
         color,
         description: normalizeTagDescription(raw.description),
         showOnMap: raw.showOnMap === true,
+        displayTitle:
+          typeof raw.displayTitle === "string" ? raw.displayTitle : "",
       })
       seenIds.add(id)
       seenLabelKeys.add(tagKey(label))
@@ -439,6 +443,7 @@ export function reconcileCatalogTags(catalog: PlacesCatalog): PlacesCatalog {
         color: null,
         description: "",
         showOnMap: false,
+        displayTitle: "",
       })
       idSet.add(id)
       labelToId.set(key, id)

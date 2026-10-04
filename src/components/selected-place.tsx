@@ -50,7 +50,7 @@ const NAVIGATION_APPS = [
 ] as const
 
 const frostedButtonClassName =
-  "h-9 rounded-full bg-foreground/10 px-5 backdrop-blur-md hover:bg-foreground/20"
+  "lg:h-9 rounded-full bg-foreground/10 lg:px-5 p-2 backdrop-blur-md hover:bg-foreground/20"
 
 export function SelectedPlace() {
   const { displayPlaces, selectedPlaceId, tags, viewerMode, selectPlace } =
@@ -72,10 +72,12 @@ export function SelectedPlace() {
       aria-label={selectedPlace.name}
     >
       <ProgressiveBlur direction="down" />
-      <div className="relative flex w-full flex-col items-center px-6 pt-28 pb-6 text-center">
-        <div className="pointer-events-auto flex w-full flex-col items-center">
-          <h2 className="text-lg font-medium">{selectedPlace.name}</h2>
-          <div className="flex items-center text-muted-foreground">
+      <div className="relative flex w-full flex-row px-6 pt-28 pb-6 text-center lg:flex-col">
+        <div className="pointer-events-auto flex w-full flex-col lg:items-center">
+          <h2 className="text-left text-lg font-medium">
+            {selectedPlace.name}
+          </h2>
+          <div className="flex text-muted-foreground lg:items-center">
             <GpsIcon className="mr-1" />
             <span className="text-xs">
               {selectedPlace.latitude.toFixed(6)},{" "}
@@ -92,30 +94,31 @@ export function SelectedPlace() {
               <p className="text-sm">{selectedPlace.note}</p>
             </div>
           ) : null}
-        </div>
-        <div className="mt-4 flex flex-wrap justify-center gap-1.5">
-          {selectedPlace.tags.map((tagId) => {
-            const catalogTag = catalogTagById(tags, tagId)
+          <div className="mt-4 flex flex-wrap gap-1.5">
+            {selectedPlace.tags.map((tagId) => {
+              const catalogTag = catalogTagById(tags, tagId)
 
-            if (!catalogTag) {
-              return null
-            }
+              if (!catalogTag) {
+                return null
+              }
 
-            return (
-              <span
-                key={tagId}
-                className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
-              >
-                <TagChip catalogTag={catalogTag} />
-              </span>
-            )
-          })}
+              return (
+                <span
+                  key={tagId}
+                  className="rounded-full bg-secondary px-2.5 py-0.5 text-xs font-medium text-secondary-foreground"
+                >
+                  <TagChip catalogTag={catalogTag} />
+                </span>
+              )
+            })}
+          </div>
         </div>
-        <div className="pointer-events-auto mt-4 flex items-center gap-2">
+        <div className="pointer-events-auto flex gap-2 lg:mt-4 lg:items-center lg:justify-center">
           <Button
             type="button"
             variant="ghost"
-            className="h-9 rounded-full bg-foreground/10 px-5 backdrop-blur-md hover:bg-foreground/20"
+            size="lg"
+            className={frostedButtonClassName}
             aria-label="Dismiss place details"
             onClick={() => selectPlace(null)}
           >
@@ -128,8 +131,7 @@ export function SelectedPlace() {
                 frostedButtonClassName
               )}
             >
-              <NavigationArrow weight="bold" />
-              導航
+              <NavigationArrow weight="fill" />
             </PopoverTrigger>
             <PopoverContent side="top" align="center" className="w-52 p-2">
               <div className="flex flex-col gap-0.5">
