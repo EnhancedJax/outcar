@@ -13,6 +13,7 @@ import {
   places as initialPlaces,
   tags as initialTags,
 } from "@/lib/places"
+import { isPathTypeValue } from "@/constants/path"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
 type EditorCoordinateHandler = (
@@ -81,6 +82,40 @@ type AppStateProviderProps = {
   children: ReactNode
 }
 
+function draftPlaceForDisplay(
+  draft: DraftPlace,
+  fallback: Place | undefined
+): Place | null {
+  const longitude = Number(draft.longitude)
+  const latitude = Number(draft.latitude)
+  const pathType = Number(draft.pathType)
+
+  if (
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90 ||
+    !isPathTypeValue(pathType)
+  ) {
+    return null
+  }
+
+  return {
+    id: draft.id,
+    name: draft.name,
+    note: draft.note,
+    longitude,
+    latitude,
+    tags: draft.tags,
+    parkingCondition: fallback?.parkingCondition ?? -1,
+    gmapUrl: fallback?.gmapUrl ?? null,
+    pathType,
+    path: pathType === -1 ? [] : draft.path,
+  }
+}
+
 export function AppStateProvider({ children }: AppStateProviderProps) {
   const [places, setPlaces] = useState<Place[]>(initialPlaces)
   const [tags, setTags] = useState<CatalogTag[]>(initialTags)
@@ -124,7 +159,12 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       return basePlaces
     }
 
-    const draftPlace = fromDraft(editorDraft)
+    const draftPlace =
+      fromDraft(editorDraft) ??
+      draftPlaceForDisplay(
+        editorDraft,
+        places.find((place) => place.id === editorDraft.id)
+      )
 
     if (!draftPlace) {
       return basePlaces

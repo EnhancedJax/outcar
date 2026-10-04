@@ -2,18 +2,21 @@ import { isParkingConditionValue } from "@/constants/parking"
 import { isPathTypeValue } from "@/constants/path"
 import placesCsv from "@/data/places.csv?raw"
 import tagsCsv from "@/data/tags.csv?raw"
-import type { CatalogTag, DraftPlace, Place, PlacesCatalog } from "@/types/place"
+import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
+import { pathAnchoredAtPin } from "@/lib/path"
+import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
+import type {
+  CatalogTag,
+  DraftPlace,
+  Place,
+  PlacesCatalog,
+} from "@/types/place"
 import {
+  createUniqueTagId,
   isValidGmapUrl,
   isValidParkingCondition,
   isValidPath,
   isValidPathType,
-} from "@/types/place"
-import { pathAnchoredAtPin } from "@/lib/path"
-import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
-import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
-import {
-  createUniqueTagId,
   normalizePlacesCatalog,
   normalizeTagLabel,
   tagKey,
@@ -372,8 +375,8 @@ export function createEmptyDraft(): DraftPlace {
     id: `draft-${Date.now()}`,
     name: "",
     note: "",
-    longitude: "139.7",
-    latitude: "35.68",
+    longitude: "114.1465859",
+    latitude: "22.3244775",
     tags: [],
     parkingCondition: "-1",
     gmapUrl: "",

@@ -73,13 +73,17 @@ export function PlacesMap() {
   } = useAppState()
   const resolvedTheme = useResolvedTheme()
   const isDark = resolvedTheme === "dark"
-  const previewPlaces = importPreviewPlaces ?? []
+  const previewPlaces = useMemo(
+    () => importPreviewPlaces ?? [],
+    [importPreviewPlaces]
+  )
 
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapRef>(null)
   const orbitFrameRef = useRef<number | null>(null)
   const isOrbitingRef = useRef(false)
   const awaitingFocusMoveEndRef = useRef(false)
+  const hasFitEditorBoundsRef = useRef(false)
   const [mapAppearance, setMapAppearance] =
     useState<MapAppearance>("monochrome")
 
@@ -203,11 +207,21 @@ export function PlacesMap() {
   }, [])
 
   useEffect(() => {
+    const isEditorMode = !viewerMode
+
+    if (isEditorMode && hasFitEditorBoundsRef.current) {
+      return
+    }
+
     const map = mapRef.current?.getMap()
     const bounds = getBounds(boundsPlaces)
 
     if (!map || !bounds) {
       return
+    }
+
+    if (isEditorMode) {
+      hasFitEditorBoundsRef.current = true
     }
 
     map.fitBounds(bounds, {
@@ -216,7 +230,7 @@ export function PlacesMap() {
       pitch: DEFAULT_PITCH,
       duration: 600,
     })
-  }, [boundsPlaces])
+  }, [boundsPlaces, viewerMode])
 
   useEffect(() => {
     const map = mapRef.current?.getMap()
