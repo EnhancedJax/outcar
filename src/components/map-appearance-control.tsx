@@ -6,9 +6,8 @@ import { useTheme } from "@/components/theme-provider"
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import type { MapAppearance } from "@/lib/mapbox"
+import { MAX_PITCH, MIN_PITCH } from "@/lib/settings"
 
-export const MIN_PITCH = 0
-export const MAX_PITCH = 70
 const PANEL_MS = 220
 
 const THEME_OPTIONS = [

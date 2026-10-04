@@ -3,10 +3,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from "react"
 import Map, { Marker, type MapRef } from "react-map-gl/mapbox"
 
 import { useAppState } from "@/app-state"
-import MapAppearanceControl, {
-  MAX_PITCH,
-  MIN_PITCH,
-} from "@/components/map-appearance-control"
+import MapAppearanceControl from "@/components/map-appearance-control"
 import { MapHeader } from "@/components/map-header"
 import { PlacePathLayer } from "@/components/place-path-layer"
 import {
@@ -17,6 +14,7 @@ import {
 import { SelectedPlace } from "@/components/selected-place"
 import { TagList } from "@/components/tag-list"
 import { useResolvedTheme } from "@/hooks/use-resolved-theme"
+import { getBounds } from "@/lib/geo"
 import {
   getBasemapConfig,
   getMapStyle,
@@ -25,79 +23,10 @@ import {
 } from "@/lib/mapbox"
 import { pathBounds } from "@/lib/path"
 import { resolvePlaceMapTag } from "@/lib/places"
-import type { Place } from "@/types/place"
+import { DEFAULT_VIEW, readMapSettings, saveMapSettings } from "@/lib/settings"
 
-const DEFAULT_PITCH = 0
-const MAP_SETTINGS_STORAGE_KEY = "outcar-map-settings"
-const ORBIT_SPEED = 5
-const FOCUS_ZOOM = 15
 const FOCUS_DURATION = 1200
-const SELECTED_PLACE_BOTTOM_PADDING = 220
-
-const DEFAULT_VIEW = {
-  longitude: 139.7,
-  latitude: 35.68,
-  zoom: 10,
-  pitch: DEFAULT_PITCH,
-}
-
-function readMapSettings() {
-  const fallback = {
-    appearance: "monochrome" as MapAppearance,
-    pitch: DEFAULT_PITCH,
-  }
-
-  try {
-    const raw = localStorage.getItem(MAP_SETTINGS_STORAGE_KEY)
-
-    if (!raw) {
-      return fallback
-    }
-
-    const parsed = JSON.parse(raw) as {
-      appearance?: unknown
-      pitch?: unknown
-    }
-    const appearance =
-      parsed.appearance === "colored" || parsed.appearance === "monochrome"
-        ? parsed.appearance
-        : fallback.appearance
-    const pitch =
-      typeof parsed.pitch === "number" &&
-      Number.isFinite(parsed.pitch) &&
-      parsed.pitch >= MIN_PITCH &&
-      parsed.pitch <= MAX_PITCH
-        ? parsed.pitch
-        : fallback.pitch
-
-    return { appearance, pitch }
-  } catch {
-    return fallback
-  }
-}
-
-function getBounds(places: Place[]) {
-  if (places.length === 0) {
-    return null
-  }
-
-  let minLng = places[0].longitude
-  let maxLng = places[0].longitude
-  let minLat = places[0].latitude
-  let maxLat = places[0].latitude
-
-  for (const place of places) {
-    minLng = Math.min(minLng, place.longitude)
-    maxLng = Math.max(maxLng, place.longitude)
-    minLat = Math.min(minLat, place.latitude)
-    maxLat = Math.max(maxLat, place.latitude)
-  }
-
-  return [
-    [minLng, minLat],
-    [maxLng, maxLat],
-  ] as [[number, number], [number, number]]
-}
+const FOCUS_ZOOM = 15
 
 export function PlacesMap() {
   const {
@@ -121,8 +50,6 @@ export function PlacesMap() {
 
   const containerRef = useRef<HTMLDivElement>(null)
   const mapRef = useRef<MapRef>(null)
-  const orbitFrameRef = useRef<number | null>(null)
-  const isOrbitingRef = useRef(false)
   const awaitingFocusMoveEndRef = useRef(false)
   const hasFitEditorBoundsRef = useRef(false)
   const [mapAppearance, setMapAppearance] = useState<MapAppearance>(
@@ -137,71 +64,12 @@ export function PlacesMap() {
     pitchRef.current = nextPitch
     setPitch(nextPitch)
 
-    if (isOrbitingRef.current) {
-      return
-    }
-
     mapRef.current?.getMap()?.setPitch(nextPitch)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem(
-      MAP_SETTINGS_STORAGE_KEY,
-      JSON.stringify({ appearance: mapAppearance, pitch })
-    )
+    saveMapSettings({ appearance: mapAppearance, pitch })
   }, [mapAppearance, pitch])
-
-  const stopOrbit = useCallback(() => {
-    isOrbitingRef.current = false
-
-    if (orbitFrameRef.current !== null) {
-      cancelAnimationFrame(orbitFrameRef.current)
-      orbitFrameRef.current = null
-    }
-  }, [])
-
-  const startOrbit = useCallback(
-    (place: Place, orbitCenter?: [number, number]) => {
-      const map = mapRef.current?.getMap()
-
-      if (!map) {
-        return
-      }
-
-      stopOrbit()
-      isOrbitingRef.current = true
-
-      const center: [number, number] = orbitCenter ?? [
-        place.longitude,
-        place.latitude,
-      ]
-      let bearing = map.getBearing()
-      let lastTime = performance.now()
-      const zoom = Math.max(map.getZoom(), FOCUS_ZOOM)
-
-      const tick = (time: number) => {
-        if (!isOrbitingRef.current) {
-          return
-        }
-
-        const delta = (time - lastTime) / 1000
-        lastTime = time
-        bearing = (bearing + ORBIT_SPEED * delta) % 360
-
-        map.jumpTo({
-          center,
-          bearing,
-          pitch: pitchRef.current,
-          zoom,
-        })
-
-        orbitFrameRef.current = requestAnimationFrame(tick)
-      }
-
-      orbitFrameRef.current = requestAnimationFrame(tick)
-    },
-    [stopOrbit]
-  )
 
   const basemapConfig = useMemo(
     () => getBasemapConfig(mapAppearance, isDark),
@@ -335,7 +203,6 @@ export function PlacesMap() {
   useEffect(() => {
     if (!viewerMode || !selectedPlace) {
       awaitingFocusMoveEndRef.current = false
-      stopOrbit()
       return
     }
 
@@ -349,7 +216,6 @@ export function PlacesMap() {
 
     const hasPath =
       selectedPlace.pathType !== -1 && selectedPlace.path.length >= 2
-    let orbitCenter: [number, number] | undefined
 
     if (hasPath) {
       const bounds = pathBounds(
@@ -361,15 +227,10 @@ export function PlacesMap() {
         padding: {
           top: 80,
           right: 80,
-          bottom: SELECTED_PLACE_BOTTOM_PADDING,
+          bottom: 220, // selected place bottom padding
           left: 80,
         },
       })
-
-      orbitCenter = [
-        (bounds[0][0] + bounds[1][0]) / 2,
-        (bounds[0][1] + bounds[1][1]) / 2,
-      ]
 
       if (camera) {
         map.flyTo({
@@ -397,7 +258,6 @@ export function PlacesMap() {
       }
 
       awaitingFocusMoveEndRef.current = false
-      startOrbit(selectedPlace, orbitCenter)
     }
 
     map.once("moveend", handleMoveEnd)
@@ -405,9 +265,8 @@ export function PlacesMap() {
     return () => {
       awaitingFocusMoveEndRef.current = false
       map.off("moveend", handleMoveEnd)
-      stopOrbit()
     }
-  }, [viewerMode, selectedPlace, startOrbit, stopOrbit])
+  }, [viewerMode, selectedPlace])
 
   useEffect(() => {
     if (!viewerMode) {
@@ -422,7 +281,6 @@ export function PlacesMap() {
 
     const handleCameraInteraction = () => {
       awaitingFocusMoveEndRef.current = false
-      stopOrbit()
     }
 
     map.on("dragstart", handleCameraInteraction)
@@ -438,7 +296,7 @@ export function PlacesMap() {
       map.off("pitchstart", handleCameraInteraction)
       map.off("touchstart", handleCameraInteraction)
     }
-  }, [viewerMode, stopOrbit])
+  }, [viewerMode])
 
   return (
     <div ref={containerRef} className="relative h-full w-full">
