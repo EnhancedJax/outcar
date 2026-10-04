@@ -1,6 +1,6 @@
 import type { MapAppearance } from "./mapbox"
 
-const DEFAULT_PITCH = 0
+const DEFAULT_PITCH = 20
 const MAP_SETTINGS_STORAGE_KEY = "outcar-map-settings"
 export const MIN_PITCH = 0
 export const MAX_PITCH = 70

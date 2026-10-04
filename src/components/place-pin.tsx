@@ -48,7 +48,7 @@ export function PlacePin({
     <PlacePinContent
       tagIcon={tagIcon}
       tagColor={tagColor}
-      className="text-destructive"
+      className="text-muted-foreground"
     />
   )
 }
