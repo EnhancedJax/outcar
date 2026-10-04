@@ -3,44 +3,68 @@
     {
       "id": "photo",
       "label": "打卡位",
-      "description": "打卡位",
-      "icon": "CameraIcon"
+      "icon": "CameraIcon",
+      "description": "打卡位"
     },
     {
       "id": "view",
       "label": "睇風景",
-      "description": "睇風景",
-      "icon": "MountainsIcon"
+      "icon": "MountainsIcon",
+      "description": "睇風景"
     },
     {
       "id": "small-road",
       "label": "細路",
-      "description": "細路",
-      "icon": "TreeIcon"
+      "icon": "TreeIcon",
+      "description": "細路"
     },
     {
       "id": "challenge",
       "label": "挑戰性",
-      "description": "挑戰性",
-      "icon": "MotorcycleIcon"
+      "icon": "MotorcycleIcon",
+      "description": "挑戰性"
     },
     {
       "id": "eat",
       "label": "食嘢",
-      "description": "食嘢",
-      "icon": "BowlFoodIcon"
+      "icon": "BowlFoodIcon",
+      "description": "食嘢"
     },
     {
       "id": "coffee",
       "label": "飲啡",
-      "description": "飲啡",
-      "icon": "CoffeeIcon"
+      "icon": "CoffeeIcon",
+      "description": "飲啡"
     },
     {
       "id": "new",
       "label": "未去過",
-      "description": "未去過",
-      "icon": "SealIcon"
+      "icon": "SealIcon",
+      "description": "未去過"
+    },
+    {
+      "id": "sunset",
+      "label": "日落",
+      "icon": "SunHorizonIcon",
+      "description": "日落"
+    },
+    {
+      "id": "sunrise",
+      "label": "日出",
+      "icon": "SunDimIcon",
+      "description": "日出"
+    },
+    {
+      "id": "nightview",
+      "label": "夜景",
+      "icon": "CityIcon",
+      "description": "夜景"
+    },
+    {
+      "id": "sea",
+      "label": "海景",
+      "icon": "WavesIcon",
+      "description": "海景"
     }
   ],
   "places": [
@@ -114,23 +138,29 @@
       "note": "",
       "longitude": 114.0386874,
       "latitude": 22.4168316,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "place-1791028289870-5",
-      "name": "元朗",
+      "name": "米埔",
       "note": "",
       "longitude": 114.0325295,
       "latitude": 22.4769142,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "place-1791028289870-6",
-      "name": "已放置圖釘",
+      "name": "山貝河",
       "note": "",
       "longitude": 114.02800789999999,
       "latitude": 22.465069,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "place-1791028289870-7",
@@ -138,7 +168,9 @@
       "note": "",
       "longitude": 114.01348,
       "latitude": 22.4663343,
-      "tags": []
+      "tags": [
+        "new"
+      ]
     },
     {
       "id": "kafe",
@@ -146,15 +178,20 @@
       "note": "",
       "longitude": 114.01187689999999,
       "latitude": 22.4522797,
-      "tags": []
+      "tags": [
+        "coffee",
+        "photo"
+      ]
     },
     {
       "id": "metered-parking-spaces-big-wave-bay",
-      "name": "大浪灣咪錶停車位",
+      "name": "大浪灣",
       "note": "",
       "longitude": 114.2455411,
       "latitude": 22.2445308,
-      "tags": []
+      "tags": [
+        "view"
+      ]
     },
     {
       "id": "peak-tram-barker-road-station",
@@ -162,7 +199,9 @@
       "note": "",
       "longitude": 114.15166939999999,
       "latitude": 22.2709869,
-      "tags": []
+      "tags": [
+        "photo"
+      ]
     },
     {
       "id": "place-1791028289870-8",
@@ -1082,7 +1121,11 @@
       "note": "",
       "longitude": 114.2214367,
       "latitude": 22.3530288,
-      "tags": []
+      "tags": [
+        "photo",
+        "view",
+        "small-road"
+      ]
     },
     {
       "id": "pak-sha-wan-pier",
