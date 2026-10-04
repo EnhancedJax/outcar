@@ -322,7 +322,7 @@ export function PlacesMap() {
       stopOrbit()
       map.off("moveend", handleMoveEnd)
     }
-  }, [viewerMode, selectedPlace])
+  }, [isMapLoaded, viewerMode, selectedPlace])
 
   useEffect(() => {
     const previousSelectedPlaceId = previousSelectedPlaceIdRef.current
@@ -365,7 +365,6 @@ export function PlacesMap() {
     }
 
     const handleCameraInteraction = () => {
-      console.log("Camera interaction detected, stopping orbiting.")
       awaitingFocusMoveEndRef.current = false
       if (orbitFrameRef.current !== null) {
         cancelAnimationFrame(orbitFrameRef.current)
@@ -376,23 +375,23 @@ export function PlacesMap() {
     map.on("mousedown", handleCameraInteraction)
     map.on("dragstart", handleCameraInteraction)
     map.on("wheel", handleCameraInteraction)
-    map.on("rotatestart", handleCameraInteraction)
-    map.on("pitchstart", handleCameraInteraction)
-    map.on("zoomstart", handleCameraInteraction)
-    map.on("boxzoomstart", handleCameraInteraction)
+    // map.on("rotatestart", handleCameraInteraction)
+    // map.on("pitchstart", handleCameraInteraction)
+    // map.on("zoomstart", handleCameraInteraction)
+    // map.on("boxzoomstart", handleCameraInteraction)
     map.on("touchstart", handleCameraInteraction)
 
     return () => {
       map.off("mousedown", handleCameraInteraction)
       map.off("dragstart", handleCameraInteraction)
       map.off("wheel", handleCameraInteraction)
-      map.off("rotatestart", handleCameraInteraction)
-      map.off("pitchstart", handleCameraInteraction)
-      map.off("zoomstart", handleCameraInteraction)
-      map.off("boxzoomstart", handleCameraInteraction)
+      // map.off("rotatestart", handleCameraInteraction)
+      // map.off("pitchstart", handleCameraInteraction)
+      // map.off("zoomstart", handleCameraInteraction)
+      // map.off("boxzoomstart", handleCameraInteraction)
       map.off("touchstart", handleCameraInteraction)
     }
-  }, [viewerMode])
+  }, [isMapLoaded, viewerMode])
 
   return (
     <div ref={containerRef} className="relative h-full w-full">
