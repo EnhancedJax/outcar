@@ -26,7 +26,7 @@ import { resolvePlaceMapTag } from "@/lib/places"
 import { DEFAULT_VIEW, readMapSettings, saveMapSettings } from "@/lib/settings"
 
 const FOCUS_DURATION = 1200
-const FOCUS_ZOOM = 15
+const FOCUS_ZOOM = 18
 const ORBIT_DEGREES_PER_SECOND = 8
 const ORBIT_PADDING = {
   top: 80,
