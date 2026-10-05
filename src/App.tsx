@@ -14,13 +14,12 @@ const PlaceEditor = lazy(() => import("@/editor/place-editor"))
 export function App() {
   const { isEditorOpen, setIsEditorOpen, isCatalogLoading, catalogError } =
     useAppState()
-  const { isAuthenticated, isLoading, signOut } = useAuth()
-  const appIsLoading = isLoading || isCatalogLoading
+  const { isAuthenticated, signOut } = useAuth() // ignore isLoading for auth
 
   return (
     <>
-      <AppLoading isLoading={appIsLoading} />
-      {appIsLoading ? null : catalogError ? (
+      <AppLoading isLoading={isCatalogLoading} />
+      {isCatalogLoading ? null : catalogError ? (
         <AppError error={new Error(catalogError)} />
       ) : (
         <div className="flex h-dvh w-full overflow-hidden">
