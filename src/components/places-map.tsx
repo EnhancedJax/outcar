@@ -412,6 +412,7 @@ export function PlacesMap() {
       >
         {pathPlace ? (
           <PlacePathLayer
+            key={pathPlace.id}
             id={pathPlace.id}
             path={pathPlace.path}
             pathType={pathPlace.pathType}

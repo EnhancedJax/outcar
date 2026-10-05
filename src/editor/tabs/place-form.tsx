@@ -6,6 +6,7 @@ import { cn } from "cn"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
+import { Spinner } from "@/components/ui/spinner"
 import { Textarea } from "@/components/ui/textarea"
 import { TagChip } from "@/components/tag-chip"
 import { PARKING_CONDITIONS } from "@/constants/parking"
@@ -27,6 +28,7 @@ export function PlaceForm() {
     draftNewTagLabel,
     setDraftNewTagLabel,
     handleApply,
+    isSaving,
     handleToggleDraftTag,
     handleAddDraftTag,
     goToPlacesList,
@@ -389,15 +391,19 @@ export function PlaceForm() {
       ) : null}
 
       <div className="flex flex-wrap gap-2">
-        <Button type="submit">Done</Button>
+        <Button type="submit" disabled={isSaving}>
+          {isSaving ? <Spinner /> : null}
+          {isSaving ? "Saving..." : "Done"}
+        </Button>
         {!isCreating ? (
           <Button
             type="button"
             variant="secondary"
-            disabled={!hasNextPlace}
+            disabled={!hasNextPlace || isSaving}
             onClick={() => void onDoneAndNext()}
           >
-            Done & next
+            {isSaving ? <Spinner /> : null}
+            {isSaving ? "Saving..." : "Done & next"}
           </Button>
         ) : null}
         <Button type="button" variant="secondary" onClick={goToPlacesList}>
