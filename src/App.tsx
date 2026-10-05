@@ -1,11 +1,13 @@
 import { Sidebar } from "@phosphor-icons/react"
 import { lazy, Suspense } from "react"
 
-import { useAuth } from "@/auth"
 import { useAppState } from "@/app-state"
-import { PlacesMap } from "@/components/places-map"
+import { useAuth } from "@/auth"
 import { PasswordDialog } from "@/components/password-dialog"
+import { PlacesMap } from "@/components/places-map"
 import { Button } from "@/components/ui/button"
+import AppError from "./components/app-error"
+import AppLoading from "./components/app-loading"
 
 const PlaceEditor = lazy(() => import("@/editor/place-editor"))
 
@@ -15,23 +17,17 @@ export function App() {
   const { isAuthenticated, isLoading, signOut } = useAuth()
 
   if (isLoading) {
-    return <div className="flex h-svh items-center justify-center">Loading...</div>
+    return (
+      <div className="flex h-svh items-center justify-center">Loading...</div>
+    )
   }
 
   if (isCatalogLoading) {
-    return (
-      <div className="flex h-svh items-center justify-center">
-        Loading places...
-      </div>
-    )
+    return <AppLoading />
   }
 
   if (catalogError) {
-    return (
-      <div className="flex h-svh items-center justify-center p-6 text-center">
-        <p>Unable to load places: {catalogError}</p>
-      </div>
-    )
+    return <AppError error={new Error(catalogError ?? "Unknown error")} />
   }
 
   return (
