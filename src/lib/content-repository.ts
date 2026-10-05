@@ -11,6 +11,7 @@ import {
   type PlacesCatalog,
 } from "@/types/place"
 import { normalizePlacesCatalog } from "@/types/place"
+import { parsePath } from "@/lib/path"
 import { supabase } from "@/lib/supabase"
 
 type TagRow = Omit<CatalogTag, "showOnMap" | "displayTitle"> & {
@@ -25,15 +26,10 @@ type PlaceRow = Omit<
   parking_condition: number
   gmap_url: string | null
   path_type: number
+  path: string
   position: number
 }
 type PlaceTagRow = { place_id: string; tag_id: string; position: number }
-type PathRow = {
-  place_id: string
-  position: number
-  longitude: number
-  latitude: number
-}
 type ImageRow = {
   id: string
   place_id: string
@@ -56,18 +52,15 @@ function throwIfError(error: { message: string } | null, operation: string) {
 
 export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
   const client = requireSupabase()
-  const [tagsResult, placesResult, placeTagsResult, pathsResult] =
-    await Promise.all([
-      client.from("tags").select("*").order("position"),
-      client.from("places").select("*").order("position"),
-      client.from("place_tags").select("*").order("position"),
-      client.from("place_paths").select("*").order("position"),
-    ])
+  const [tagsResult, placesResult, placeTagsResult] = await Promise.all([
+    client.from("tags").select("*").order("position"),
+    client.from("places").select("*").order("position"),
+    client.from("place_tags").select("*").order("position"),
+  ])
 
   throwIfError(tagsResult.error, "load tags")
   throwIfError(placesResult.error, "load places")
   throwIfError(placeTagsResult.error, "load place tags")
-  throwIfError(pathsResult.error, "load place paths")
 
   const tags = (tagsResult.data as TagRow[]).map((tag) => ({
     id: tag.id,
@@ -84,12 +77,6 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     ids.push(row.tag_id)
     tagIdsByPlace.set(row.place_id, ids)
   }
-  const pathsByPlace = new Map<string, [number, number][]>()
-  for (const row of pathsResult.data as PathRow[]) {
-    const path = pathsByPlace.get(row.place_id) ?? []
-    path.push([row.longitude, row.latitude])
-    pathsByPlace.set(row.place_id, path)
-  }
   const places = (placesResult.data as PlaceRow[]).map((place) => ({
     id: place.id,
     name: place.name,
@@ -100,7 +87,7 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     parkingCondition: place.parking_condition,
     gmapUrl: place.gmap_url,
     pathType: place.path_type,
-    path: pathsByPlace.get(place.id) ?? [],
+    path: parsePath(place.path),
     images: [],
   }))
 
