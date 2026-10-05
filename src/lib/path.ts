@@ -9,8 +9,55 @@ const COORDINATE_PAIR_SEPARATOR = ","
 
 export function serializePath(path: PathCoordinate[]) {
   return path
-    .map(([longitude, latitude]) => `${longitude}${COORDINATE_PAIR_SEPARATOR}${latitude}`)
+    .map(
+      ([longitude, latitude]) =>
+        `${longitude}${COORDINATE_PAIR_SEPARATOR}${latitude}`
+    )
     .join(COORDINATE_SEPARATOR)
+}
+
+function parseCoordinatePair(value: unknown, source: string): PathCoordinate {
+  if (
+    !Array.isArray(value) ||
+    value.length !== 2 ||
+    typeof value[0] !== "number" ||
+    typeof value[1] !== "number"
+  ) {
+    throw new Error(`Invalid path coordinate pair: ${source}`)
+  }
+
+  const [longitude, latitude] = value
+
+  if (
+    !Number.isFinite(longitude) ||
+    longitude < -180 ||
+    longitude > 180 ||
+    !Number.isFinite(latitude) ||
+    latitude < -90 ||
+    latitude > 90
+  ) {
+    throw new Error(`Invalid path coordinate pair: ${source}`)
+  }
+
+  return [longitude, latitude]
+}
+
+function parseDelimitedPath(value: string): PathCoordinate[] {
+  return value.split(COORDINATE_SEPARATOR).map((pair) => {
+    const values = pair.split(COORDINATE_PAIR_SEPARATOR)
+
+    if (
+      values.length !== 2 ||
+      values.some((coordinate) => !coordinate.trim())
+    ) {
+      throw new Error(`Invalid path coordinate pair: ${pair}`)
+    }
+
+    return parseCoordinatePair(
+      values.map((coordinate) => Number(coordinate)),
+      pair
+    )
+  })
 }
 
 export function parsePath(value: string): PathCoordinate[] {
@@ -20,33 +67,23 @@ export function parsePath(value: string): PathCoordinate[] {
     return []
   }
 
-  const coordinates: PathCoordinate[] = []
+  if (trimmed.startsWith("[")) {
+    let parsed: unknown
 
-  for (const pair of trimmed.split(COORDINATE_SEPARATOR)) {
-    const [longitudeRaw, latitudeRaw] = pair.split(COORDINATE_PAIR_SEPARATOR)
-
-    if (!longitudeRaw || !latitudeRaw) {
-      throw new Error(`Invalid path coordinate pair: ${pair}`)
+    try {
+      parsed = JSON.parse(trimmed)
+    } catch {
+      throw new Error(`Invalid path: ${value}`)
     }
 
-    const longitude = Number(longitudeRaw)
-    const latitude = Number(latitudeRaw)
-
-    if (
-      !Number.isFinite(longitude) ||
-      longitude < -180 ||
-      longitude > 180 ||
-      !Number.isFinite(latitude) ||
-      latitude < -90 ||
-      latitude > 90
-    ) {
-      throw new Error(`Invalid path coordinate pair: ${pair}`)
+    if (!Array.isArray(parsed)) {
+      throw new Error(`Invalid path: ${value}`)
     }
 
-    coordinates.push([longitude, latitude])
+    return parsed.map((pair) => parseCoordinatePair(pair, JSON.stringify(pair)))
   }
 
-  return coordinates
+  return parseDelimitedPath(trimmed)
 }
 
 export function parsePathType(value: string): PathTypeValue {
