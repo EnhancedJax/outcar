@@ -26,7 +26,8 @@ export function TagsTab() {
     <div className="space-y-2">
       <Label>Tags</Label>
       <p className="text-xs text-muted-foreground">
-        Order controls the filter bar and map pin icon priority in production.
+        Order controls the filter bar and default map pin icon priority in
+        production.
       </p>
       <div className="flex gap-2">
         <Input

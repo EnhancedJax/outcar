@@ -184,20 +184,28 @@ export function setTagColor(
 
 export function resolvePlaceMapTag(
   placeTags: string[],
-  catalogTags: CatalogTag[]
+  catalogTags: CatalogTag[],
+  activeTag: string | null = null
 ): CatalogTag | null {
   const placeTagSet = new Set(placeTags)
+  const activeCatalogTag =
+    activeTag && placeTagSet.has(activeTag)
+      ? catalogTags.find((tag) => tag.id === activeTag)
+      : undefined
 
   return (
-    catalogTags.find((tag) => placeTagSet.has(tag.id) && tag.showOnMap) ?? null
+    activeCatalogTag ??
+    catalogTags.find((tag) => placeTagSet.has(tag.id) && tag.showOnMap) ??
+    null
   )
 }
 
 export function resolvePlaceMapTagIcon(
   placeTags: string[],
-  catalogTags: CatalogTag[]
+  catalogTags: CatalogTag[],
+  activeTag: string | null = null
 ): string | null {
-  return resolvePlaceMapTag(placeTags, catalogTags)?.icon ?? null
+  return resolvePlaceMapTag(placeTags, catalogTags, activeTag)?.icon ?? null
 }
 
 export function moveTag(

@@ -41,6 +41,7 @@ export function PlacesMap() {
     fitBoundsPlaces,
     importPreviewPlaces,
     tags,
+    activeTag,
     viewerMode,
     selectedPlaceId,
     selectPlaceFromMap,
@@ -421,7 +422,7 @@ export function PlacesMap() {
         {visiblePlaces.map((place) => {
           const isSelected = place.id === selectedPlaceId
           const isDraggable = place.id === draggableMarkerId
-          const mapTag = resolvePlaceMapTag(place.tags, tags)
+          const mapTag = resolvePlaceMapTag(place.tags, tags, activeTag)
 
           return (
             <Marker
