@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import type { MapAppearance } from "@/lib/mapbox"
 import { MAX_PITCH, MIN_PITCH } from "@/lib/settings"
+import Attribution from "./attribution"
 
 const PANEL_MS = 220
 
@@ -116,82 +117,89 @@ export default function MapAppearanceControl({
             role="dialog"
             aria-label="Map settings"
             className={cn(
-              "absolute inset-x-0 bottom-0 z-40 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] transition-transform duration-200 ease-out",
+              "absolute inset-x-0 bottom-0 z-40 px-4 pb-[env(safe-area-inset-bottom)] transition-transform duration-200 ease-out",
               shown ? "translate-y-0" : "translate-y-full"
             )}
           >
-            <div className="mx-auto flex w-full max-w-sm flex-col gap-4 rounded-2xl border border-border bg-background/95 p-4 shadow-lg backdrop-blur">
-              <div className="flex flex-col gap-2">
-                <Label>地圖</Label>
-                <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={
-                      mapAppearance === "monochrome" ? "default" : "ghost"
-                    }
-                    aria-pressed={mapAppearance === "monochrome"}
-                    onClick={() => setMapAppearance("monochrome")}
-                  >
-                    黑白
-                  </Button>
-                  <Button
-                    type="button"
-                    size="sm"
-                    variant={mapAppearance === "colored" ? "default" : "ghost"}
-                    aria-pressed={mapAppearance === "colored"}
-                    onClick={() => setMapAppearance("colored")}
-                  >
-                    彩色
-                  </Button>
+            <div className="mx-auto w-full max-w-sm rounded-t-2xl border border-border bg-background/95 backdrop-blur">
+              <div className="flex flex-col gap-4 p-4">
+                <div className="flex flex-col gap-2">
+                  <Label>地圖</Label>
+                  <div className="grid grid-cols-2 gap-1 rounded-lg bg-muted p-1">
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        mapAppearance === "monochrome" ? "default" : "ghost"
+                      }
+                      aria-pressed={mapAppearance === "monochrome"}
+                      onClick={() => setMapAppearance("monochrome")}
+                    >
+                      黑白
+                    </Button>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant={
+                        mapAppearance === "colored" ? "default" : "ghost"
+                      }
+                      aria-pressed={mapAppearance === "colored"}
+                      onClick={() => setMapAppearance("colored")}
+                    >
+                      彩色
+                    </Button>
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <Label>主題</Label>
+                  <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
+                    {THEME_OPTIONS.map((option) => {
+                      const Icon = option.icon
+
+                      return (
+                        <Button
+                          key={option.value}
+                          type="button"
+                          size="sm"
+                          variant={theme === option.value ? "default" : "ghost"}
+                          aria-pressed={theme === option.value}
+                          onClick={() => setTheme(option.value)}
+                        >
+                          <Icon />
+                          {option.label}
+                        </Button>
+                      )
+                    })}
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="map-pitch">傾斜度</Label>
+                    <span className="text-sm text-muted-foreground tabular-nums">
+                      {pitch}°
+                    </span>
+                  </div>
+                  <input
+                    id="map-pitch"
+                    type="range"
+                    min={MIN_PITCH}
+                    max={MAX_PITCH}
+                    step={1}
+                    value={pitch}
+                    aria-valuemin={MIN_PITCH}
+                    aria-valuemax={MAX_PITCH}
+                    aria-valuenow={pitch}
+                    className="w-full cursor-pointer accent-foreground"
+                    onChange={(event) => {
+                      onPitchChange(Number(event.target.value))
+                    }}
+                  />
                 </div>
               </div>
-
-              <div className="flex flex-col gap-2">
-                <Label>主題</Label>
-                <div className="grid grid-cols-3 gap-1 rounded-lg bg-muted p-1">
-                  {THEME_OPTIONS.map((option) => {
-                    const Icon = option.icon
-
-                    return (
-                      <Button
-                        key={option.value}
-                        type="button"
-                        size="sm"
-                        variant={theme === option.value ? "default" : "ghost"}
-                        aria-pressed={theme === option.value}
-                        onClick={() => setTheme(option.value)}
-                      >
-                        <Icon />
-                        {option.label}
-                      </Button>
-                    )
-                  })}
-                </div>
-              </div>
-
-              <div className="flex flex-col gap-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="map-pitch">傾斜度</Label>
-                  <span className="text-sm text-muted-foreground tabular-nums">
-                    {pitch}°
-                  </span>
-                </div>
-                <input
-                  id="map-pitch"
-                  type="range"
-                  min={MIN_PITCH}
-                  max={MAX_PITCH}
-                  step={1}
-                  value={pitch}
-                  aria-valuemin={MIN_PITCH}
-                  aria-valuemax={MAX_PITCH}
-                  aria-valuenow={pitch}
-                  className="w-full cursor-pointer accent-foreground"
-                  onChange={(event) => {
-                    onPitchChange(Number(event.target.value))
-                  }}
-                />
+              <div className="border-t border-border bg-muted p-4">
+                <Attribution />
               </div>
             </div>
           </div>

@@ -10,9 +10,9 @@ import {
 } from "react"
 
 import { useAuth } from "@/auth"
-import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
-import { loadPlaceImages } from "@/lib/content-repository"
 import { isPathTypeValue } from "@/constants/path"
+import { loadPlaceImages } from "@/lib/content-repository"
+import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 
 type EditorCoordinateHandler = (longitude: number, latitude: number) => void
@@ -37,7 +37,7 @@ type AppStateContextValue = {
   isCatalogLoading: boolean
   catalogError: string | null
   selectedPlaceImages: PlaceImage[]
-  selectedPlaceImagesLoading: boolean
+  selectedPlaceImagesLoadingCount: number
   selectedPlaceImagesError: string | null
   setPlaces: (places: Place[]) => void
   setTags: (tags: CatalogTag[]) => void
@@ -112,7 +112,7 @@ function draftPlaceForDisplay(
     pathType,
     path: pathType === -1 ? [] : draft.path,
     images: draft.images,
-    hasImages: draft.images.length > 0,
+    imagesCount: draft.images.length,
   }
 }
 
@@ -125,8 +125,8 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [selectedPlaceImages, setSelectedPlaceImages] = useState<PlaceImage[]>(
     []
   )
-  const [selectedPlaceImagesLoading, setSelectedPlaceImagesLoading] =
-    useState(false)
+  const [selectedPlaceImagesLoadingCount, setSelectedPlaceImagesLoadingCount] =
+    useState(0)
   const [selectedPlaceImagesError, setSelectedPlaceImagesError] = useState<
     string | null
   >(null)
@@ -175,7 +175,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   useEffect(() => {
     const selectedPlace = places.find((place) => place.id === selectedPlaceId)
 
-    if (!selectedPlaceId || !selectedPlace?.hasImages) {
+    if (!selectedPlaceId || !selectedPlace?.imagesCount) {
       return
     }
 
@@ -193,7 +193,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
         }
       })
       .finally(() => {
-        if (!cancelled) setSelectedPlaceImagesLoading(false)
+        if (!cancelled) setSelectedPlaceImagesLoadingCount(0)
       })
 
     return () => {
@@ -300,11 +300,11 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setSelectedPlaceId(placeId)
       setSelectedPlaceImages([])
       setSelectedPlaceImagesError(null)
-      setSelectedPlaceImagesLoading(
+      setSelectedPlaceImagesLoadingCount(
         placeId
-          ? (displayPlaces.find((place) => place.id === placeId)?.hasImages ??
-              false)
-          : false
+          ? (displayPlaces.find((place) => place.id === placeId)?.imagesCount ??
+              0)
+          : 0
       )
 
       if (
@@ -356,7 +356,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       isCatalogLoading,
       catalogError,
       selectedPlaceImages,
-      selectedPlaceImagesLoading,
+      selectedPlaceImagesLoadingCount,
       selectedPlaceImagesError,
       setPlaces,
       setTags,
@@ -398,7 +398,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       isCatalogLoading,
       catalogError,
       selectedPlaceImages,
-      selectedPlaceImagesLoading,
+      selectedPlaceImagesLoadingCount,
       selectedPlaceImagesError,
     ]
   )

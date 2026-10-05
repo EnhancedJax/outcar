@@ -1,3 +1,5 @@
+import { parsePath } from "@/lib/path"
+import { supabase } from "@/lib/supabase"
 import {
   isValidCatalogTag,
   isValidParkingCondition,
@@ -5,14 +7,12 @@ import {
   isValidPathType,
   isValidPlaceImage,
   isValidPlacesCatalog,
+  normalizePlacesCatalog,
   type CatalogTag,
   type Place,
   type PlaceImage,
   type PlacesCatalog,
 } from "@/types/place"
-import { normalizePlacesCatalog } from "@/types/place"
-import { parsePath } from "@/lib/path"
-import { supabase } from "@/lib/supabase"
 
 type TagRow = Omit<CatalogTag, "showOnMap" | "displayTitle"> & {
   show_on_map: boolean
@@ -21,13 +21,20 @@ type TagRow = Omit<CatalogTag, "showOnMap" | "displayTitle"> & {
 }
 type PlaceRow = Omit<
   Place,
-  "tags" | "path" | "parkingCondition" | "gmapUrl" | "pathType"
+  | "tags"
+  | "path"
+  | "parkingCondition"
+  | "gmapUrl"
+  | "pathType"
+  | "images"
+  | "imagesCount"
 > & {
   parking_condition: number
   gmap_url: string | null
   path_type: number
   path: string
   position: number
+  place_images: { count: number }[]
 }
 type PlaceTagRow = { place_id: string; tag_id: string; position: number }
 type ImageRow = {
@@ -52,18 +59,15 @@ function throwIfError(error: { message: string } | null, operation: string) {
 
 export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
   const client = requireSupabase()
-  const [tagsResult, placesResult, placeTagsResult, placeImagesResult] =
-    await Promise.all([
-      client.from("tags").select("*").order("position"),
-      client.from("places").select("*").order("position"),
-      client.from("place_tags").select("*").order("position"),
-      client.from("place_images").select("place_id"),
-    ])
+  const [tagsResult, placesResult, placeTagsResult] = await Promise.all([
+    client.from("tags").select("*").order("position"),
+    client.from("places").select("*, place_images(count)").order("position"),
+    client.from("place_tags").select("*").order("position"),
+  ])
 
   throwIfError(tagsResult.error, "load tags")
   throwIfError(placesResult.error, "load places")
   throwIfError(placeTagsResult.error, "load place tags")
-  throwIfError(placeImagesResult.error, "load place image metadata")
 
   const tags = (tagsResult.data as TagRow[]).map((tag) => ({
     id: tag.id,
@@ -80,25 +84,30 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     ids.push(row.tag_id)
     tagIdsByPlace.set(row.place_id, ids)
   }
-  const placeIdsWithImages = new Set(
-    (placeImagesResult.data as Pick<ImageRow, "place_id">[]).map(
-      (image) => image.place_id
-    )
-  )
-  const places = (placesResult.data as PlaceRow[]).map((place) => ({
-    id: place.id,
-    name: place.name,
-    note: place.note,
-    longitude: place.longitude,
-    latitude: place.latitude,
-    tags: tagIdsByPlace.get(place.id) ?? [],
-    parkingCondition: place.parking_condition,
-    gmapUrl: place.gmap_url,
-    pathType: place.path_type,
-    path: parsePath(place.path),
-    images: [],
-    hasImages: placeIdsWithImages.has(place.id),
-  }))
+  const places: Place[] = (placesResult.data as PlaceRow[]).map((place) => {
+    if (
+      place.place_images.length !== 1 ||
+      !Number.isInteger(place.place_images[0].count) ||
+      place.place_images[0].count < 0
+    ) {
+      throw new Error(`Supabase returned an invalid image count: ${place.id}`)
+    }
+
+    return {
+      id: place.id,
+      name: place.name,
+      note: place.note,
+      longitude: place.longitude,
+      latitude: place.latitude,
+      tags: tagIdsByPlace.get(place.id) ?? [],
+      parkingCondition: place.parking_condition,
+      gmapUrl: place.gmap_url,
+      pathType: place.path_type,
+      path: parsePath(place.path),
+      images: [],
+      imagesCount: place.place_images[0].count,
+    }
+  })
 
   for (const tag of tags) {
     if (!isValidCatalogTag(tag)) {

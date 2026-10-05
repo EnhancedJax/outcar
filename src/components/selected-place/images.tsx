@@ -20,14 +20,14 @@ export default function SelectedPlaceImages({
 }) {
   const {
     selectedPlaceImages,
-    selectedPlaceImagesLoading,
+    selectedPlaceImagesLoadingCount,
     selectedPlaceImagesError,
   } = useAppState()
 
-  if (selectedPlaceImagesLoading) {
+  if (selectedPlaceImagesLoadingCount) {
     return (
       <div className="scrollbar-hide mb-4 flex flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
-        {[...Array(3)].map((_, index) => (
+        {[...Array(selectedPlaceImagesLoadingCount)].map((_, index) => (
           <div
             key={`loading-${index}`}
             className="aspect-square h-16 w-16 animate-pulse rounded-md bg-muted-foreground lg:h-20 lg:w-30"
@@ -97,7 +97,7 @@ function PlaceImageViewer({
   const multiple = images.length > 1
 
   return (
-    <Lightbox.Portal className="relative z-[100]">
+    <Lightbox.Portal className="relative z-100">
       <Lightbox.Backdrop className="fixed inset-0 bg-black/80 [opacity:calc(1-var(--lightbox-pull-progress,0))] data-[pull-snapping]:[transition:opacity_var(--lightbox-pull-snap-duration,300ms)_var(--lightbox-pull-snap-easing,ease)]" />
       <Lightbox.Content
         aria-label={`${placeName} photos`}

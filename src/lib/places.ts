@@ -2,14 +2,9 @@ import { isParkingConditionValue } from "@/constants/parking"
 import { isPathTypeValue } from "@/constants/path"
 import { loadPlacesCatalog } from "@/lib/content-repository"
 import { pathAnchoredAtPin } from "@/lib/path"
-import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import { supabase } from "@/lib/supabase"
-import type {
-  CatalogTag,
-  DraftPlace,
-  Place,
-  PlaceImage,
-} from "@/types/place"
+import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
+import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 import {
   createUniqueTagId,
   isValidGmapUrl,
@@ -39,11 +34,7 @@ export async function fetchPlacesCatalog() {
 
 async function callEditorRpc(
   functionName:
-    | "save_place"
-    | "delete_place"
-    | "save_tag"
-    | "delete_tag"
-    | "reorder_tags",
+    "save_place" | "delete_place" | "save_tag" | "delete_tag" | "reorder_tags",
   args: Record<string, unknown>
 ) {
   if (!supabase) {
@@ -52,7 +43,9 @@ async function callEditorRpc(
 
   const { error } = await supabase.rpc(functionName, args)
   if (error) {
-    throw new Error(`Failed to ${functionName.replaceAll("_", " ")}: ${error.message}`)
+    throw new Error(
+      `Failed to ${functionName.replaceAll("_", " ")}: ${error.message}`
+    )
   }
 }
 
@@ -326,7 +319,7 @@ export function fromDraft(draft: DraftPlace): Place | null {
     pathType,
     path,
     images: draft.images,
-    hasImages: draft.images.length > 0,
+    imagesCount: draft.images.length,
   }
 }
 
