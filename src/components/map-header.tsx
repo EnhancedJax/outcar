@@ -36,7 +36,7 @@ export function MapHeader() {
       )}
     >
       <ProgressiveBlur direction="up" />
-      <div className="relative max-w-full px-6 pt-6 sm:pr-48">
+      <div className="relative max-w-full pt-6 pr-24 pl-6 sm:pr-48">
         <h1
           className="pointer-events-auto cursor-pointer text-2xl font-medium"
           onClick={handleTitleClick}
