@@ -38,3 +38,12 @@ truth.
 Production reads publicly readable catalog rows from Supabase and does not
 expose editor writes. User submissions, authentication, and password-based
 editing are intentionally deferred to a future change.
+
+## Place images
+
+Place images are stored in Supabase as complete base64 data URLs in the
+`place_images` table. Image data is loaded lazily only for the currently
+selected place. In the development editor, new images append to the list,
+which can be reordered with the up/down controls or deleted; the first image
+is displayed as the primary selected-place image. There are currently no
+application-enforced file count or size limits.

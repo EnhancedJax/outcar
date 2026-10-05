@@ -19,6 +19,7 @@ import {
   createEmptyDraft,
   createUniquePlaceId,
   fetchGoogleMapsList,
+  createPlaceImage,
   fromDraft,
   moveTag,
   placeAlreadyExists,
@@ -31,7 +32,8 @@ import {
   toDraft,
   validatePathForDraft,
 } from "@/lib/places"
-import type { CatalogTag, DraftPlace, Place } from "@/types/place"
+import { loadPlaceImages } from "@/lib/content-repository"
+import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 
 import {
   importPreviewToPlaces,
@@ -89,6 +91,9 @@ type PlaceEditorContextValue = {
   handleImportConfirm: () => void
   startCreate: () => void
   startEdit: (place: Place) => void
+  handleImageFiles: (files: FileList | File[]) => Promise<void>
+  moveDraftImage: (index: number, direction: "up" | "down") => void
+  deleteDraftImage: (index: number) => void
   handleApply: (
     values: DraftPlace,
     options?: { advance?: boolean }
@@ -522,6 +527,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         gmapUrl: null,
         pathType: -1,
         path: [],
+        images: [],
       }
     })
 
@@ -542,11 +548,81 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   }, [onSelectPlace, openPlaceForm])
 
   const startEdit = useCallback(
-    (place: Place) => {
-      openPlaceForm(toDraft(place), false)
+    async (place: Place) => {
+      let images: PlaceImage[] = []
+      try {
+        images = await loadPlaceImages(place.id)
+      } catch (error) {
+        setError(
+          error instanceof Error ? error.message : "Failed to load images"
+        )
+      }
+      openPlaceForm(toDraft({ ...place, images }), false)
       onSelectPlace(place.id)
     },
     [onSelectPlace, openPlaceForm]
+  )
+
+  const handleImageFiles = useCallback(
+    async (files: FileList | File[]) => {
+      const nextImages: PlaceImage[] = []
+
+      for (const file of Array.from(files)) {
+        if (!file.type.startsWith("image/")) {
+          setError(`Unsupported image file: ${file.name}`)
+          continue
+        }
+
+        try {
+          const dataUrl = await new Promise<string>((resolve, reject) => {
+            const reader = new FileReader()
+            reader.addEventListener("load", () => {
+              if (typeof reader.result === "string") resolve(reader.result)
+              else reject(new Error(`Failed to read image: ${file.name}`))
+            })
+            reader.addEventListener("error", () =>
+              reject(
+                reader.error ?? new Error(`Failed to read image: ${file.name}`)
+              )
+            )
+            reader.readAsDataURL(file)
+          })
+          nextImages.push(createPlaceImage(dataUrl))
+        } catch (error) {
+          setError(
+            error instanceof Error
+              ? error.message
+              : `Failed to read ${file.name}`
+          )
+        }
+      }
+
+      if (nextImages.length > 0) {
+        setValue("images", [...getValues("images"), ...nextImages])
+      }
+    },
+    [getValues, setError, setValue]
+  )
+
+  const moveDraftImage = useCallback(
+    (index: number, direction: "up" | "down") => {
+      const images = [...getValues("images")]
+      const target = direction === "up" ? index - 1 : index + 1
+      if (index < 0 || target < 0 || target >= images.length) return
+      ;[images[index], images[target]] = [images[target], images[index]]
+      setValue("images", images)
+    },
+    [getValues, setValue]
+  )
+
+  const deleteDraftImage = useCallback(
+    (index: number) => {
+      setValue(
+        "images",
+        getValues("images").filter((_, imageIndex) => imageIndex !== index)
+      )
+    },
+    [getValues, setValue]
   )
 
   const clearPath = useCallback(() => {
@@ -812,6 +888,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleImportConfirm,
       startCreate,
       startEdit,
+      handleImageFiles,
+      moveDraftImage,
+      deleteDraftImage,
       handleApply,
       handleDelete,
       handleToggleDraftTag,
@@ -867,6 +946,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       selectedPlaceId,
       startCreate,
       startEdit,
+      handleImageFiles,
+      moveDraftImage,
+      deleteDraftImage,
       tags,
       updateImportSelection,
     ]

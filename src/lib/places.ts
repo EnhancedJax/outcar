@@ -7,6 +7,7 @@ import type {
   CatalogTag,
   DraftPlace,
   Place,
+  PlaceImage,
   PlacesCatalog,
 } from "@/types/place"
 import {
@@ -268,6 +269,7 @@ export function toDraft(place: Place): DraftPlace {
     gmapUrl: place.gmapUrl ?? "",
     pathType: String(place.pathType),
     path: [...place.path],
+    images: [...place.images],
   }
 }
 
@@ -311,6 +313,7 @@ export function fromDraft(draft: DraftPlace): Place | null {
     gmapUrl: gmapUrl === "" ? null : gmapUrl,
     pathType,
     path,
+    images: draft.images,
   }
 }
 
@@ -434,5 +437,10 @@ export function createEmptyDraft(): DraftPlace {
     gmapUrl: "",
     pathType: "-1",
     path: [],
+    images: [],
   }
+}
+
+export function createPlaceImage(dataUrl: string): PlaceImage {
+  return { id: `image-${crypto.randomUUID()}`, dataUrl }
 }

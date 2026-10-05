@@ -29,6 +29,7 @@ export function importPreviewToPlaces(items: ImportPreviewItem[]): Place[] {
       gmapUrl: null,
       pathType: -1,
       path: [],
+      images: [],
     }))
 }
 

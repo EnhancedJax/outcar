@@ -11,6 +11,11 @@ export type CatalogTag = {
   displayTitle: string
 }
 
+export type PlaceImage = {
+  id: string
+  dataUrl: string
+}
+
 export type Place = {
   id: string
   name: string
@@ -22,6 +27,7 @@ export type Place = {
   gmapUrl: string | null
   pathType: number
   path: PathCoordinate[]
+  images: PlaceImage[]
 }
 
 export type DraftPlace = {
@@ -35,6 +41,7 @@ export type DraftPlace = {
   gmapUrl: string
   pathType: string
   path: PathCoordinate[]
+  images: PlaceImage[]
 }
 
 export type PlacesCatalog = {
@@ -68,6 +75,41 @@ function isValidPlaceTagIdsArray(value: unknown): value is string[] {
   }
 
   return true
+}
+
+function isValidImageDataUrl(value: unknown): value is string {
+  return (
+    typeof value === "string" &&
+    /^data:image\/[a-z0-9.+-]+;base64,[a-z0-9+/]+=*$/i.test(value)
+  )
+}
+
+export function isValidPlaceImage(value: unknown): value is PlaceImage {
+  if (!value || typeof value !== "object") {
+    return false
+  }
+
+  const image = value as Record<string, unknown>
+  return (
+    typeof image.id === "string" &&
+    image.id.trim().length > 0 &&
+    isValidImageDataUrl(image.dataUrl)
+  )
+}
+
+function isValidPlaceImages(value: unknown): value is PlaceImage[] {
+  if (!Array.isArray(value)) {
+    return false
+  }
+
+  const ids = new Set<string>()
+  return value.every((image) => {
+    if (!isValidPlaceImage(image) || ids.has(image.id)) {
+      return false
+    }
+    ids.add(image.id)
+    return true
+  })
 }
 
 export function isValidCatalogTag(value: unknown): value is CatalogTag {
@@ -205,6 +247,7 @@ export function isValidPlace(value: unknown): value is Place {
 
   const tags = place.tags === undefined ? [] : place.tags
   const path = place.path === undefined ? [] : place.path
+  const images = place.images === undefined ? [] : place.images
   const pathType = place.pathType === undefined ? -1 : place.pathType
 
   return (
@@ -226,6 +269,7 @@ export function isValidPlace(value: unknown): value is Place {
     isValidGmapUrl(place.gmapUrl) &&
     isValidPathType(pathType) &&
     isValidPath(path) &&
+    isValidPlaceImages(images) &&
     (pathType === -1 ? path.length === 0 : path.length >= 2)
   )
 }

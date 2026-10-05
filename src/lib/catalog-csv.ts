@@ -208,6 +208,7 @@ export function parsePlacesCatalogCsv(
         gmapUrl: parseGmapUrl(record.gmapUrl),
         pathType,
         path: pathType === -1 ? [] : path,
+        images: [],
       }
     }
   )

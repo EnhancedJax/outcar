@@ -25,8 +25,16 @@ const frostedButtonClassName =
   "lg:h-9 rounded-full bg-foreground/10 lg:px-5 p-2 backdrop-blur-md hover:bg-foreground/20"
 
 export function SelectedPlace() {
-  const { displayPlaces, selectedPlaceId, tags, viewerMode, selectPlace } =
-    useAppState()
+  const {
+    displayPlaces,
+    selectedPlaceId,
+    tags,
+    viewerMode,
+    selectPlace,
+    selectedPlaceImages,
+    selectedPlaceImagesLoading,
+    selectedPlaceImagesError,
+  } = useAppState()
 
   const selectedPlace = useMemo(
     () => displayPlaces.find((place) => place.id === selectedPlaceId) ?? null,
@@ -46,6 +54,22 @@ export function SelectedPlace() {
       <ProgressiveBlur direction="down" />
       <div className="relative flex w-full flex-row px-6 pt-28 pb-6 text-center lg:flex-col">
         <div className="pointer-events-auto flex w-full flex-col lg:items-center">
+          {selectedPlaceImagesLoading ? (
+            <div
+              className="mb-3 h-40 w-full animate-pulse rounded-lg bg-muted lg:max-w-md"
+              aria-label="Loading place image"
+            />
+          ) : selectedPlaceImages[0] ? (
+            <img
+              src={selectedPlaceImages[0].dataUrl}
+              alt={selectedPlace.name}
+              className="mb-3 max-h-56 w-full rounded-lg object-cover lg:max-w-md"
+            />
+          ) : selectedPlaceImagesError ? (
+            <p className="mb-3 text-xs text-destructive">
+              {selectedPlaceImagesError}
+            </p>
+          ) : null}
           <h2 className="text-left text-lg font-medium">
             {selectedPlace.name}
           </h2>

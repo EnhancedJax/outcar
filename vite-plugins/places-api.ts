@@ -1,5 +1,5 @@
-import type { Plugin } from "vite"
 import { createClient } from "@supabase/supabase-js"
+import type { Plugin } from "vite"
 
 import { isValidPlacesCatalog } from "../src/types/place.js"
 import { fetchGoogleMapsList } from "./google-maps-list.js"
@@ -67,13 +67,13 @@ export function placesApiPlugin(): Plugin {
             return
           }
 
-          const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
+          const url = process.env.VITE_SUPABASE_URL
           const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
           if (!url || !serviceKey) {
             sendJson(res, 500, {
               error:
-                "Local editor saves require SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+                "Local editor saves require VITE_SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
             })
             return
           }

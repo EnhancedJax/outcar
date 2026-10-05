@@ -1,3 +1,5 @@
+import { useRef } from "react"
+import { ArrowDown, ArrowUp, Trash } from "@phosphor-icons/react"
 import { useFormContext } from "react-hook-form"
 import { cn } from "cn"
 
@@ -36,6 +38,9 @@ export function PlaceForm() {
     handlePathTypeChange,
     clearPath,
     undoPathPoint,
+    handleImageFiles,
+    moveDraftImage,
+    deleteDraftImage,
   } = usePlaceEditor()
 
   const {
@@ -49,6 +54,8 @@ export function PlaceForm() {
   const selectedTags = watch("tags")
   const pathType = watch("pathType")
   const path = watch("path")
+  const images = watch("images")
+  const imageInputRef = useRef<HTMLInputElement>(null)
 
   const applyDraft = (values: DraftPlace, advance: boolean) => {
     const applyError = handleApply(values, { advance })
@@ -145,11 +152,7 @@ export function PlaceForm() {
               }
             }}
           />
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={handleAddDraftTag}
-          >
+          <Button type="button" variant="secondary" onClick={handleAddDraftTag}>
             Add
           </Button>
         </div>
@@ -225,7 +228,10 @@ export function PlaceForm() {
           onChange={(event) => handlePathTypeChange(event.target.value)}
         >
           {PATH_TYPES.map((pathTypeOption) => (
-            <option key={pathTypeOption.value} value={String(pathTypeOption.value)}>
+            <option
+              key={pathTypeOption.value}
+              value={String(pathTypeOption.value)}
+            >
               {pathTypeOption.title}
             </option>
           ))}
@@ -261,7 +267,12 @@ export function PlaceForm() {
               >
                 Undo
               </Button>
-              <Button type="button" size="sm" variant="secondary" onClick={clearPath}>
+              <Button
+                type="button"
+                size="sm"
+                variant="secondary"
+                onClick={clearPath}
+              >
                 Clear
               </Button>
             </div>
@@ -293,6 +304,84 @@ export function PlaceForm() {
         {errors.gmapUrl ? (
           <p className="text-xs text-destructive">{errors.gmapUrl.message}</p>
         ) : null}
+      </div>
+
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label>Images</Label>
+          <Button
+            type="button"
+            size="sm"
+            variant="secondary"
+            onClick={() => imageInputRef.current?.click()}
+          >
+            Add images
+          </Button>
+          <input
+            ref={imageInputRef}
+            className="hidden"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={(event) => {
+              if (event.target.files) {
+                void handleImageFiles(event.target.files)
+                event.target.value = ""
+              }
+            }}
+          />
+        </div>
+        {images.length === 0 ? (
+          <p className="text-xs text-muted-foreground">No images added.</p>
+        ) : (
+          <div className="grid gap-2">
+            {images.map((image, index) => (
+              <div key={image.id} className="flex gap-2 rounded border p-2">
+                <img
+                  src={image.dataUrl}
+                  alt={`${index === 0 ? "Primary " : ""}preview`}
+                  className="size-20 rounded object-cover"
+                />
+                <div className="flex flex-1 flex-wrap content-start gap-1">
+                  {index === 0 ? (
+                    <span className="w-full text-xs text-muted-foreground">
+                      Primary image
+                    </span>
+                  ) : null}
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="secondary"
+                    disabled={index === 0}
+                    aria-label="Move image up"
+                    onClick={() => moveDraftImage(index, "up")}
+                  >
+                    <ArrowUp />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="secondary"
+                    disabled={index === images.length - 1}
+                    aria-label="Move image down"
+                    onClick={() => moveDraftImage(index, "down")}
+                  >
+                    <ArrowDown />
+                  </Button>
+                  <Button
+                    type="button"
+                    size="icon-xs"
+                    variant="destructive"
+                    aria-label="Delete image"
+                    onClick={() => deleteDraftImage(index)}
+                  >
+                    <Trash />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
 
       {errors.root ? (

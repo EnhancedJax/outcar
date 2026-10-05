@@ -10,8 +10,9 @@ import {
 } from "react"
 
 import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
+import { loadPlaceImages } from "@/lib/content-repository"
 import { isPathTypeValue } from "@/constants/path"
-import type { CatalogTag, DraftPlace, Place } from "@/types/place"
+import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 
 type EditorCoordinateHandler = (longitude: number, latitude: number) => void
 
@@ -34,6 +35,9 @@ type AppStateContextValue = {
   draggableMarkerId: string | null
   isCatalogLoading: boolean
   catalogError: string | null
+  selectedPlaceImages: PlaceImage[]
+  selectedPlaceImagesLoading: boolean
+  selectedPlaceImagesError: string | null
   setPlaces: (places: Place[]) => void
   setTags: (tags: CatalogTag[]) => void
   setEditorDraft: (draft: DraftPlace | null, isCreating: boolean) => void
@@ -106,6 +110,7 @@ function draftPlaceForDisplay(
     gmapUrl: fallback?.gmapUrl ?? null,
     pathType,
     path: pathType === -1 ? [] : draft.path,
+    images: draft.images,
   }
 }
 
@@ -114,6 +119,14 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [tags, setTags] = useState<CatalogTag[]>([])
   const [isCatalogLoading, setIsCatalogLoading] = useState(true)
   const [catalogError, setCatalogError] = useState<string | null>(null)
+  const [selectedPlaceImages, setSelectedPlaceImages] = useState<PlaceImage[]>(
+    []
+  )
+  const [selectedPlaceImagesLoading, setSelectedPlaceImagesLoading] =
+    useState(false)
+  const [selectedPlaceImagesError, setSelectedPlaceImagesError] = useState<
+    string | null
+  >(null)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [editorDraft, setEditorDraftState] = useState<DraftPlace | null>(null)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
@@ -155,6 +168,33 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       cancelled = true
     }
   }, [])
+
+  useEffect(() => {
+    if (!selectedPlaceId) {
+      return
+    }
+
+    let cancelled = false
+
+    void loadPlaceImages(selectedPlaceId)
+      .then((images) => {
+        if (!cancelled) setSelectedPlaceImages(images)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setSelectedPlaceImagesError(
+            error instanceof Error ? error.message : "Failed to load images"
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setSelectedPlaceImagesLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [selectedPlaceId])
 
   const isEditorActive = import.meta.env.DEV && isEditorOpen
   const viewerMode = !isEditorActive
@@ -253,6 +293,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const selectPlace = useCallback(
     (placeId: string | null) => {
       setSelectedPlaceId(placeId)
+      setSelectedPlaceImages([])
+      setSelectedPlaceImagesError(null)
+      setSelectedPlaceImagesLoading(Boolean(placeId))
 
       if (
         placeId &&
@@ -302,6 +345,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       draggableMarkerId,
       isCatalogLoading,
       catalogError,
+      selectedPlaceImages,
+      selectedPlaceImagesLoading,
+      selectedPlaceImagesError,
       setPlaces,
       setTags,
       setEditorDraft,
@@ -341,6 +387,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       handleMarkerDrag,
       isCatalogLoading,
       catalogError,
+      selectedPlaceImages,
+      selectedPlaceImagesLoading,
+      selectedPlaceImagesError,
     ]
   )
 

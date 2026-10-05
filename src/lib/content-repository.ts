@@ -3,9 +3,11 @@ import {
   isValidParkingCondition,
   isValidPath,
   isValidPathType,
+  isValidPlaceImage,
   isValidPlacesCatalog,
   type CatalogTag,
   type Place,
+  type PlaceImage,
   type PlacesCatalog,
 } from "@/types/place"
 import { normalizePlacesCatalog } from "@/types/place"
@@ -31,6 +33,12 @@ type PathRow = {
   position: number
   longitude: number
   latitude: number
+}
+type ImageRow = {
+  id: string
+  place_id: string
+  data_url: string
+  position: number
 }
 
 function requireSupabase() {
@@ -93,6 +101,7 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     gmapUrl: place.gmap_url,
     pathType: place.path_type,
     path: pathsByPlace.get(place.id) ?? [],
+    images: [],
   }))
 
   for (const tag of tags) {
@@ -116,4 +125,26 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     throw new Error("Supabase returned an invalid content catalog.")
   }
   return catalog
+}
+
+export async function loadPlaceImages(placeId: string): Promise<PlaceImage[]> {
+  const client = requireSupabase()
+  const result = await client
+    .from("place_images")
+    .select("id, place_id, data_url, position")
+    .eq("place_id", placeId)
+    .order("position")
+
+  throwIfError(result.error, "load place images")
+
+  const images = (result.data as ImageRow[]).map((image) => ({
+    id: image.id,
+    dataUrl: image.data_url,
+  }))
+
+  if (!images.every((image) => isValidPlaceImage(image))) {
+    throw new Error(`Supabase returned invalid images for place: ${placeId}`)
+  }
+
+  return images
 }
