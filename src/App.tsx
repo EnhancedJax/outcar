@@ -23,7 +23,7 @@ export function App() {
       {appIsLoading ? null : catalogError ? (
         <AppError error={new Error(catalogError)} />
       ) : (
-        <div className="flex h-svh w-full overflow-hidden">
+        <div className="flex h-dvh w-full overflow-hidden">
           <main className="relative min-h-0 min-w-0 flex-1">
             <PlacesMap />
 
