@@ -12,12 +12,11 @@ import { FormProvider, useForm } from "react-hook-form"
 
 import { useAppState } from "@/app-state"
 import { isPathTypeValue, type PathTypeValue } from "@/constants/path"
+import { fetchDirections } from "@/lib/mapbox"
 import { pathAnchoredAtPin, reversePath } from "@/lib/path"
-import { fetchDirections, searchPlaces } from "@/lib/mapbox"
 import {
   addTagToCatalog,
   createEmptyDraft,
-  createPlaceId,
   createUniquePlaceId,
   fetchGoogleMapsList,
   fromDraft,
@@ -68,8 +67,6 @@ type PlaceEditorContextValue = {
   setNewTagLabel: (label: string) => void
   draftNewTagLabel: string
   setDraftNewTagLabel: (label: string) => void
-  results: Awaited<ReturnType<typeof searchPlaces>>
-  isSearching: boolean
   isImporting: boolean
   isDirty: boolean
   isSaving: boolean
@@ -90,12 +87,8 @@ type PlaceEditorContextValue = {
   handleSetTagShowOnMap: (tagId: string, showOnMap: boolean) => void
   handleImportPreview: () => Promise<void>
   handleImportConfirm: () => void
-  handleSearch: () => Promise<void>
   startCreate: () => void
   startEdit: (place: Place) => void
-  applySearchResult: (
-    feature: Awaited<ReturnType<typeof searchPlaces>>[number]
-  ) => void
   handleApply: (
     values: DraftPlace,
     options?: { advance?: boolean }
@@ -158,10 +151,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const [importPreview, setImportPreview] = useState<ImportPreviewItem[]>([])
   const [newTagLabel, setNewTagLabel] = useState("")
   const [draftNewTagLabel, setDraftNewTagLabel] = useState("")
-  const [results, setResults] = useState<
-    Awaited<ReturnType<typeof searchPlaces>>
-  >([])
-  const [isSearching, setIsSearching] = useState(false)
   const [isImporting, setIsImporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [committedSnapshot, setCommittedSnapshot] = useState(() =>
@@ -540,28 +529,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     clearImportPreview()
   }, [applyCatalog, clearImportPreview, importPreview, places, tags])
 
-  const handleSearch = useCallback(async () => {
-    if (!query.trim()) {
-      return
-    }
-
-    setIsSearching(true)
-    setError(null)
-
-    try {
-      const features = await searchPlaces(query)
-      setResults(features)
-    } catch (searchError) {
-      setError(
-        searchError instanceof Error
-          ? searchError.message
-          : "Failed to search locations"
-      )
-    } finally {
-      setIsSearching(false)
-    }
-  }, [query])
-
   const goToPlacesList = useCallback(() => {
     setPlacesScreen("list")
     isCreatingRef.current = false
@@ -580,84 +547,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       onSelectPlace(place.id)
     },
     [onSelectPlace, openPlaceForm]
-  )
-
-  const applySearchResult = useCallback(
-    (feature: Awaited<ReturnType<typeof searchPlaces>>[number]) => {
-      const [longitude, latitude] = feature.center
-
-      if (placesScreen === "form") {
-        setValue("longitude", String(longitude))
-        setValue("latitude", String(latitude))
-
-        const name = getValues("name")
-        const id = getValues("id")
-
-        if (!name) {
-          setValue("name", feature.place_name)
-        }
-
-        if (!id) {
-          setValue("id", createPlaceId(feature.place_name))
-        }
-
-        return
-      }
-
-      const nextDraft = {
-        ...createEmptyDraft(),
-        id: createPlaceId(feature.place_name),
-        name: feature.place_name,
-        longitude: String(longitude),
-        latitude: String(latitude),
-      }
-
-      openPlaceForm(nextDraft, true)
-      onSelectPlace(null)
-    },
-    [getValues, onSelectPlace, openPlaceForm, placesScreen, setValue]
-  )
-
-  const handlePathTypeChange = useCallback(
-    (nextPathType: string) => {
-      const pathType = Number(nextPathType) as PathTypeValue
-      const values = getValues()
-      const pinLongitude = Number(values.longitude)
-      const pinLatitude = Number(values.latitude)
-
-      setValue("pathType", nextPathType)
-      setPathDrawingError(null)
-
-      if (pathType === -1) {
-        setValue("path", [])
-        setPathDrawMode(null)
-        return
-      }
-
-      const currentPathType = Number(values.pathType)
-
-      if (
-        values.path.length > 0 &&
-        currentPathType !== -1 &&
-        currentPathType !== pathType
-      ) {
-        setValue(
-          "path",
-          pathAnchoredAtPin(
-            pathType,
-            pinLongitude,
-            pinLatitude,
-            reversePath(values.path)
-          )
-        )
-        return
-      }
-
-      if (values.path.length === 0) {
-        setValue("path", [])
-      }
-    },
-    [getValues, setPathDrawMode, setValue]
   )
 
   const clearPath = useCallback(() => {
@@ -713,6 +602,48 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     )
   }, [getValues, setValue])
 
+  const handlePathTypeChange = useCallback(
+    (nextPathType: string) => {
+      const pathType = Number(nextPathType) as PathTypeValue
+      const values = getValues()
+      const pinLongitude = Number(values.longitude)
+      const pinLatitude = Number(values.latitude)
+
+      setValue("pathType", nextPathType)
+      setPathDrawingError(null)
+
+      if (pathType === -1) {
+        setValue("path", [])
+        setPathDrawMode(null)
+        return
+      }
+
+      const currentPathType = Number(values.pathType)
+
+      if (
+        values.path.length > 0 &&
+        currentPathType !== -1 &&
+        currentPathType !== pathType
+      ) {
+        setValue(
+          "path",
+          pathAnchoredAtPin(
+            pathType,
+            pinLongitude,
+            pinLatitude,
+            reversePath(values.path)
+          )
+        )
+        return
+      }
+
+      if (values.path.length === 0) {
+        setValue("path", [])
+      }
+    },
+    [getValues, setPathDrawMode, setValue]
+  )
+
   const handleApply = useCallback(
     (
       values: DraftPlace,
@@ -755,7 +686,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
           )
 
       applyCatalog(tags, nextPlaces)
-      setResults([])
       setQuery("")
 
       if (followingPlace) {
@@ -860,8 +790,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       setNewTagLabel,
       draftNewTagLabel,
       setDraftNewTagLabel,
-      results,
-      isSearching,
       isImporting,
       isDirty,
       isSaving,
@@ -882,10 +810,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleSetTagShowOnMap,
       handleImportPreview,
       handleImportConfirm,
-      handleSearch,
       startCreate,
       startEdit,
-      applySearchResult,
       handleApply,
       handleDelete,
       handleToggleDraftTag,
@@ -900,7 +826,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     }),
     [
       activeTab,
-      applySearchResult,
       clearImportPreview,
       goToPlacesList,
       draft,
@@ -918,7 +843,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleMoveTag,
       handleApply,
       handleCommit,
-      handleSearch,
       handleToggleDraftTag,
       handlePathTypeChange,
       clearPath,
@@ -935,12 +859,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       isDirty,
       isImporting,
       isSaving,
-      isSearching,
       newTagLabel,
       places,
       placesScreen,
       query,
-      results,
       selectedPlace,
       selectedPlaceId,
       startCreate,

@@ -101,7 +101,9 @@ function isListUrl(resolvedUrl: string) {
     return true
   }
 
-  return /!11m2!2s[^!]+!3e3/.test(decoded) || /!4m3!11m2!2s[^!]+!3e3/.test(decoded)
+  return (
+    /!11m2!2s[^!]+!3e3/.test(decoded) || /!4m3!11m2!2s[^!]+!3e3/.test(decoded)
+  )
 }
 
 function isPlaceUrl(resolvedUrl: string) {

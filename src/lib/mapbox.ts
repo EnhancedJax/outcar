@@ -68,22 +68,3 @@ export async function fetchDirections(
 
   return coordinatesResult
 }
-
-export async function searchPlaces(query: string) {
-  const token = getMapboxToken()
-  const url = new URL(
-    `https://api.mapbox.com/geocoding/v5/mapbox.places/${encodeURIComponent(query)}.json`
-  )
-
-  url.searchParams.set("access_token", token)
-  url.searchParams.set("limit", "5")
-
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error("Failed to search locations")
-  }
-
-  const payload = (await response.json()) as { features: GeocodingFeature[] }
-  return payload.features
-}
