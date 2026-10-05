@@ -1,5 +1,5 @@
 import { ArrowSquareOutIcon } from "@phosphor-icons/react"
-import { Button } from "./ui/button"
+import { buttonVariants } from "./ui/button"
 
 export default function Attribution() {
   return (
@@ -8,15 +8,13 @@ export default function Attribution() {
         <img src="/pfp.png" alt="PFP" className="h-6 w-6 rounded-full" />
         Made by Jax ⋅ 香港製造
       </div>
-      <Button
-        variant="default"
-        size="sm"
-        onClick={() => {
-          window.open("https://jaxtam.dev", "_blank")
-        }}
+      <a
+        href="https://jaxtam.dev/hk"
+        target="_blank"
+        className={buttonVariants({ variant: "default", size: "default" })}
       >
-        <ArrowSquareOutIcon size={16} />
-      </Button>
+        <ArrowSquareOutIcon size={16} weight="regular" />
+      </a>
     </div>
   )
 }
