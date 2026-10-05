@@ -9,7 +9,6 @@ import type {
   DraftPlace,
   Place,
   PlaceImage,
-  PlacesCatalog,
 } from "@/types/place"
 import {
   createUniqueTagId,
@@ -38,22 +37,63 @@ export async function fetchPlacesCatalog() {
   }
 }
 
-export async function savePlacesCatalog(nextCatalog: PlacesCatalog) {
-  const sanitizedCatalog: PlacesCatalog = {
-    ...nextCatalog,
-    tags: sanitizeCatalogTags(nextCatalog.tags),
-  }
-
+async function callEditorRpc(
+  functionName:
+    | "save_place"
+    | "delete_place"
+    | "save_tag"
+    | "delete_tag"
+    | "reorder_tags",
+  args: Record<string, unknown>
+) {
   if (!supabase) {
     throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.")
   }
 
-  const { error } = await supabase.rpc("replace_catalog", {
-    catalog: sanitizedCatalog,
-  })
+  const { error } = await supabase.rpc(functionName, args)
   if (error) {
-    throw new Error(`Failed to save places: ${error.message}`)
+    throw new Error(`Failed to ${functionName.replaceAll("_", " ")}: ${error.message}`)
   }
+}
+
+export async function savePlace(place: Place, position: number) {
+  await callEditorRpc("save_place", {
+    place: {
+      ...place,
+      position,
+      tags: place.tags,
+      path: place.path,
+      images: place.images,
+      parkingCondition: place.parkingCondition,
+      gmapUrl: place.gmapUrl,
+      pathType: place.pathType,
+    },
+  })
+}
+
+export async function deletePlace(placeId: string) {
+  await callEditorRpc("delete_place", { place_id: placeId })
+}
+
+export async function saveTag(tag: CatalogTag, position: number) {
+  await callEditorRpc("save_tag", {
+    tag: {
+      ...sanitizeCatalogTags([tag])[0],
+      position,
+      showOnMap: tag.showOnMap,
+      displayTitle: tag.displayTitle,
+    },
+  })
+}
+
+export async function deleteTag(tagId: string) {
+  await callEditorRpc("delete_tag", { tag_id: tagId })
+}
+
+export async function reorderTags(tags: CatalogTag[]) {
+  await callEditorRpc("reorder_tags", {
+    tag_ids: tags.map((tag) => tag.id),
+  })
 }
 
 export function createPlaceId(name: string) {

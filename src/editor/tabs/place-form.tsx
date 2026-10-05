@@ -57,8 +57,8 @@ export function PlaceForm() {
   const images = watch("images")
   const imageInputRef = useRef<HTMLInputElement>(null)
 
-  const applyDraft = (values: DraftPlace, advance: boolean) => {
-    const applyError = handleApply(values, { advance })
+  const applyDraft = async (values: DraftPlace, advance: boolean) => {
+    const applyError = await handleApply(values, { advance })
 
     if (!applyError) {
       return
@@ -72,12 +72,12 @@ export function PlaceForm() {
     setError("root", { message: applyError.message })
   }
 
-  const onSubmit = handleSubmit((values) => {
-    applyDraft(values, false)
+  const onSubmit = handleSubmit(async (values) => {
+    await applyDraft(values, false)
   })
 
-  const onDoneAndNext = handleSubmit((values) => {
-    applyDraft(values, true)
+  const onDoneAndNext = handleSubmit(async (values) => {
+    await applyDraft(values, true)
   })
 
   return (

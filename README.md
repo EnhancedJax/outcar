@@ -19,15 +19,16 @@ Copy `.env.example` to `.env.local` and set:
 The application reads its content from Supabase. The editor is unlocked by
 clicking the map title ten times and entering the password for the configured
 Supabase editor account. The browser session is persisted by Supabase Auth.
-Catalog writes use the authenticated Supabase RPC directly; no service-role
-key is needed by the app.
+Catalog writes use authenticated, item-scoped Supabase RPCs directly; no
+service-role key is needed by the app. Place edits save when the form is
+completed, and tag changes save immediately. The editor never replaces the
+entire catalog.
 
 ## Supabase setup and seed
 
-Apply the migration in
-`supabase/migrations/20261005000000_content_catalog.sql` to create the
-normalized catalog tables, read policies, and the protected replacement
-function. Then seed the current CSV backup:
+Apply the migrations under `supabase/migrations/` to create the normalized
+catalog tables, read policies, and authenticated editor write functions. Then
+seed the current CSV backup:
 
 ```bash
 pnpm seed:supabase

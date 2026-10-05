@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { PlaceEditorProvider, usePlaceEditor } from "./place-editor-context"
@@ -6,8 +5,7 @@ import { PlacesTab } from "./tabs/places-tab"
 import { TagsTab } from "./tabs/tags-tab"
 
 function PlaceEditorShell() {
-  const { activeTab, setActiveTab, error, handleCommit, isDirty, isSaving } =
-    usePlaceEditor()
+  const { activeTab, setActiveTab, error } = usePlaceEditor()
 
   return (
     <aside className="flex h-full min-h-0 w-full flex-col bg-background">
@@ -16,14 +14,6 @@ function PlaceEditorShell() {
           <h2 className="font-medium">Places editor</h2>
           <p className="text-sm text-muted-foreground">Dev mode only</p>
         </div>
-        <Button
-          type="button"
-          size="sm"
-          onClick={() => void handleCommit()}
-          disabled={!isDirty || isSaving}
-        >
-          {isSaving ? "Saving..." : "Save"}
-        </Button>
       </div>
 
       <Tabs

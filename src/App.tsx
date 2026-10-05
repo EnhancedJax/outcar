@@ -51,7 +51,7 @@ export function App() {
       </main>
 
       {isAuthenticated && isEditorOpen ? (
-        <div className="flex h-full w-sm shrink-0 flex-col overflow-hidden border-l border-border">
+        <div className="fixed inset-x-0 bottom-0 z-40 flex h-[50svh] w-full shrink-0 flex-col overflow-hidden border-t border-border bg-background md:static md:h-full md:w-sm md:border-t-0 md:border-l">
           <Suspense fallback={null}>
             <PlaceEditor />
           </Suspense>

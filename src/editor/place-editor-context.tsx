@@ -22,7 +22,11 @@ import {
   moveTag,
   removeTagFromCatalog,
   removeTagFromPlaces,
-  savePlacesCatalog,
+  deletePlace,
+  deleteTag,
+  reorderTags,
+  savePlace,
+  saveTag,
   setTagColor,
   setTagIcon,
   setTagShowOnMap,
@@ -43,10 +47,6 @@ export type PlaceApplyError = {
   message: string
 }
 
-function catalogSnapshot(tags: CatalogTag[], places: Place[]) {
-  return JSON.stringify({ tags, places })
-}
-
 type PlaceEditorContextValue = {
   places: Place[]
   tags: CatalogTag[]
@@ -60,7 +60,6 @@ type PlaceEditorContextValue = {
   setNewTagLabel: (label: string) => void
   draftNewTagLabel: string
   setDraftNewTagLabel: (label: string) => void
-  isDirty: boolean
   isSaving: boolean
   error: string | null
   activeTab: EditorTab
@@ -68,13 +67,15 @@ type PlaceEditorContextValue = {
   placesScreen: PlacesScreen
   hasNextPlace: boolean
   goToPlacesList: () => void
-  handleCommit: () => Promise<void>
-  handleAddTag: () => void
-  handleDeleteTag: (tagId: string) => void
-  handleMoveTag: (index: number, direction: "up" | "down") => void
-  handleSetTagIcon: (tagId: string, icon: string | null) => void
-  handleSetTagColor: (tagId: string, color: string | null) => void
-  handleSetTagShowOnMap: (tagId: string, showOnMap: boolean) => void
+  handleAddTag: () => Promise<void>
+  handleDeleteTag: (tagId: string) => Promise<void>
+  handleMoveTag: (index: number, direction: "up" | "down") => Promise<void>
+  handleSetTagIcon: (tagId: string, icon: string | null) => Promise<void>
+  handleSetTagColor: (tagId: string, color: string | null) => Promise<void>
+  handleSetTagShowOnMap: (
+    tagId: string,
+    showOnMap: boolean
+  ) => Promise<void>
   startCreate: () => void
   startEdit: (place: Place) => void
   handleImageFiles: (files: FileList | File[]) => Promise<void>
@@ -83,10 +84,10 @@ type PlaceEditorContextValue = {
   handleApply: (
     values: DraftPlace,
     options?: { advance?: boolean }
-  ) => PlaceApplyError | null
-  handleDelete: (placeId: string) => void
+  ) => Promise<PlaceApplyError | null>
+  handleDelete: (placeId: string) => Promise<void>
   handleToggleDraftTag: (tagId: string) => void
-  handleAddDraftTag: () => void
+  handleAddDraftTag: () => Promise<void>
   pathDrawMode: "roads" | "points" | null
   isFetchingPath: boolean
   pathDrawingError: string | null
@@ -129,6 +130,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   } = useAppState()
 
   const isCreatingRef = useRef(false)
+  const imageLoadRequestRef = useRef(0)
   const formMethods = useForm<DraftPlace>({
     defaultValues: createEmptyDraft(),
     mode: "onSubmit",
@@ -139,9 +141,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const [newTagLabel, setNewTagLabel] = useState("")
   const [draftNewTagLabel, setDraftNewTagLabel] = useState("")
   const [isSaving, setIsSaving] = useState(false)
-  const [committedSnapshot, setCommittedSnapshot] = useState(() =>
-    catalogSnapshot(tags, places)
-  )
   const [error, setError] = useState<string | null>(null)
   const [activeTab, setActiveTab] = useState<EditorTab>("places")
   const [placesScreen, setPlacesScreen] = useState<PlacesScreen>("list")
@@ -151,8 +150,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const [isFetchingPath, setIsFetchingPath] = useState(false)
   const [pathDrawingError, setPathDrawingError] = useState<string | null>(null)
   const pathDrawModeRef = useRef<"roads" | "points" | null>(null)
-
-  const isDirty = catalogSnapshot(tags, places) !== committedSnapshot
 
   const selectedPlace =
     places.find((place) => place.id === selectedPlaceId) ?? null
@@ -321,8 +318,22 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       const place = places.find((item) => item.id === placeId)
 
       if (place) {
-        openPlaceForm(toDraft(place), false)
-        onSelectPlace(place.id)
+        const requestId = ++imageLoadRequestRef.current
+        void loadPlaceImages(place.id)
+          .then((images) => {
+            if (requestId !== imageLoadRequestRef.current) {
+              return
+            }
+            openPlaceForm(toDraft({ ...place, images }), false)
+            onSelectPlace(place.id)
+          })
+          .catch((loadError) => {
+            setError(
+              loadError instanceof Error
+                ? loadError.message
+                : "Failed to load images"
+            )
+          })
       }
     })
 
@@ -337,29 +348,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     [setPlaces, setTags]
   )
 
-  const handleCommit = useCallback(async () => {
-    if (!isDirty) {
-      return
-    }
-
-    setIsSaving(true)
-    setError(null)
-
-    try {
-      await savePlacesCatalog({ tags, places })
-      setCommittedSnapshot(catalogSnapshot(tags, places))
-    } catch (commitError) {
-      setError(
-        commitError instanceof Error
-          ? commitError.message
-          : "Failed to save places"
-      )
-    } finally {
-      setIsSaving(false)
-    }
-  }, [isDirty, places, tags])
-
-  const handleAddTag = useCallback(() => {
+  const handleAddTag = useCallback(async () => {
     const nextTags = addTagToCatalog(tags, newTagLabel)
 
     if (!nextTags) {
@@ -367,53 +356,129 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       return
     }
 
-    applyCatalog(nextTags, places)
-    setNewTagLabel("")
+    setIsSaving(true)
+    setError(null)
+    try {
+      await saveTag(nextTags[nextTags.length - 1], nextTags.length - 1)
+      applyCatalog(nextTags, places)
+      setNewTagLabel("")
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error ? saveError.message : "Failed to add tag"
+      )
+    } finally {
+      setIsSaving(false)
+    }
   }, [applyCatalog, newTagLabel, places, tags])
 
   const handleDeleteTag = useCallback(
-    (tagId: string) => {
+    async (tagId: string) => {
+      setIsSaving(true)
+      setError(null)
+      try {
+        await deleteTag(tagId)
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error
+            ? saveError.message
+            : "Failed to delete tag"
+        )
+        setIsSaving(false)
+        return
+      }
+
       const nextTags = removeTagFromCatalog(tags, tagId)
       const nextPlaces = removeTagFromPlaces(places, tagId)
       applyCatalog(nextTags, nextPlaces)
 
       if (placesScreen === "form") {
         const currentDraft = getValues()
-        setValue("tags", toggleDraftTag(currentDraft, tagId).tags)
+        setValue(
+          "tags",
+          currentDraft.tags.filter((draftTagId) => draftTagId !== tagId)
+        )
       }
+      setIsSaving(false)
     },
     [applyCatalog, getValues, places, placesScreen, setValue, tags]
   )
 
   const handleSetTagIcon = useCallback(
-    (tagId: string, icon: string | null) => {
+    async (tagId: string, icon: string | null) => {
       const nextTags = setTagIcon(tags, tagId, icon)
-      applyCatalog(nextTags, places)
+      const tagIndex = nextTags.findIndex((tag) => tag.id === tagId)
+      setIsSaving(true)
+      setError(null)
+      try {
+        await saveTag(nextTags[tagIndex], tagIndex)
+        applyCatalog(nextTags, places)
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error ? saveError.message : "Failed to save tag"
+        )
+      } finally {
+        setIsSaving(false)
+      }
     },
     [applyCatalog, places, tags]
   )
 
   const handleSetTagColor = useCallback(
-    (tagId: string, color: string | null) => {
+    async (tagId: string, color: string | null) => {
       const nextTags = setTagColor(tags, tagId, color)
-      applyCatalog(nextTags, places)
+      const tagIndex = nextTags.findIndex((tag) => tag.id === tagId)
+      setIsSaving(true)
+      setError(null)
+      try {
+        await saveTag(nextTags[tagIndex], tagIndex)
+        applyCatalog(nextTags, places)
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error ? saveError.message : "Failed to save tag"
+        )
+      } finally {
+        setIsSaving(false)
+      }
     },
     [applyCatalog, places, tags]
   )
 
   const handleSetTagShowOnMap = useCallback(
-    (tagId: string, showOnMap: boolean) => {
+    async (tagId: string, showOnMap: boolean) => {
       const nextTags = setTagShowOnMap(tags, tagId, showOnMap)
-      applyCatalog(nextTags, places)
+      const tagIndex = nextTags.findIndex((tag) => tag.id === tagId)
+      setIsSaving(true)
+      setError(null)
+      try {
+        await saveTag(nextTags[tagIndex], tagIndex)
+        applyCatalog(nextTags, places)
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error ? saveError.message : "Failed to save tag"
+        )
+      } finally {
+        setIsSaving(false)
+      }
     },
     [applyCatalog, places, tags]
   )
 
   const handleMoveTag = useCallback(
-    (index: number, direction: "up" | "down") => {
+    async (index: number, direction: "up" | "down") => {
       const targetIndex = direction === "up" ? index - 1 : index + 1
       const nextTags = moveTag(tags, index, targetIndex)
-      applyCatalog(nextTags, places)
+      setIsSaving(true)
+      setError(null)
+      try {
+        await reorderTags(nextTags)
+        applyCatalog(nextTags, places)
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error ? saveError.message : "Failed to reorder tags"
+        )
+      } finally {
+        setIsSaving(false)
+      }
     },
     [applyCatalog, places, tags]
   )
@@ -432,16 +497,23 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
   const startEdit = useCallback(
     async (place: Place) => {
-      let images: PlaceImage[] = []
+      const requestId = ++imageLoadRequestRef.current
       try {
-        images = await loadPlaceImages(place.id)
+        const images = await loadPlaceImages(place.id)
+        if (requestId !== imageLoadRequestRef.current) {
+          return
+        }
+        openPlaceForm(toDraft({ ...place, images }), false)
+        onSelectPlace(place.id)
       } catch (error) {
+        if (requestId !== imageLoadRequestRef.current) {
+          return
+        }
         setError(
           error instanceof Error ? error.message : "Failed to load images"
         )
+        return
       }
-      openPlaceForm(toDraft({ ...place, images }), false)
-      onSelectPlace(place.id)
     },
     [onSelectPlace, openPlaceForm]
   )
@@ -604,10 +676,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   const handleApply = useCallback(
-    (
+    async (
       values: DraftPlace,
       options?: { advance?: boolean }
-    ): PlaceApplyError | null => {
+    ): Promise<PlaceApplyError | null> => {
       const pathValidation = validatePathForDraft(values)
 
       if (pathValidation !== true) {
@@ -644,6 +716,29 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
             place.id === selectedPlace?.id ? nextPlace : place
           )
 
+      setIsSaving(true)
+      setError(null)
+      try {
+        await savePlace(
+          nextPlace,
+          isCreating
+            ? places.reduce(
+                (maxPosition, place) =>
+                  Math.max(maxPosition, places.indexOf(place)),
+                -1
+              ) + 1
+            : Math.max(currentIndex, 0)
+        )
+      } catch (saveError) {
+        setError(
+          saveError instanceof Error
+            ? saveError.message
+            : "Failed to save place"
+        )
+        setIsSaving(false)
+        return { message: "Place could not be saved." }
+      }
+      setIsSaving(false)
       applyCatalog(tags, nextPlaces)
       setQuery("")
 
@@ -673,9 +768,23 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   )
 
   const handleDelete = useCallback(
-    (placeId: string) => {
+    async (placeId: string) => {
+      setIsSaving(true)
+      setError(null)
+      try {
+        await deletePlace(placeId)
+      } catch (deleteError) {
+        setError(
+          deleteError instanceof Error
+            ? deleteError.message
+            : "Failed to delete place"
+        )
+        setIsSaving(false)
+        return
+      }
       const nextPlaces = places.filter((place) => place.id !== placeId)
       applyCatalog(tags, nextPlaces)
+      setIsSaving(false)
 
       if (selectedPlaceId === placeId) {
         setPlacesScreen("list")
@@ -699,7 +808,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     [getValues, placesScreen, setValue]
   )
 
-  const handleAddDraftTag = useCallback(() => {
+  const handleAddDraftTag = useCallback(async () => {
     if (placesScreen !== "form") {
       return
     }
@@ -713,7 +822,18 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
 
     const addedTag = nextTags[nextTags.length - 1]
     const currentDraft = getValues()
-    applyCatalog(nextTags, places)
+    setIsSaving(true)
+    setError(null)
+    try {
+      await saveTag(addedTag, nextTags.length - 1)
+      applyCatalog(nextTags, places)
+    } catch (saveError) {
+      setError(
+        saveError instanceof Error ? saveError.message : "Failed to add tag"
+      )
+      setIsSaving(false)
+      return
+    }
     setValue(
       "tags",
       currentDraft.tags.includes(addedTag.id)
@@ -721,6 +841,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         : [...currentDraft.tags, addedTag.id]
     )
     setDraftNewTagLabel("")
+    setIsSaving(false)
   }, [
     applyCatalog,
     draftNewTagLabel,
@@ -745,7 +866,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       setNewTagLabel,
       draftNewTagLabel,
       setDraftNewTagLabel,
-      isDirty,
       isSaving,
       error,
       activeTab,
@@ -753,7 +873,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       placesScreen,
       hasNextPlace,
       goToPlacesList,
-      handleCommit,
       handleAddTag,
       handleDeleteTag,
       handleMoveTag,
@@ -792,7 +911,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleSetTagShowOnMap,
       handleMoveTag,
       handleApply,
-      handleCommit,
       handleToggleDraftTag,
       handlePathTypeChange,
       clearPath,
@@ -803,7 +921,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       pathDrawingError,
       setPathDrawMode,
       isCreating,
-      isDirty,
       isSaving,
       newTagLabel,
       places,
