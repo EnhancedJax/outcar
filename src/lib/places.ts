@@ -3,6 +3,7 @@ import { isPathTypeValue } from "@/constants/path"
 import { loadPlacesCatalog } from "@/lib/content-repository"
 import { pathAnchoredAtPin } from "@/lib/path"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
+import { supabase } from "@/lib/supabase"
 import type {
   CatalogTag,
   DraftPlace,
@@ -29,39 +30,6 @@ function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
   }))
 }
 
-export type GoogleMapsListPlace = {
-  name: string
-  note: string
-  longitude: number
-  latitude: number
-}
-
-export type GoogleMapsListResult = {
-  listName: string
-  places: GoogleMapsListPlace[]
-}
-
-export async function fetchGoogleMapsList(
-  url: string
-): Promise<GoogleMapsListResult> {
-  const response = await fetch("/__places/google-list", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({ url }),
-  })
-
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as {
-      error?: string
-    } | null
-    throw new Error(payload?.error ?? "Failed to fetch Google Maps link")
-  }
-
-  return (await response.json()) as GoogleMapsListResult
-}
-
 export async function fetchPlacesCatalog() {
   const catalog = await loadPlacesCatalog()
   return {
@@ -76,19 +44,15 @@ export async function savePlacesCatalog(nextCatalog: PlacesCatalog) {
     tags: sanitizeCatalogTags(nextCatalog.tags),
   }
 
-  const response = await fetch("/__places", {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(sanitizedCatalog),
-  })
+  if (!supabase) {
+    throw new Error("Missing VITE_SUPABASE_URL or VITE_SUPABASE_ANON_KEY.")
+  }
 
-  if (!response.ok) {
-    const payload = (await response.json().catch(() => null)) as {
-      error?: string
-    } | null
-    throw new Error(payload?.error ?? "Failed to save places")
+  const { error } = await supabase.rpc("replace_catalog", {
+    catalog: sanitizedCatalog,
+  })
+  if (error) {
+    throw new Error(`Failed to save places: ${error.message}`)
   }
 }
 

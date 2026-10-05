@@ -14,11 +14,13 @@ Copy `.env.example` to `.env.local` and set:
 - `VITE_MAPBOX_ACCESS_TOKEN`
 - `VITE_SUPABASE_URL`
 - `VITE_SUPABASE_ANON_KEY`
-- `SUPABASE_SERVICE_ROLE_KEY` for the development editor save endpoint
+- `VITE_EDITOR_EMAIL`
 
-The application reads its content from Supabase. The editor is enabled only in
-development and writes through the Vite middleware using the service-role key.
-Do not expose that key through a `VITE_` variable or commit it.
+The application reads its content from Supabase. The editor is unlocked by
+clicking the map title ten times and entering the password for the configured
+Supabase editor account. The browser session is persisted by Supabase Auth.
+Catalog writes use the authenticated Supabase RPC directly; no service-role
+key is needed by the app.
 
 ## Supabase setup and seed
 
@@ -35,9 +37,8 @@ The seed command preserves the existing tag/place IDs and ordering. The CSV
 files under `src/data` are backup/seed material, not the runtime source of
 truth.
 
-Production reads publicly readable catalog rows from Supabase and does not
-expose editor writes. User submissions, authentication, and password-based
-editing are intentionally deferred to a future change.
+Catalog rows remain publicly readable from Supabase. Google Maps list importing
+is not included in the production editor.
 
 ## Place images
 

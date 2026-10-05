@@ -2,7 +2,6 @@ import { Button } from "@/components/ui/button"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 
 import { PlaceEditorProvider, usePlaceEditor } from "./place-editor-context"
-import { ImportTab } from "./tabs/import-tab"
 import { PlacesTab } from "./tabs/places-tab"
 import { TagsTab } from "./tabs/tags-tab"
 
@@ -40,9 +39,6 @@ function PlaceEditorShell() {
             <TabsTrigger value="tags" className="flex-1">
               Tags
             </TabsTrigger>
-            <TabsTrigger value="import" className="flex-1">
-              Import
-            </TabsTrigger>
           </TabsList>
         </div>
 
@@ -52,9 +48,6 @@ function PlaceEditorShell() {
           </TabsContent>
           <TabsContent value="tags" className="flex-1 overflow-y-auto p-4">
             <TagsTab />
-          </TabsContent>
-          <TabsContent value="import" className="flex-1 overflow-y-auto p-4">
-            <ImportTab />
           </TabsContent>
         </div>
       </Tabs>

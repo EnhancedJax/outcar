@@ -17,12 +17,9 @@ import { pathAnchoredAtPin, reversePath } from "@/lib/path"
 import {
   addTagToCatalog,
   createEmptyDraft,
-  createUniquePlaceId,
-  fetchGoogleMapsList,
   createPlaceImage,
   fromDraft,
   moveTag,
-  placeAlreadyExists,
   removeTagFromCatalog,
   removeTagFromPlaces,
   savePlacesCatalog,
@@ -36,10 +33,8 @@ import { loadPlaceImages } from "@/lib/content-repository"
 import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 
 import {
-  importPreviewToPlaces,
   toggleDraftTag,
   type EditorTab,
-  type ImportPreviewItem,
   type PlacesScreen,
 } from "./place-editor-utils"
 
@@ -61,15 +56,10 @@ type PlaceEditorContextValue = {
   selectedPlace: Place | null
   query: string
   setQuery: (query: string) => void
-  importUrl: string
-  setImportUrl: (url: string) => void
-  importListName: string | null
-  importPreview: ImportPreviewItem[]
   newTagLabel: string
   setNewTagLabel: (label: string) => void
   draftNewTagLabel: string
   setDraftNewTagLabel: (label: string) => void
-  isImporting: boolean
   isDirty: boolean
   isSaving: boolean
   error: string | null
@@ -79,16 +69,12 @@ type PlaceEditorContextValue = {
   hasNextPlace: boolean
   goToPlacesList: () => void
   handleCommit: () => Promise<void>
-  clearImportPreview: () => void
-  updateImportSelection: (key: string, selected: boolean) => void
   handleAddTag: () => void
   handleDeleteTag: (tagId: string) => void
   handleMoveTag: (index: number, direction: "up" | "down") => void
   handleSetTagIcon: (tagId: string, icon: string | null) => void
   handleSetTagColor: (tagId: string, color: string | null) => void
   handleSetTagShowOnMap: (tagId: string, showOnMap: boolean) => void
-  handleImportPreview: () => Promise<void>
-  handleImportConfirm: () => void
   startCreate: () => void
   startEdit: (place: Place) => void
   handleImageFiles: (files: FileList | File[]) => Promise<void>
@@ -136,7 +122,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     setPlaces,
     setTags,
     setEditorDraft: onDraftChange,
-    setImportPreviewPlaces,
     selectPlace: onSelectPlace,
     registerEditorPlaceSelect,
     registerEditorCoordinateHandler,
@@ -151,12 +136,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
   const { reset, watch, setValue, getValues } = formMethods
 
   const [query, setQuery] = useState("")
-  const [importUrl, setImportUrl] = useState("")
-  const [importListName, setImportListName] = useState<string | null>(null)
-  const [importPreview, setImportPreview] = useState<ImportPreviewItem[]>([])
   const [newTagLabel, setNewTagLabel] = useState("")
   const [draftNewTagLabel, setDraftNewTagLabel] = useState("")
-  const [isImporting, setIsImporting] = useState(false)
   const [isSaving, setIsSaving] = useState(false)
   const [committedSnapshot, setCommittedSnapshot] = useState(() =>
     catalogSnapshot(tags, places)
@@ -348,15 +329,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     return () => registerEditorPlaceSelect(null)
   }, [onSelectPlace, openPlaceForm, places, registerEditorPlaceSelect])
 
-  useEffect(() => {
-    if (importPreview.length === 0) {
-      setImportPreviewPlaces(null)
-      return
-    }
-
-    setImportPreviewPlaces(importPreviewToPlaces(importPreview))
-  }, [importPreview, setImportPreviewPlaces])
-
   const applyCatalog = useCallback(
     (nextTags: CatalogTag[], nextPlaces: Place[]) => {
       setTags(nextTags)
@@ -386,23 +358,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       setIsSaving(false)
     }
   }, [isDirty, places, tags])
-
-  const clearImportPreview = useCallback(() => {
-    setImportListName(null)
-    setImportPreview([])
-    setImportUrl("")
-  }, [])
-
-  const updateImportSelection = useCallback(
-    (key: string, selected: boolean) => {
-      setImportPreview((current) =>
-        current.map((item) =>
-          item.key === key && !item.alreadyExists ? { ...item, selected } : item
-        )
-      )
-    },
-    []
-  )
 
   const handleAddTag = useCallback(() => {
     const nextTags = addTagToCatalog(tags, newTagLabel)
@@ -462,78 +417,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     },
     [applyCatalog, places, tags]
   )
-
-  const handleImportPreview = useCallback(async () => {
-    if (!importUrl.trim()) {
-      return
-    }
-
-    setIsImporting(true)
-    setError(null)
-
-    try {
-      const result = await fetchGoogleMapsList(importUrl.trim())
-      const previewItems = result.places.map((place, index) => {
-        const alreadyExists = placeAlreadyExists(place, places)
-
-        return {
-          key: `${index}-${place.name}-${place.longitude}-${place.latitude}`,
-          name: place.name,
-          note: place.note,
-          longitude: place.longitude,
-          latitude: place.latitude,
-          selected: !alreadyExists,
-          alreadyExists,
-        }
-      })
-
-      setImportListName(result.listName)
-      setImportPreview(previewItems)
-    } catch (previewError) {
-      clearImportPreview()
-      setError(
-        previewError instanceof Error
-          ? previewError.message
-          : "Failed to preview Google Maps link"
-      )
-    } finally {
-      setIsImporting(false)
-    }
-  }, [clearImportPreview, importUrl, places])
-
-  const handleImportConfirm = useCallback(() => {
-    const selectedItems = importPreview.filter(
-      (item) => item.selected && !item.alreadyExists
-    )
-
-    if (selectedItems.length === 0) {
-      setError("Select at least one new place to import.")
-      return
-    }
-
-    const existingIds = new Set(places.map((place) => place.id))
-    const importedPlaces = selectedItems.map((item) => {
-      const id = createUniquePlaceId(item.name, existingIds)
-      existingIds.add(id)
-
-      return {
-        id,
-        name: item.name,
-        note: item.note,
-        longitude: item.longitude,
-        latitude: item.latitude,
-        tags: [],
-        parkingCondition: -1,
-        gmapUrl: null,
-        pathType: -1,
-        path: [],
-        images: [],
-      }
-    })
-
-    applyCatalog(tags, [...places, ...importedPlaces])
-    clearImportPreview()
-  }, [applyCatalog, clearImportPreview, importPreview, places, tags])
 
   const goToPlacesList = useCallback(() => {
     setPlacesScreen("list")
@@ -858,15 +741,10 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       selectedPlace,
       query,
       setQuery,
-      importUrl,
-      setImportUrl,
-      importListName,
-      importPreview,
       newTagLabel,
       setNewTagLabel,
       draftNewTagLabel,
       setDraftNewTagLabel,
-      isImporting,
       isDirty,
       isSaving,
       error,
@@ -876,16 +754,12 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       hasNextPlace,
       goToPlacesList,
       handleCommit,
-      clearImportPreview,
-      updateImportSelection,
       handleAddTag,
       handleDeleteTag,
       handleMoveTag,
       handleSetTagIcon,
       handleSetTagColor,
       handleSetTagShowOnMap,
-      handleImportPreview,
-      handleImportConfirm,
       startCreate,
       startEdit,
       handleImageFiles,
@@ -905,7 +779,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
     }),
     [
       activeTab,
-      clearImportPreview,
       goToPlacesList,
       draft,
       draftNewTagLabel,
@@ -917,8 +790,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       handleSetTagIcon,
       handleSetTagColor,
       handleSetTagShowOnMap,
-      handleImportConfirm,
-      handleImportPreview,
       handleMoveTag,
       handleApply,
       handleCommit,
@@ -931,12 +802,8 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       pathDrawMode,
       pathDrawingError,
       setPathDrawMode,
-      importListName,
-      importPreview,
-      importUrl,
       isCreating,
       isDirty,
-      isImporting,
       isSaving,
       newTagLabel,
       places,
@@ -950,7 +817,6 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
       moveDraftImage,
       deleteDraftImage,
       tags,
-      updateImportSelection,
     ]
   )
 

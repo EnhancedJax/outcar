@@ -86,10 +86,7 @@ export default function MapAppearanceControl({
         type="button"
         size="icon"
         variant="secondary"
-        className={cn(
-          "absolute top-4 z-50 shadow-lg",
-          import.meta.env.DEV ? "right-16" : "right-4"
-        )}
+        className="absolute top-4 right-4 z-50 shadow-lg"
         aria-expanded={shown}
         aria-label="Map settings"
         onClick={() => {

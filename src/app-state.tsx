@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react"
 
+import { useAuth } from "@/auth"
 import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
 import { loadPlaceImages } from "@/lib/content-repository"
 import { isPathTypeValue } from "@/constants/path"
@@ -115,6 +116,7 @@ function draftPlaceForDisplay(
 }
 
 export function AppStateProvider({ children }: AppStateProviderProps) {
+  const { isAuthenticated } = useAuth()
   const [places, setPlaces] = useState<Place[]>([])
   const [tags, setTags] = useState<CatalogTag[]>([])
   const [isCatalogLoading, setIsCatalogLoading] = useState(true)
@@ -196,7 +198,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
     }
   }, [selectedPlaceId])
 
-  const isEditorActive = import.meta.env.DEV && isEditorOpen
+  const isEditorActive = isAuthenticated && isEditorOpen
   const viewerMode = !isEditorActive
 
   const setEditorDraft = useCallback(
