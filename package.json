@@ -10,12 +10,14 @@
     "lint": "eslint .",
     "format": "prettier --write \"**/*.{ts,tsx}\"",
     "typecheck": "tsc --noEmit",
+    "seed:supabase": "tsx scripts/seed-supabase.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "@base-ui/react": "^1.8.0",
     "@fontsource-variable/space-grotesk": "^5.3.0",
     "@phosphor-icons/react": "^2.1.10",
+    "@supabase/supabase-js": "^2.117.2",
     "@tailwindcss/vite": "^4",
     "class-variance-authority": "^0.7.1",
     "cn": "^0.4.0",
@@ -43,6 +45,7 @@
     "prettier-plugin-tailwindcss": "^0.8.1",
     "typescript": "~6.0.2",
     "typescript-eslint": "^8",
+    "tsx": "^4.20.6",
     "vite": "^8"
   }
 }

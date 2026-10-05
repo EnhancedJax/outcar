@@ -1,13 +1,8 @@
-import { writeFile } from "node:fs/promises"
-import { resolve } from "node:path"
 import type { Plugin } from "vite"
+import { createClient } from "@supabase/supabase-js"
 
-import { serializePlacesCatalog } from "../src/lib/catalog-csv.js"
 import { isValidPlacesCatalog } from "../src/types/place.js"
 import { fetchGoogleMapsList } from "./google-maps-list.js"
-
-const TAGS_PATH = resolve(import.meta.dirname, "../src/data/tags.csv")
-const PLACES_PATH = resolve(import.meta.dirname, "../src/data/places.csv")
 
 async function readJsonBody(req: import("node:http").IncomingMessage) {
   const chunks: Buffer[] = []
@@ -72,10 +67,28 @@ export function placesApiPlugin(): Plugin {
             return
           }
 
-          const files = serializePlacesCatalog(body)
+          const url = process.env.SUPABASE_URL ?? process.env.VITE_SUPABASE_URL
+          const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-          await writeFile(TAGS_PATH, files.tags, "utf8")
-          await writeFile(PLACES_PATH, files.places, "utf8")
+          if (!url || !serviceKey) {
+            sendJson(res, 500, {
+              error:
+                "Local editor saves require SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.",
+            })
+            return
+          }
+
+          const client = createClient(url, serviceKey)
+          const { error } = await client.rpc("replace_catalog", {
+            catalog: body,
+          })
+
+          if (error) {
+            sendJson(res, 500, {
+              error: `Failed to save places: ${error.message}`,
+            })
+            return
+          }
 
           sendJson(res, 200, { ok: true })
         } catch (error) {

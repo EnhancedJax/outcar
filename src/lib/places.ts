@@ -1,8 +1,6 @@
 import { isParkingConditionValue } from "@/constants/parking"
 import { isPathTypeValue } from "@/constants/path"
-import placesCsv from "@/data/places.csv?raw"
-import tagsCsv from "@/data/tags.csv?raw"
-import { parsePlacesCatalogCsv } from "@/lib/catalog-csv"
+import { loadPlacesCatalog } from "@/lib/content-repository"
 import { pathAnchoredAtPin } from "@/lib/path"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
 import type {
@@ -17,14 +15,9 @@ import {
   isValidParkingCondition,
   isValidPath,
   isValidTagColor,
-  normalizePlacesCatalog,
   normalizeTagLabel,
   tagKey,
 } from "@/types/place"
-
-const catalog = normalizePlacesCatalog(
-  parsePlacesCatalogCsv(tagsCsv, placesCsv)
-)
 
 function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
   return tags.map((tag) => ({
@@ -34,9 +27,6 @@ function sanitizeCatalogTags(tags: CatalogTag[]): CatalogTag[] {
     showOnMap: tag.showOnMap === true,
   }))
 }
-
-export const places = catalog.places
-export const tags = sanitizeCatalogTags(catalog.tags)
 
 export type GoogleMapsListPlace = {
   name: string
@@ -69,6 +59,14 @@ export async function fetchGoogleMapsList(
   }
 
   return (await response.json()) as GoogleMapsListResult
+}
+
+export async function fetchPlacesCatalog() {
+  const catalog = await loadPlacesCatalog()
+  return {
+    ...catalog,
+    tags: sanitizeCatalogTags(catalog.tags),
+  }
 }
 
 export async function savePlacesCatalog(nextCatalog: PlacesCatalog) {

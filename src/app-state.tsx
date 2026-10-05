@@ -2,29 +2,20 @@ import {
   createContext,
   useCallback,
   useContext,
+  useEffect,
   useMemo,
   useRef,
   useState,
   type ReactNode,
 } from "react"
 
-import {
-  fromDraft,
-  places as initialPlaces,
-  tags as initialTags,
-} from "@/lib/places"
+import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
 import { isPathTypeValue } from "@/constants/path"
 import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 
-type EditorCoordinateHandler = (
-  longitude: number,
-  latitude: number
-) => void
+type EditorCoordinateHandler = (longitude: number, latitude: number) => void
 
-type EditorMarkerDragHandler = (
-  longitude: number,
-  latitude: number
-) => void
+type EditorMarkerDragHandler = (longitude: number, latitude: number) => void
 
 type AppStateContextValue = {
   places: Place[]
@@ -41,6 +32,8 @@ type AppStateContextValue = {
   displayPlaces: Place[]
   fitBoundsPlaces: Place[]
   draggableMarkerId: string | null
+  isCatalogLoading: boolean
+  catalogError: string | null
   setPlaces: (places: Place[]) => void
   setTags: (tags: CatalogTag[]) => void
   setEditorDraft: (draft: DraftPlace | null, isCreating: boolean) => void
@@ -117,8 +110,10 @@ function draftPlaceForDisplay(
 }
 
 export function AppStateProvider({ children }: AppStateProviderProps) {
-  const [places, setPlaces] = useState<Place[]>(initialPlaces)
-  const [tags, setTags] = useState<CatalogTag[]>(initialTags)
+  const [places, setPlaces] = useState<Place[]>([])
+  const [tags, setTags] = useState<CatalogTag[]>([])
+  const [isCatalogLoading, setIsCatalogLoading] = useState(true)
+  const [catalogError, setCatalogError] = useState<string | null>(null)
   const [selectedPlaceId, setSelectedPlaceId] = useState<string | null>(null)
   const [editorDraft, setEditorDraftState] = useState<DraftPlace | null>(null)
   const [isCreatingDraft, setIsCreatingDraft] = useState(false)
@@ -128,10 +123,38 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [isEditorOpen, setIsEditorOpen] = useState(true)
   const editorPlaceSelectRef = useRef<((placeId: string) => void) | null>(null)
-  const editorCoordinateHandlerRef = useRef<EditorCoordinateHandler | null>(null)
+  const editorCoordinateHandlerRef = useRef<EditorCoordinateHandler | null>(
+    null
+  )
   const editorMarkerDragHandlerRef = useRef<EditorMarkerDragHandler | null>(
     null
   )
+
+  useEffect(() => {
+    let cancelled = false
+
+    void fetchPlacesCatalog()
+      .then((catalog) => {
+        if (cancelled) return
+        setPlaces(catalog.places)
+        setTags(catalog.tags)
+        setCatalogError(null)
+      })
+      .catch((error: unknown) => {
+        if (!cancelled) {
+          setCatalogError(
+            error instanceof Error ? error.message : "Failed to load places"
+          )
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setIsCatalogLoading(false)
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   const isEditorActive = import.meta.env.DEV && isEditorOpen
   const viewerMode = !isEditorActive
@@ -198,7 +221,11 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
 
   const handleMapClick = useCallback(
     (longitude: number, latitude: number) => {
-      if (!isEditorActive || !editorDraft || !editorCoordinateHandlerRef.current) {
+      if (
+        !isEditorActive ||
+        !editorDraft ||
+        !editorCoordinateHandlerRef.current
+      ) {
         return
       }
 
@@ -273,6 +300,8 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       displayPlaces,
       fitBoundsPlaces,
       draggableMarkerId,
+      isCatalogLoading,
+      catalogError,
       setPlaces,
       setTags,
       setEditorDraft,
@@ -310,6 +339,8 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       registerEditorMarkerDragHandler,
       handleMapClick,
       handleMarkerDrag,
+      isCatalogLoading,
+      catalogError,
     ]
   )
 

@@ -10,7 +10,24 @@ const PlaceEditor = import.meta.env.DEV
   : null
 
 export function App() {
-  const { isEditorOpen, setIsEditorOpen } = useAppState()
+  const { isEditorOpen, setIsEditorOpen, isCatalogLoading, catalogError } =
+    useAppState()
+
+  if (isCatalogLoading) {
+    return (
+      <div className="flex h-svh items-center justify-center">
+        Loading places...
+      </div>
+    )
+  }
+
+  if (catalogError) {
+    return (
+      <div className="flex h-svh items-center justify-center p-6 text-center">
+        <p>Unable to load places: {catalogError}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="flex h-svh w-full overflow-hidden">

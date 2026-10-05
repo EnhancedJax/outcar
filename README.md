@@ -1,21 +1,40 @@
-# React + TypeScript + Vite + shadcn/ui
+# Outcar
 
-This is a template for a new Vite project with React, TypeScript, and shadcn/ui.
+## Development
 
-## Adding components
-
-To add components to your app, run the following command:
+Install dependencies and start the Vite server:
 
 ```bash
-npx shadcn@latest add button
+pnpm install
+pnpm dev
 ```
 
-This will place the ui components in the `src/components` directory.
+Copy `.env.example` to `.env.local` and set:
 
-## Using components
+- `VITE_MAPBOX_ACCESS_TOKEN`
+- `VITE_SUPABASE_URL`
+- `VITE_SUPABASE_ANON_KEY`
+- `SUPABASE_SERVICE_ROLE_KEY` for the development editor save endpoint
 
-To use the components in your app, import them as follows:
+The application reads its content from Supabase. The editor is enabled only in
+development and writes through the Vite middleware using the service-role key.
+Do not expose that key through a `VITE_` variable or commit it.
 
-```tsx
-import { Button } from "@/components/ui/button"
+## Supabase setup and seed
+
+Apply the migration in
+`supabase/migrations/20261005000000_content_catalog.sql` to create the
+normalized catalog tables, read policies, and the protected replacement
+function. Then seed the current CSV backup:
+
+```bash
+pnpm seed:supabase
 ```
+
+The seed command preserves the existing tag/place IDs and ordering. The CSV
+files under `src/data` are backup/seed material, not the runtime source of
+truth.
+
+Production reads publicly readable catalog rows from Supabase and does not
+expose editor writes. User submissions, authentication, and password-based
+editing are intentionally deferred to a future change.
