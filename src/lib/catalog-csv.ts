@@ -209,6 +209,7 @@ export function parsePlacesCatalogCsv(
         pathType,
         path: pathType === -1 ? [] : path,
         images: [],
+        hasImages: false,
       }
     }
   )

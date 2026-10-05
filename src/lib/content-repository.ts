@@ -52,15 +52,18 @@ function throwIfError(error: { message: string } | null, operation: string) {
 
 export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
   const client = requireSupabase()
-  const [tagsResult, placesResult, placeTagsResult] = await Promise.all([
-    client.from("tags").select("*").order("position"),
-    client.from("places").select("*").order("position"),
-    client.from("place_tags").select("*").order("position"),
-  ])
+  const [tagsResult, placesResult, placeTagsResult, placeImagesResult] =
+    await Promise.all([
+      client.from("tags").select("*").order("position"),
+      client.from("places").select("*").order("position"),
+      client.from("place_tags").select("*").order("position"),
+      client.from("place_images").select("place_id"),
+    ])
 
   throwIfError(tagsResult.error, "load tags")
   throwIfError(placesResult.error, "load places")
   throwIfError(placeTagsResult.error, "load place tags")
+  throwIfError(placeImagesResult.error, "load place image metadata")
 
   const tags = (tagsResult.data as TagRow[]).map((tag) => ({
     id: tag.id,
@@ -77,6 +80,11 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     ids.push(row.tag_id)
     tagIdsByPlace.set(row.place_id, ids)
   }
+  const placeIdsWithImages = new Set(
+    (placeImagesResult.data as Pick<ImageRow, "place_id">[]).map(
+      (image) => image.place_id
+    )
+  )
   const places = (placesResult.data as PlaceRow[]).map((place) => ({
     id: place.id,
     name: place.name,
@@ -89,6 +97,7 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     pathType: place.path_type,
     path: parsePath(place.path),
     images: [],
+    hasImages: placeIdsWithImages.has(place.id),
   }))
 
   for (const tag of tags) {

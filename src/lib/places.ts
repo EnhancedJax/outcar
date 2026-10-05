@@ -286,6 +286,7 @@ export function fromDraft(draft: DraftPlace): Place | null {
     pathType,
     path,
     images: draft.images,
+    hasImages: draft.images.length > 0,
   }
 }
 

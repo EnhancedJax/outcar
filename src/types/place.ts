@@ -28,6 +28,7 @@ export type Place = {
   pathType: number
   path: PathCoordinate[]
   images: PlaceImage[]
+  hasImages: boolean
 }
 
 export type DraftPlace = {

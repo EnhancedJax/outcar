@@ -112,6 +112,7 @@ function draftPlaceForDisplay(
     pathType,
     path: pathType === -1 ? [] : draft.path,
     images: draft.images,
+    hasImages: draft.images.length > 0,
   }
 }
 
@@ -172,7 +173,9 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
   }, [])
 
   useEffect(() => {
-    if (!selectedPlaceId) {
+    const selectedPlace = places.find((place) => place.id === selectedPlaceId)
+
+    if (!selectedPlaceId || !selectedPlace?.hasImages) {
       return
     }
 
@@ -196,7 +199,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
     return () => {
       cancelled = true
     }
-  }, [selectedPlaceId])
+  }, [places, selectedPlaceId])
 
   const isEditorActive = isAuthenticated && isEditorOpen
   const viewerMode = !isEditorActive
@@ -297,7 +300,12 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
       setSelectedPlaceId(placeId)
       setSelectedPlaceImages([])
       setSelectedPlaceImagesError(null)
-      setSelectedPlaceImagesLoading(Boolean(placeId))
+      setSelectedPlaceImagesLoading(
+        placeId
+          ? (displayPlaces.find((place) => place.id === placeId)?.hasImages ??
+              false)
+          : false
+      )
 
       if (
         placeId &&
@@ -307,7 +315,7 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
         setActiveTag(null)
       }
     },
-    [activeTag, filteredPlaces]
+    [activeTag, displayPlaces, filteredPlaces]
   )
 
   const registerEditorPlaceSelect = useCallback(
