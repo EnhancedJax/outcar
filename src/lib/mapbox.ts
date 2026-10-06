@@ -17,11 +17,15 @@ export function getMapStyle() {
   return MAPBOX_STANDARD_STYLE
 }
 
-export function getBasemapConfig(appearance: MapAppearance, isDark: boolean) {
+export function getBasemapConfig(
+  appearance: MapAppearance,
+  isDark: boolean
+): ConfigSpecification {
   return {
     theme: appearance === "monochrome" ? "monochrome" : "default",
     lightPreset: isDark ? "night" : "day",
     show3dObjects: true,
+    showPointOfInterestLabels: false,
   }
 }
 
@@ -32,6 +36,7 @@ export type GeocodingFeature = {
 }
 
 import type { PathCoordinate } from "@/constants/path"
+import type { ConfigSpecification } from "mapbox-gl"
 
 export type DirectionsProfile = "driving" | "walking"
 

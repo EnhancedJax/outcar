@@ -400,6 +400,7 @@ export function PlacesMap() {
         ref={mapRef}
         mapboxAccessToken={getMapboxToken()}
         mapStyle={getMapStyle()}
+        language="zh-Hant"
         config={{ basemap: basemapConfig }}
         initialViewState={initialViewState}
         onLoad={() => {
