@@ -27,7 +27,7 @@ export function SelectedPlace() {
       aria-label={selectedPlace.name}
     >
       <ProgressiveBlur direction="down" />
-      <div className="relative flex w-full flex-row gap-4 pt-28 pb-6 lg:flex-col">
+      <div className="relative flex w-full flex-row items-end gap-4 pt-28 pb-6 lg:flex-col lg:items-center">
         <div className="flex-1">
           <SelectedPlaceImages selectedPlace={selectedPlace} />
           <SelectedPlaceHeader selectedPlace={selectedPlace} />
