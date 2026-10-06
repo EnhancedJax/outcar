@@ -1,6 +1,6 @@
 import { useAppState } from "@/app-state"
-import { TagChip } from "@/components/tag-chip"
 import { ShareButton } from "@/components/share-button"
+import { TagChip } from "@/components/tag-chip"
 import { sharePathForState, shareUrl } from "@/lib/share-routes"
 import { motion, stagger } from "motion/react"
 
@@ -26,7 +26,7 @@ export function TagList() {
   return (
     <div className="pointer-events-none absolute inset-x-0 bottom-0 z-10 flex justify-center">
       <motion.div
-        className="pointer-events-auto flex w-full gap-2 overflow-visible overflow-x-auto px-4 pb-4"
+        className="pointer-events-auto flex w-full scrollbar-none gap-2 overflow-visible overflow-x-auto px-4 pb-4"
         role="toolbar"
         aria-label="Filter places by tag"
         initial="hidden"

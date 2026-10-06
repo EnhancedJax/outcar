@@ -26,7 +26,7 @@ export default function SelectedPlaceImages({
 
   if (selectedPlaceImagesLoadingCount) {
     return (
-      <div className="scrollbar-hide mb-4 flex flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
+      <div className="mb-4 flex scrollbar-none flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
         {[...Array(selectedPlaceImagesLoadingCount)].map((_, index) => (
           <div
             key={`loading-${index}`}
@@ -58,7 +58,7 @@ export default function SelectedPlaceImages({
         { type: "onOpenComplete", behavior: "instant", inline: "center" },
       ]}
     >
-      <div className="scrollbar-hide pointer-events-auto mb-4 flex flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
+      <div className="pointer-events-auto mb-4 flex scrollbar-none flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
         {selectedPlaceImages.map((image, index) => (
           <Lightbox.Trigger
             key={image.id}

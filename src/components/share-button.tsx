@@ -1,4 +1,4 @@
-import { ShareNetwork } from "@phosphor-icons/react"
+import { ShareNetworkIcon } from "@phosphor-icons/react"
 import { useState } from "react"
 
 import { Button } from "@/components/ui/button"
@@ -38,16 +38,14 @@ export function ShareButton({ title, text, url, className }: ShareButtonProps) {
     <Button
       type="button"
       variant="ghost"
-      size="lg"
+      // size="lg"
       className={className}
       aria-label={status || "Share link"}
       title={status || "Share link"}
       onClick={() => void handleShare()}
     >
-      <ShareNetwork weight="bold" />
-      <span className="sr-only" aria-live="polite">
-        {status}
-      </span>
+      <ShareNetworkIcon weight="bold" />
+      <span className="hidden lg:block">分享</span>
     </Button>
   )
 }
