@@ -41,6 +41,15 @@ truth.
 Catalog rows remain publicly readable from Supabase. Google Maps list importing
 is not included in the production editor.
 
+## Shareable links
+
+Places and single-tag lists can be shared at `/places/{placeId}` and
+`/tags/{tagId}`. Vercel serves route-specific page metadata for social previews;
+place previews use the first public place image when available, and tag previews
+use a branded Outcar card. Configure `VITE_SUPABASE_URL` and
+`VITE_SUPABASE_ANON_KEY` for both the Vercel build and serverless function
+runtime.
+
 ## Place images
 
 Place images are stored in Supabase as complete base64 data URLs in the

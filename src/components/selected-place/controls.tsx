@@ -9,7 +9,9 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover"
 import { gmapStreetViewUrl, NAVIGATION_APPS } from "@/lib/urls"
+import { sharePathForState, shareUrl } from "@/lib/share-routes"
 import type { Place } from "@/types/place"
+import { ShareButton } from "@/components/share-button"
 
 const frostedButtonClassName =
   "lg:h-9 rounded-full bg-foreground/10 lg:px-5 p-2 backdrop-blur-md hover:bg-foreground/20"
@@ -20,6 +22,7 @@ export default function SelectedPlaceControls({
   selectedPlace: Place
 }) {
   const { selectPlace } = useAppState()
+  const placeUrl = shareUrl(sharePathForState(selectedPlace.id, null))
 
   return (
     <div className="pointer-events-auto flex gap-2 lg:mt-4 lg:items-center lg:justify-center">
@@ -33,6 +36,12 @@ export default function SelectedPlaceControls({
       >
         <ArrowLeft weight="bold" />
       </Button>
+      <ShareButton
+        title={selectedPlace.name}
+        text={selectedPlace.note || "香港電單車出車地圖"}
+        url={placeUrl}
+        className={frostedButtonClassName}
+      />
       <Popover>
         <PopoverTrigger
           className={cn(

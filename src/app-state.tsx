@@ -12,6 +12,7 @@ import {
 import { useAuth } from "@/auth"
 import { isPathTypeValue } from "@/constants/path"
 import { loadPlaceImages } from "@/lib/content-repository"
+import { parseShareRoute, sharePathForState } from "@/lib/share-routes"
 import { fetchPlacesCatalog, fromDraft } from "@/lib/places"
 import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
 
@@ -137,6 +138,13 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
     Place[] | null
   >(null)
   const [activeTag, setActiveTag] = useState<string | null>(null)
+  const [shareRouteReady, setShareRouteReady] = useState(false)
+  const lastSyncedPathRef = useRef("")
+  const routeStateRef = useRef({
+    places,
+    tags,
+    selectPlace: null as null | ((id: string | null) => void),
+  })
   const [isEditorOpen, setIsEditorOpen] = useState(true)
   const editorPlaceSelectRef = useRef<((placeId: string) => void) | null>(null)
   const editorCoordinateHandlerRef = useRef<EditorCoordinateHandler | null>(
@@ -219,6 +227,68 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
 
     return places.filter((place) => place.tags.includes(activeTag))
   }, [places, activeTag])
+
+  useEffect(() => {
+    if (isCatalogLoading || !shareRouteReady) return
+
+    const selectedPlace = places.find((place) => place.id === selectedPlaceId)
+    const selectedTag = tags.find((tag) => tag.id === activeTag)
+    const title = selectedPlace
+      ? `${selectedPlace.name}｜香港電單車出車地圖`
+      : selectedTag
+        ? `${selectedTag.displayTitle || selectedTag.label}｜香港電單車出車地圖`
+        : "香港電單車出車地圖｜Hong Kong Motorcycle Ride Map"
+    const description = selectedPlace
+      ? selectedPlace.note || "探索香港適合電單車出車的景點。"
+      : selectedTag
+        ? selectedTag.description || `探索「${selectedTag.label}」相關景點。`
+        : "有邊度好去？探索香港適合電單車出車的景點、咖啡店和小路。"
+    const path = sharePathForState(selectedPlaceId, activeTag)
+    const imagePath = selectedPlace
+      ? `/api/place-image?id=${encodeURIComponent(selectedPlace.id)}`
+      : "/share-card.png"
+    const setMeta = (selector: string, attribute: string, value: string) => {
+      const element = document.head.querySelector<HTMLMetaElement>(selector)
+      element?.setAttribute(attribute, value)
+    }
+
+    document.title = title
+    setMeta('meta[name="description"]', "content", description)
+    setMeta('meta[property="og:title"]', "content", title)
+    setMeta('meta[property="og:description"]', "content", description)
+    setMeta(
+      'meta[property="og:image"]',
+      "content",
+      new URL(imagePath, window.location.origin).toString()
+    )
+    setMeta(
+      'meta[property="og:url"]',
+      "content",
+      new URL(path, window.location.origin).toString()
+    )
+    setMeta('meta[name="twitter:card"]', "content", "summary_large_image")
+    setMeta('meta[name="twitter:title"]', "content", title)
+    setMeta('meta[name="twitter:description"]', "content", description)
+    setMeta(
+      'meta[name="twitter:image"]',
+      "content",
+      new URL(imagePath, window.location.origin).toString()
+    )
+    const canonical = document.head.querySelector<HTMLLinkElement>(
+      "link[rel=canonical]"
+    )
+    canonical?.setAttribute(
+      "href",
+      new URL(path, window.location.origin).toString()
+    )
+  }, [
+    activeTag,
+    isCatalogLoading,
+    places,
+    selectedPlaceId,
+    shareRouteReady,
+    tags,
+  ])
 
   const displayPlaces = useMemo(() => {
     const basePlaces = isEditorActive ? places : filteredPlaces
@@ -317,6 +387,62 @@ export function AppStateProvider({ children }: AppStateProviderProps) {
     },
     [activeTag, displayPlaces, filteredPlaces]
   )
+
+  useEffect(() => {
+    routeStateRef.current = { places, tags, selectPlace }
+  }, [places, selectPlace, tags])
+
+  useEffect(() => {
+    if (isCatalogLoading) return
+
+    const applyLocation = () => {
+      const route = parseShareRoute(window.location.pathname)
+      const {
+        places: currentPlaces,
+        tags: currentTags,
+        selectPlace: select,
+      } = routeStateRef.current
+      const matchingPlace =
+        route.kind === "place"
+          ? currentPlaces.find((place) => place.id === route.id)
+          : undefined
+      const matchingTag =
+        route.kind === "tag"
+          ? currentTags.find((tag) => tag.id === route.id)
+          : undefined
+
+      if (matchingPlace) {
+        setActiveTag(null)
+        select?.(matchingPlace.id)
+      } else if (matchingTag) {
+        select?.(null)
+        setActiveTag(matchingTag.id)
+      } else {
+        select?.(null)
+        setActiveTag(null)
+        if (window.location.pathname !== "/") {
+          window.history.replaceState(null, "", "/")
+        }
+      }
+
+      lastSyncedPathRef.current = window.location.pathname
+      setShareRouteReady(true)
+    }
+
+    applyLocation()
+    window.addEventListener("popstate", applyLocation)
+    return () => window.removeEventListener("popstate", applyLocation)
+  }, [isCatalogLoading])
+
+  useEffect(() => {
+    if (isCatalogLoading || !shareRouteReady) return
+
+    const nextPath = sharePathForState(selectedPlaceId, activeTag)
+    if (nextPath === lastSyncedPathRef.current) return
+
+    window.history.pushState(null, "", nextPath)
+    lastSyncedPathRef.current = nextPath
+  }, [activeTag, isCatalogLoading, selectedPlaceId, shareRouteReady])
 
   const registerEditorPlaceSelect = useCallback(
     (handler: ((placeId: string) => void) | null) => {

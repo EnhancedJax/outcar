@@ -1,0 +1,22 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "functions": {
+    "api/share.ts": {
+      "includeFiles": "dist/**"
+    }
+  },
+  "rewrites": [
+    {
+      "source": "/places/:id",
+      "destination": "/api/share?kind=place&id=:id"
+    },
+    {
+      "source": "/tags/:id",
+      "destination": "/api/share?kind=tag&id=:id"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "/index.html"
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 import { useAppState } from "@/app-state"
 import { TagChip } from "@/components/tag-chip"
+import { ShareButton } from "@/components/share-button"
+import { sharePathForState, shareUrl } from "@/lib/share-routes"
 import { motion, stagger } from "motion/react"
 
 export function TagList() {
@@ -10,6 +12,7 @@ export function TagList() {
     viewerMode,
     selectedPlaceId,
     isCatalogLoading,
+    places,
   } = useAppState()
 
   if (!viewerMode || tags.length === 0 || selectedPlaceId !== null) {
@@ -61,6 +64,18 @@ export function TagList() {
             </motion.button>
           )
         })}
+        {activeTag ? (
+          <ShareButton
+            title={
+              tags.find((tag) => tag.id === activeTag)?.displayTitle ||
+              tags.find((tag) => tag.id === activeTag)?.label ||
+              "Outcar places"
+            }
+            text={`${places.filter((place) => place.tags.includes(activeTag)).length} places on Outcar`}
+            url={shareUrl(sharePathForState(null, activeTag))}
+            className="sticky right-0 rounded-full border border-border bg-background px-3 shadow-lg"
+          />
+        ) : null}
       </motion.div>
     </div>
   )
