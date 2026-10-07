@@ -472,11 +472,7 @@ export function PlacesMap() {
                     selectPlaceFromMap(selectedPlace.id)
                   }}
                 >
-                  <ImageMapPin
-                    imageId={image.id}
-                    width={image.width}
-                    height={image.height}
-                  />
+                  <ImageMapPin imageId={image.id} />
                 </Marker>
               ))
           : null}

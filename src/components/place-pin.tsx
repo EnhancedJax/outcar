@@ -7,8 +7,8 @@ import {
   MAP_PIN_TIP_Y,
   MapPinIcon,
 } from "@/components/map-pin-icon"
-import { TagIcon } from "@/lib/tag-icons"
 import { supabase } from "@/lib/supabase"
+import { TagIcon } from "@/lib/tag-icons"
 
 type PlacePinProps = {
   tagIcon?: string | null
@@ -76,15 +76,7 @@ export function PreviewPlacePin() {
   return <MapPinIcon variant="dotted" className="text-primary" />
 }
 
-export function ImageMapPin({
-  imageId,
-  width,
-  height,
-}: {
-  imageId: string
-  width: number
-  height: number
-}) {
+export function ImageMapPin({ imageId }: { imageId: string }) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [thumbnail, setThumbnail] = useState<string | null>(null)
 
@@ -126,8 +118,7 @@ export function ImageMapPin({
   return (
     <div
       ref={containerRef}
-      className="block w-12 overflow-hidden rounded-md border-2 border-white bg-muted shadow-lg"
-      style={{ aspectRatio: `${width} / ${height}` }}
+      className="block aspect-square w-12 overflow-hidden rounded-md border-2 border-white bg-muted shadow-lg"
     >
       {thumbnail ? (
         <img
