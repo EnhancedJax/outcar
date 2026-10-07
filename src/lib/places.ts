@@ -4,7 +4,7 @@ import { loadPlacesCatalog } from "@/lib/content-repository"
 import { pathAnchoredAtPin } from "@/lib/path"
 import { supabase } from "@/lib/supabase"
 import { normalizePhosphorIconName as normalizeIcon } from "@/lib/tag-icons"
-import type { CatalogTag, DraftPlace, Place, PlaceImage } from "@/types/place"
+import type { CatalogTag, DraftPlace, Place } from "@/types/place"
 import {
   createUniqueTagId,
   isValidGmapUrl,
@@ -319,6 +319,15 @@ export function fromDraft(draft: DraftPlace): Place | null {
     pathType,
     path,
     images: draft.images,
+    imageMetadata: draft.images.map((image, position) => ({
+      id: image.id,
+      placeId: draft.id,
+      position,
+      width: image.width,
+      height: image.height,
+      latitude: image.latitude,
+      longitude: image.longitude,
+    })),
     imagesCount: draft.images.length,
   }
 }
@@ -445,8 +454,4 @@ export function createEmptyDraft(): DraftPlace {
     path: [],
     images: [],
   }
-}
-
-export function createPlaceImage(dataUrl: string): PlaceImage {
-  return { id: `image-${crypto.randomUUID()}`, dataUrl }
 }

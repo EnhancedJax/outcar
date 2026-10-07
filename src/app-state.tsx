@@ -113,6 +113,15 @@ function draftPlaceForDisplay(
     pathType,
     path: pathType === -1 ? [] : draft.path,
     images: draft.images,
+    imageMetadata: draft.images.map((image, position) => ({
+      id: image.id,
+      placeId: draft.id,
+      position,
+      width: image.width,
+      height: image.height,
+      latitude: image.latitude,
+      longitude: image.longitude,
+    })),
     imagesCount: draft.images.length,
   }
 }

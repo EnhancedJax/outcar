@@ -14,6 +14,19 @@ export type CatalogTag = {
 export type PlaceImage = {
   id: string
   dataUrl: string
+  width: number
+  height: number
+  latitude: number | null
+  longitude: number | null
+  thumbnailDataUrl: string
+}
+
+export type PlaceImageMetadata = Omit<
+  PlaceImage,
+  "dataUrl" | "thumbnailDataUrl"
+> & {
+  placeId: string
+  position: number
 }
 
 export type Place = {
@@ -28,6 +41,7 @@ export type Place = {
   pathType: number
   path: PathCoordinate[]
   images: PlaceImage[]
+  imageMetadata: PlaceImageMetadata[]
   imagesCount: number
 }
 
@@ -94,7 +108,33 @@ export function isValidPlaceImage(value: unknown): value is PlaceImage {
   return (
     typeof image.id === "string" &&
     image.id.trim().length > 0 &&
-    isValidImageDataUrl(image.dataUrl)
+    isValidImageDataUrl(image.dataUrl) &&
+    isValidImageMetadata(image) &&
+    isValidImageDataUrl((value as Record<string, unknown>).thumbnailDataUrl)
+  )
+}
+
+export function isValidImageMetadata(
+  value: unknown
+): value is Omit<PlaceImage, "dataUrl" | "thumbnailDataUrl"> {
+  if (!value || typeof value !== "object") return false
+  const image = value as Record<string, unknown>
+  const hasCoordinates = image.latitude !== null || image.longitude !== null
+  return (
+    Number.isInteger(image.width) &&
+    Number(image.width) > 0 &&
+    Number.isInteger(image.height) &&
+    Number(image.height) > 0 &&
+    (!hasCoordinates ||
+      (typeof image.latitude === "number" &&
+        Number.isFinite(image.latitude) &&
+        image.latitude >= -90 &&
+        image.latitude <= 90 &&
+        typeof image.longitude === "number" &&
+        Number.isFinite(image.longitude) &&
+        image.longitude >= -180 &&
+        image.longitude <= 180)) &&
+    (!hasCoordinates || (image.latitude !== null && image.longitude !== null))
   )
 }
 
@@ -249,6 +289,8 @@ export function isValidPlace(value: unknown): value is Place {
   const tags = place.tags === undefined ? [] : place.tags
   const path = place.path === undefined ? [] : place.path
   const images = place.images === undefined ? [] : place.images
+  const imageMetadata =
+    place.imageMetadata === undefined ? [] : place.imageMetadata
   const pathType = place.pathType === undefined ? -1 : place.pathType
 
   return (
@@ -271,6 +313,20 @@ export function isValidPlace(value: unknown): value is Place {
     isValidPathType(pathType) &&
     isValidPath(path) &&
     isValidPlaceImages(images) &&
+    Array.isArray(imageMetadata) &&
+    imageMetadata.every((image) => {
+      if (!image || typeof image !== "object") return false
+      const record = image as Record<string, unknown>
+      return (
+        typeof record.id === "string" &&
+        record.id.length > 0 &&
+        typeof record.placeId === "string" &&
+        record.placeId === place.id &&
+        Number.isInteger(record.position) &&
+        Number(record.position) >= 0 &&
+        isValidImageMetadata(record)
+      )
+    }) &&
     (pathType === -1 ? path.length === 0 : path.length >= 2)
   )
 }
@@ -425,6 +481,9 @@ export function normalizePlacesCatalog(value: unknown): PlacesCatalog {
         tags: Array.isArray(raw.tags) ? raw.tags : [],
         pathType: raw.pathType ?? -1,
         path: Array.isArray(raw.path) ? raw.path : [],
+        imageMetadata: Array.isArray(raw.imageMetadata)
+          ? raw.imageMetadata
+          : [],
       }
     })
 

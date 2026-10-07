@@ -7,6 +7,7 @@ import MapAppearanceControl from "@/components/map-appearance-control"
 import { MapHeader } from "@/components/map-header"
 import { PlacePathLayer } from "@/components/place-path-layer"
 import {
+  ImageMapPin,
   PlacePin,
   PreviewPlacePin,
   SelectedPlacePin,
@@ -452,6 +453,33 @@ export function PlacesMap() {
             </Marker>
           )
         })}
+
+        {selectedPlace &&
+        selectedPlace.pathType !== -1 &&
+        selectedPlace.path.length >= 2
+          ? selectedPlace.imageMetadata
+              .filter(
+                (image) => image.latitude !== null && image.longitude !== null
+              )
+              .map((image) => (
+                <Marker
+                  key={`image-${image.id}`}
+                  longitude={image.longitude!}
+                  latitude={image.latitude!}
+                  anchor="center"
+                  onClick={(event) => {
+                    event.originalEvent.stopPropagation()
+                    selectPlaceFromMap(selectedPlace.id)
+                  }}
+                >
+                  <ImageMapPin
+                    imageId={image.id}
+                    width={image.width}
+                    height={image.height}
+                  />
+                </Marker>
+              ))
+          : null}
 
         {previewPlaces.map((place) => (
           <Marker

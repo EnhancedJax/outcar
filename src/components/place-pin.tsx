@@ -1,3 +1,5 @@
+import { useEffect, useRef, useState } from "react"
+
 import { cn } from "cn"
 
 import {
@@ -6,6 +8,7 @@ import {
   MapPinIcon,
 } from "@/components/map-pin-icon"
 import { TagIcon } from "@/lib/tag-icons"
+import { supabase } from "@/lib/supabase"
 
 type PlacePinProps = {
   tagIcon?: string | null
@@ -71,4 +74,69 @@ export function SelectedPlacePin({
 
 export function PreviewPlacePin() {
   return <MapPinIcon variant="dotted" className="text-primary" />
+}
+
+export function ImageMapPin({
+  imageId,
+  width,
+  height,
+}: {
+  imageId: string
+  width: number
+  height: number
+}) {
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [thumbnail, setThumbnail] = useState<string | null>(null)
+
+  useEffect(() => {
+    const element = containerRef.current
+    const client = supabase
+    if (!element || !client) return
+    let cancelled = false
+    const loadThumbnail = async () => {
+      const { data, error } = await client
+        .from("place_image_metadata")
+        .select("thumbnail_data_url")
+        .eq("id", imageId)
+        .maybeSingle()
+      if (!cancelled && !error) setThumbnail(data?.thumbnail_data_url ?? null)
+    }
+    if (typeof IntersectionObserver === "undefined") {
+      void loadThumbnail()
+      return () => {
+        cancelled = true
+      }
+    }
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          observer.disconnect()
+          void loadThumbnail()
+        }
+      },
+      { rootMargin: "100px" }
+    )
+    observer.observe(element)
+    return () => {
+      cancelled = true
+      observer.disconnect()
+    }
+  }, [imageId])
+
+  return (
+    <div
+      ref={containerRef}
+      className="block w-12 overflow-hidden rounded-md border-2 border-white bg-muted shadow-lg"
+      style={{ aspectRatio: `${width} / ${height}` }}
+    >
+      {thumbnail ? (
+        <img
+          src={thumbnail}
+          alt=""
+          draggable={false}
+          className="size-full object-cover"
+        />
+      ) : null}
+    </div>
+  )
 }

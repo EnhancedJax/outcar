@@ -27,13 +27,16 @@ export default function SelectedPlaceImages({
   if (selectedPlaceImagesLoadingCount) {
     return (
       <div className="mb-4 flex scrollbar-none flex-row gap-2 overflow-x-scroll px-6 lg:justify-center">
-        {[...Array(selectedPlaceImagesLoadingCount)].map((_, index) => (
-          <div
-            key={`loading-${index}`}
-            className="aspect-square h-16 w-16 animate-pulse rounded-md bg-muted-foreground lg:h-20 lg:w-30"
-            aria-label="Loading place image"
-          />
-        ))}
+        {selectedPlace.imageMetadata
+          .slice(0, selectedPlaceImagesLoadingCount)
+          .map((image) => (
+            <div
+              key={`loading-${image.id}`}
+              className="h-16 shrink-0 animate-pulse rounded-md bg-muted-foreground lg:h-20"
+              style={{ aspectRatio: `${image.width} / ${image.height}` }}
+              aria-label="Loading place image"
+            />
+          ))}
       </div>
     )
   }
@@ -67,13 +70,20 @@ export default function SelectedPlaceImages({
             className="inline-flex shrink-0 cursor-zoom-in overflow-hidden rounded-md p-0 focus-visible:ring-2 focus-visible:ring-ring focus-visible:outline-none"
           >
             {({ imageRef }) => (
-              <img
-                ref={imageRef}
-                src={image.dataUrl}
-                alt=""
-                draggable={false}
-                className="pointer-events-none h-16 rounded-md object-cover lg:h-20"
-              />
+              <div
+                className="pointer-events-none h-16 shrink-0 overflow-hidden rounded-md lg:h-20"
+                style={{ aspectRatio: `${image.width} / ${image.height}` }}
+              >
+                <img
+                  ref={imageRef}
+                  src={image.dataUrl}
+                  alt=""
+                  width={image.width}
+                  height={image.height}
+                  draggable={false}
+                  className="size-full object-cover"
+                />
+              </div>
             )}
           </Lightbox.Trigger>
         ))}
@@ -123,6 +133,8 @@ function PlaceImageViewer({
                     <img
                       src={image.dataUrl}
                       alt={`${placeName} photo ${index + 1}`}
+                      width={image.width}
+                      height={image.height}
                       draggable={false}
                     />
                   </Lightbox.Media>

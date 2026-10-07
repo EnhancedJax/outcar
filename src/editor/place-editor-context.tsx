@@ -13,11 +13,11 @@ import { FormProvider, useForm } from "react-hook-form"
 import { useAppState } from "@/app-state"
 import { isPathTypeValue, type PathTypeValue } from "@/constants/path"
 import { fetchDirections } from "@/lib/mapbox"
+import { processImageFile } from "@/lib/image-metadata"
 import { pathAnchoredAtPin, reversePath } from "@/lib/path"
 import {
   addTagToCatalog,
   createEmptyDraft,
-  createPlaceImage,
   fromDraft,
   moveTag,
   removeTagFromCatalog,
@@ -72,10 +72,7 @@ type PlaceEditorContextValue = {
   handleMoveTag: (index: number, direction: "up" | "down") => Promise<void>
   handleSetTagIcon: (tagId: string, icon: string | null) => Promise<void>
   handleSetTagColor: (tagId: string, color: string | null) => Promise<void>
-  handleSetTagShowOnMap: (
-    tagId: string,
-    showOnMap: boolean
-  ) => Promise<void>
+  handleSetTagShowOnMap: (tagId: string, showOnMap: boolean) => Promise<void>
   startCreate: () => void
   startEdit: (place: Place) => void
   handleImageFiles: (files: FileList | File[]) => Promise<void>
@@ -474,7 +471,9 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         applyCatalog(nextTags, places)
       } catch (saveError) {
         setError(
-          saveError instanceof Error ? saveError.message : "Failed to reorder tags"
+          saveError instanceof Error
+            ? saveError.message
+            : "Failed to reorder tags"
         )
       } finally {
         setIsSaving(false)
@@ -529,20 +528,7 @@ export function PlaceEditorProvider({ children }: PlaceEditorProviderProps) {
         }
 
         try {
-          const dataUrl = await new Promise<string>((resolve, reject) => {
-            const reader = new FileReader()
-            reader.addEventListener("load", () => {
-              if (typeof reader.result === "string") resolve(reader.result)
-              else reject(new Error(`Failed to read image: ${file.name}`))
-            })
-            reader.addEventListener("error", () =>
-              reject(
-                reader.error ?? new Error(`Failed to read image: ${file.name}`)
-              )
-            )
-            reader.readAsDataURL(file)
-          })
-          nextImages.push(createPlaceImage(dataUrl))
+          nextImages.push(await processImageFile(file))
         } catch (error) {
           setError(
             error instanceof Error

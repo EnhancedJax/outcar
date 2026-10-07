@@ -6,11 +6,13 @@ import {
   isValidPath,
   isValidPathType,
   isValidPlaceImage,
+  isValidImageMetadata,
   isValidPlacesCatalog,
   normalizePlacesCatalog,
   type CatalogTag,
   type Place,
   type PlaceImage,
+  type PlaceImageMetadata,
   type PlacesCatalog,
 } from "@/types/place"
 
@@ -27,6 +29,7 @@ type PlaceRow = Omit<
   | "gmapUrl"
   | "pathType"
   | "images"
+  | "imageMetadata"
   | "imagesCount"
 > & {
   parking_condition: number
@@ -37,11 +40,25 @@ type PlaceRow = Omit<
 }
 type PlaceTagRow = { place_id: string; tag_id: string; position: number }
 type PlaceImageIdRow = { place_id: string }
+type PlaceImageMetadataRow = {
+  id: string
+  place_id: string
+  position: number
+  width: number
+  height: number
+  latitude: number | null
+  longitude: number | null
+}
 type ImageRow = {
   id: string
   place_id: string
   data_url: string
   position: number
+  width: number
+  height: number
+  latitude: number | null
+  longitude: number | null
+  thumbnail_data_url: string
 }
 
 function requireSupabase() {
@@ -59,18 +76,28 @@ function throwIfError(error: { message: string } | null, operation: string) {
 
 export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
   const client = requireSupabase()
-  const [tagsResult, placesResult, placeTagsResult, imageIdsResult] =
-    await Promise.all([
-      client.from("tags").select("*").order("position"),
-      client.from("places").select("*").order("position"),
-      client.from("place_tags").select("*").order("position"),
-      client.from("place_images").select("place_id"),
-    ])
+  const [
+    tagsResult,
+    placesResult,
+    placeTagsResult,
+    imageIdsResult,
+    metadataResult,
+  ] = await Promise.all([
+    client.from("tags").select("*").order("position"),
+    client.from("places").select("*").order("position"),
+    client.from("place_tags").select("*").order("position"),
+    client.from("place_images").select("place_id"),
+    client
+      .from("place_image_metadata")
+      .select("id, place_id, position, width, height, latitude, longitude")
+      .order("position"),
+  ])
 
   throwIfError(tagsResult.error, "load tags")
   throwIfError(placesResult.error, "load places")
   throwIfError(placeTagsResult.error, "load place tags")
   throwIfError(imageIdsResult.error, "load place image counts")
+  throwIfError(metadataResult.error, "load place image metadata")
 
   const tags = (tagsResult.data as TagRow[]).map((tag) => ({
     id: tag.id,
@@ -94,6 +121,23 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     }
     imageCounts.set(row.place_id, (imageCounts.get(row.place_id) ?? 0) + 1)
   }
+  const metadataByPlace = new Map<string, PlaceImageMetadata[]>()
+  for (const row of metadataResult.data as PlaceImageMetadataRow[]) {
+    const metadata = {
+      id: row.id,
+      placeId: row.place_id,
+      position: row.position,
+      width: row.width,
+      height: row.height,
+      latitude: row.latitude,
+      longitude: row.longitude,
+    }
+    if (!isValidImageMetadata(metadata))
+      throw new Error(`Supabase returned invalid image metadata: ${row.id}`)
+    const images = metadataByPlace.get(row.place_id) ?? []
+    images.push(metadata)
+    metadataByPlace.set(row.place_id, images)
+  }
   const places: Place[] = (placesResult.data as PlaceRow[]).map((place) => ({
     id: place.id,
     name: place.name,
@@ -106,6 +150,7 @@ export async function loadPlacesCatalog(): Promise<PlacesCatalog> {
     pathType: place.path_type,
     path: parsePath(place.path),
     images: [],
+    imageMetadata: metadataByPlace.get(place.id) ?? [],
     imagesCount: imageCounts.get(place.id) ?? 0,
   }))
 
@@ -142,10 +187,33 @@ export async function loadPlaceImages(placeId: string): Promise<PlaceImage[]> {
 
   throwIfError(result.error, "load place images")
 
-  const images = (result.data as ImageRow[]).map((image) => ({
-    id: image.id,
-    dataUrl: image.data_url,
-  }))
+  const metadataResult = await client
+    .from("place_image_metadata")
+    .select(
+      "id, place_id, position, width, height, latitude, longitude, thumbnail_data_url"
+    )
+    .eq("place_id", placeId)
+    .order("position")
+  throwIfError(metadataResult.error, "load image metadata")
+  const metadata = new Map(
+    (metadataResult.data as ImageRow[]).map((image) => [image.id, image])
+  )
+  const images = (result.data as Pick<ImageRow, "id" | "data_url">[])
+    .map((image) => {
+      const imageMetadata = metadata.get(image.id)
+      return imageMetadata
+        ? {
+            id: image.id,
+            dataUrl: image.data_url,
+            width: imageMetadata.width,
+            height: imageMetadata.height,
+            latitude: imageMetadata.latitude,
+            longitude: imageMetadata.longitude,
+            thumbnailDataUrl: imageMetadata.thumbnail_data_url,
+          }
+        : null
+    })
+    .filter((image): image is PlaceImage => image !== null)
 
   if (!images.every((image) => isValidPlaceImage(image))) {
     throw new Error(`Supabase returned invalid images for place: ${placeId}`)

@@ -58,3 +58,16 @@ selected place. In the development editor, new images append to the list,
 which can be reordered with the up/down controls or deleted; the first image
 is displayed as the primary selected-place image. There are currently no
 application-enforced file count or size limits.
+
+Image dimensions, EXIF GPS coordinates, and generated WebP thumbnails are
+stored separately in `place_image_metadata`. After applying the metadata
+migration, backfill existing records before deploying the updated client:
+
+```bash
+SUPABASE_URL=https://your-project.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key \
+pnpm metadata:backfill
+```
+
+The backfill command uses the service-role key only from the local process; do
+not add it to client environment variables or commit it.
